@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:marc_flutter/app/onesignal.dart';
 import 'package:marc_flutter/app/router.dart';
 import 'package:marc_flutter/app/theme.dart';
 
@@ -16,6 +17,7 @@ Future<void> main() async {
     url: dotenv.get('SUPABASE_URL'),
     publishableKey: dotenv.get('SUPABASE_ANON_KEY'),
   );
+  await initOneSignal();
   runApp(const ProviderScope(child: MyApp()));
 }
 
