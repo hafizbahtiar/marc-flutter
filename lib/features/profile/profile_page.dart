@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:marc_flutter/features/auth/auth_providers.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
@@ -15,6 +16,7 @@ class ProfilePage extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final email = Supabase.instance.client.auth.currentUser?.email ?? '';
     final profile = ref.watch(myProfileProvider);
+    final loading = profile.isLoading;
     final p = profile.valueOrNull;
 
     final verified = p?.emailVerified ?? false;
@@ -36,25 +38,37 @@ class ProfilePage extends ConsumerWidget {
           children: [
             const VerifyEmailBanner(),
             const SizedBox(height: 16),
-            _Header(
-              name: p?.displayName,
-              roleName: p?.roleName,
-              isManagement: p?.isManagement ?? false,
+            Skeletonizer(
+              enabled: loading,
+              child: _Header(
+                name: p?.displayName ?? (loading ? 'Nama Ahli' : null),
+                roleName: p?.roleName ?? (loading ? 'Ahli' : null),
+                isManagement: p?.isManagement ?? false,
+              ),
             ),
             const SizedBox(height: 28),
-            _InfoCard(
-              children: [
-                _InfoRow(label: 'Email', value: email),
-                _InfoRow(label: 'No. telefon', value: p?.phone ?? '-'),
-                _InfoRow(label: 'No. ahli', value: p?.memberId ?? '-'),
-                _InfoRow(
-                  label: 'Status email',
-                  value: verified ? 'Disahkan' : 'Belum disahkan',
-                  valueColor: verified
-                      ? scheme.primary
-                      : const Color(0xFF8A5A00),
-                ),
-              ],
+            Skeletonizer(
+              enabled: loading,
+              child: _InfoCard(
+                children: [
+                  _InfoRow(label: 'Email', value: email),
+                  _InfoRow(
+                    label: 'No. telefon',
+                    value: p?.phone ?? (loading ? '0100000000' : '-'),
+                  ),
+                  _InfoRow(
+                    label: 'No. ahli',
+                    value: p?.memberId ?? (loading ? 'MARC2026/08/0000' : '-'),
+                  ),
+                  _InfoRow(
+                    label: 'Status email',
+                    value: verified ? 'Disahkan' : 'Belum disahkan',
+                    valueColor: verified
+                        ? scheme.primary
+                        : const Color(0xFF8A5A00),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
             OutlinedButton.icon(

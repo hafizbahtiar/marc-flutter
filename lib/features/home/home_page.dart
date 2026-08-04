@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
 import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
 
@@ -9,6 +10,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(myProfileProvider);
+    final loading = profile.isLoading;
     final p = profile.valueOrNull;
 
     return Scaffold(
@@ -24,12 +26,20 @@ class HomePage extends ConsumerWidget {
               style: Theme.of(context).textTheme.labelSmall,
             ),
             const SizedBox(height: 6),
-            Text(
-              p?.displayName == null ? 'Ahli MARC' : p!.displayName!,
-              style: Theme.of(context).textTheme.displaySmall,
+            Skeletonizer(
+              enabled: loading,
+              child: Text(
+                p?.displayName ?? 'Ahli MARC',
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
             ),
             const SizedBox(height: 28),
-            _MemberCard(memberId: p?.memberId),
+            Skeletonizer(
+              enabled: loading,
+              child: _MemberCard(
+                memberId: p?.memberId ?? 'MARC2026/08/0000',
+              ),
+            ),
           ],
         ),
       ),
@@ -40,7 +50,7 @@ class HomePage extends ConsumerWidget {
 class _MemberCard extends StatelessWidget {
   const _MemberCard({required this.memberId});
 
-  final String? memberId;
+  final String memberId;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +80,7 @@ class _MemberCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            memberId ?? '—',
+            memberId,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: scheme.onPrimary,
                   letterSpacing: 0.5,
