@@ -53,14 +53,26 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_native_splash: ^2.4.8
+  flutter_launcher_icons: ^0.14.4
+
+# App icon (jana: dart run flutter_launcher_icons)
+flutter_launcher_icons:
+  image_path: "assets/splash/logo.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  background_color_ios: "#FFFFFF"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/splash/logo.png"
+  min_sdk_android: 21
 
 # Splash screen native (jana: dart run flutter_native_splash:create)
 flutter_native_splash:
   color: "#2F6B4F"
-  image: assets/splash/marc_wordmark.png
+  image: assets/splash/logo.png
   android_12:
     color: "#2F6B4F"
-    image: assets/splash/marc_wordmark.png
+    image: assets/splash/logo.png
   android: true
   ios: true
   web: false
