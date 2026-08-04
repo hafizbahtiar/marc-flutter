@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:marc_flutter/services/auth_service.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  Future<void> _signOut(BuildContext context) async {
-    await Supabase.instance.client.auth.signOut();
+  Future<void> _signOut() async {
+    await AuthService().signOut();
     // AuthGate akan tukar ke LoginPage secara automatik
   }
 
@@ -19,7 +20,7 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Log Keluar',
-            onPressed: () => _signOut(context),
+            onPressed: () => _signOut(),
           ),
         ],
       ),

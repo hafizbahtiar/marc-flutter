@@ -20,23 +20,31 @@ class AuthGate extends StatelessWidget {
         if (session != null) {
           return const HomePage();
         }
-        return Navigator(
-          onGenerateRoute: (settings) {
-            if (settings.name == '/register') {
-              return MaterialPageRoute(
-                builder: (_) => RegisterPage(
-                  onLoginTap: () => Navigator.pop(context),
-                ),
-              );
-            }
-            return MaterialPageRoute(
-              builder: (_) => LoginPage(
-                onRegisterTap: () => Navigator.pushNamed(context, '/register'),
-              ),
-            );
-          },
-        );
+        return const _AuthSwitcher();
       },
+    );
+  }
+}
+
+class _AuthSwitcher extends StatefulWidget {
+  const _AuthSwitcher();
+
+  @override
+  State<_AuthSwitcher> createState() => _AuthSwitcherState();
+}
+
+class _AuthSwitcherState extends State<_AuthSwitcher> {
+  bool _showRegister = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_showRegister) {
+      return RegisterPage(
+        onLoginTap: () => setState(() => _showRegister = false),
+      );
+    }
+    return LoginPage(
+      onRegisterTap: () => setState(() => _showRegister = true),
     );
   }
 }

@@ -5,7 +5,12 @@ import 'package:marc_flutter/pages/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // .env belum diisi — pengguna perlu salin .env.example ke .env
+    // dan isi SUPABASE_URL + SUPABASE_ANON_KEY.
+  }
   await Supabase.initialize(
     url: dotenv.get('SUPABASE_URL'),
     publishableKey: dotenv.get('SUPABASE_ANON_KEY'),
