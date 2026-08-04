@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:marc_flutter/app/theme.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
 import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
 
@@ -12,24 +9,11 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final email = Supabase.instance.client.auth.currentUser?.email ?? '';
     final profile = ref.watch(myProfileProvider);
+    final name = profile.valueOrNull?.displayName;
 
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            tooltip: 'Profil',
-            onPressed: () => context.push('/profile'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Log keluar',
-            onPressed: () => ref.read(authServiceProvider).signOut(),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Utama')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
@@ -37,11 +21,9 @@ class HomePage extends ConsumerWidget {
             const VerifyEmailBanner(),
             const SizedBox(height: 24),
             Text(
-              'Anda telah log masuk',
+              name == null ? 'Selamat datang' : 'Hai, $name',
               style: Theme.of(context).textTheme.displaySmall,
             ),
-            const SizedBox(height: 8),
-            Text(email, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 32),
             _MemberIdCard(
               child: profile.when(

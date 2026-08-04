@@ -3,21 +3,42 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:marc_flutter/features/auth/auth_providers.dart';
 
 class Profile {
-  const Profile({required this.memberId, required this.emailVerified});
+  const Profile({
+    required this.memberId,
+    required this.emailVerified,
+    required this.displayName,
+    required this.phone,
+    required this.roleKey,
+    required this.roleName,
+    required this.category,
+  });
 
   final String memberId;
   final bool emailVerified;
+  final String? displayName;
+  final String? phone;
+  final String roleKey;
+  final String roleName;
+  final String category;
 
-  factory Profile.fromMap(Map<String, dynamic> map) => Profile(
-        memberId: map['member_id'] as String,
-        emailVerified: (map['email_verified'] as bool?) ?? false,
-      );
+  bool get isManagement => category == 'management';
+
+  factory Profile.fromMap(Map<String, dynamic> map) {
+    final role = map['roles'] as Map<String, dynamic>?;
+    return Profile(
+      memberId: map['member_id'] as String,
+      emailVerified: (map['email_verified'] as bool?) ?? false,
+      displayName: map['display_name'] as String?,
+      phone: map['phone'] as String?,
+      roleKey: (role?['key'] as String?) ?? 'ahli',
+      roleName: (role?['name'] as String?) ?? 'Ahli',
+      category: (role?['category'] as String?) ?? 'ahli',
+    );
+  }
 }
 
-/// Profil user semasa (member id + status verify email).
-/// Dimuat semula bila auth berubah, dan boleh di-refresh manual.
+/// Profil user semasa. Dimuat semula bila auth berubah / selepas edit.
 final myProfileProvider = FutureProvider<Profile?>((ref) async {
-  // Kaitkan dengan auth supaya re-fetch selepas log masuk / log keluar.
   ref.watch(authStateProvider);
 
   final client = Supabase.instance.client;
@@ -26,7 +47,8 @@ final myProfileProvider = FutureProvider<Profile?>((ref) async {
 
   final data = await client
       .from('profiles')
-      .select('member_id, email_verified')
+      .select('member_id, email_verified, display_name, phone, '
+          'roles(key, name, category)')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -34,23 +56,88 @@ final myProfileProvider = FutureProvider<Profile?>((ref) async {
   return Profile.fromMap(data);
 });
 
+final profileRepositoryProvider =
+    Provider<ProfileRepository>((ref) => ProfileRepository(ref));
+
+class ProfileRepository {
+  ProfileRepository(this._ref);
+  final Ref _ref;
+
+  /// Kemas kini display name & phone user semasa.
+  Future<void> update({
+    required String displayName,
+    required String phone,
+  }) async {
+    final client = Supabase.instance.client;
+    final uid = client.auth.currentUser?.id;
+    if (uid == null) throw StateError('Tiada sesi');
+
+    String? clean(String v) => v.trim().isEmpty ? null : v.trim();
+
+    await client.from('profiles').update({
+      'display_name': clean(displayName),
+      'phone': clean(phone),
+    }).eq('id', uid);
+
+    _ref.invalidate(myProfileProvider);
+  }
+}
+
+class MemberRow {
+  const MemberRow({
+    required this.memberId,
+    required this.displayName,
+    required this.roleName,
+    required this.category,
+  });
+
+  final String memberId;
+  final String? displayName;
+  final String roleName;
+  final String category;
+
+  factory MemberRow.fromMap(Map<String, dynamic> map) {
+    final role = map['roles'] as Map<String, dynamic>?;
+    return MemberRow(
+      memberId: map['member_id'] as String,
+      displayName: map['display_name'] as String?,
+      roleName: (role?['name'] as String?) ?? 'Ahli',
+      category: (role?['category'] as String?) ?? 'ahli',
+    );
+  }
+}
+
+/// Senarai ahli. RLS tentukan siapa nampak apa:
+/// management → semua; ahli biasa → diri sendiri sahaja.
+final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
+  ref.watch(authStateProvider);
+
+  final client = Supabase.instance.client;
+  if (client.auth.currentUser == null) return const [];
+
+  final data = await client
+      .from('profiles')
+      .select('member_id, display_name, roles(name, category)')
+      .order('member_id');
+
+  return (data as List)
+      .map((m) => MemberRow.fromMap(m as Map<String, dynamic>))
+      .toList();
+});
+
 final emailVerificationProvider =
     Provider<EmailVerification>((ref) => EmailVerification(ref));
 
 /// Aliran pengesahan email diuruskan sendiri menggunakan OTP email Supabase.
-///
-/// Nota: ini "soft nudge" UX, bukan gate keselamatan — login tidak
-/// bergantung padanya.
+/// Nota: "soft nudge" UX, bukan gate keselamatan.
 class EmailVerification {
   EmailVerification(this._ref);
 
   final Ref _ref;
   SupabaseClient get _client => Supabase.instance.client;
 
-  /// Email user semasa (untuk dipapar dalam sheet).
   String? get emailForDisplay => _client.auth.currentUser?.email;
 
-  /// Hantar kod OTP ke email user semasa.
   Future<void> sendCode() async {
     final email = _client.auth.currentUser?.email;
     if (email == null) {
@@ -59,7 +146,6 @@ class EmailVerification {
     await _client.auth.signInWithOtp(email: email, shouldCreateUser: false);
   }
 
-  /// Sahkan kod. Kalau sah → tandakan profil sebagai verified & refresh.
   Future<void> verifyCode(String token) async {
     final email = _client.auth.currentUser?.email;
     if (email == null) {

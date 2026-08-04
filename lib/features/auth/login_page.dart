@@ -5,6 +5,7 @@ import 'package:marc_flutter/features/auth/auth_providers.dart';
 import 'package:marc_flutter/features/auth/widgets/auth_field.dart';
 import 'package:marc_flutter/features/auth/widgets/button_busy.dart';
 import 'package:marc_flutter/shared/validators.dart';
+import 'package:marc_flutter/shared/widgets/my_snackbar.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -39,9 +40,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     ref.listen(loginControllerProvider, (prev, next) {
       if (next.hasError && !next.isLoading) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text('${next.error}')));
+        MySnackBar.error(context, '${next.error}');
       }
     });
 

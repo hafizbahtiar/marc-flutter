@@ -1,0 +1,51 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+/// Shell dengan bottom navigation. Setiap tab ada stack navigasi sendiri
+/// (StatefulShellRoute.indexedStack).
+class NavShell extends StatelessWidget {
+  const NavShell({super.key, required this.shell});
+
+  final StatefulNavigationShell shell;
+
+  void _onTap(int index) {
+    shell.goBranch(
+      index,
+      // Tekan tab semasa sekali lagi → balik ke akar tab itu.
+      initialLocation: index == shell.currentIndex,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: shell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: shell.currentIndex,
+        onDestinationSelected: _onTap,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Utama',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.groups_outlined),
+            selectedIcon: Icon(Icons.groups),
+            label: 'Ahli',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_outlined),
+            selectedIcon: Icon(Icons.notifications),
+            label: 'Notifikasi',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
+      ),
+    );
+  }
+}

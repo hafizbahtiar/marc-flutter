@@ -3,9 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:marc_flutter/app/nav_shell.dart';
 import 'package:marc_flutter/features/auth/login_page.dart';
 import 'package:marc_flutter/features/auth/register_page.dart';
 import 'package:marc_flutter/features/home/home_page.dart';
+import 'package:marc_flutter/features/members/members_page.dart';
+import 'package:marc_flutter/features/notifications/notifications_page.dart';
+import 'package:marc_flutter/features/profile/edit_profile_page.dart';
 import 'package:marc_flutter/features/profile/profile_page.dart';
 
 /// Adapter: dengar Stream, notify GoRouter untuk refresh redirect.
@@ -43,8 +47,38 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterPage()),
-      GoRoute(path: '/home', builder: (_, _) => const HomePage()),
-      GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (_, _) => const EditProfilePage(),
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => NavShell(shell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const HomePage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/notifications',
+                builder: (_, _) => const NotificationsPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 });

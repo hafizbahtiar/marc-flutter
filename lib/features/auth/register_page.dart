@@ -5,6 +5,7 @@ import 'package:marc_flutter/features/auth/auth_providers.dart';
 import 'package:marc_flutter/features/auth/widgets/auth_field.dart';
 import 'package:marc_flutter/features/auth/widgets/button_busy.dart';
 import 'package:marc_flutter/shared/validators.dart';
+import 'package:marc_flutter/shared/widgets/my_snackbar.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -32,13 +33,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         .submit(_email.text.trim(), _password.text);
     if (!mounted) return;
     if (ok) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Pendaftaran berjaya. Semak email untuk pengesahan.'),
-          ),
-        );
+      MySnackBar.success(context, 'Pendaftaran berjaya.');
       context.pop();
     }
   }
@@ -50,9 +45,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     ref.listen(registerControllerProvider, (prev, next) {
       if (next.hasError && !next.isLoading) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text('${next.error}')));
+        MySnackBar.error(context, '${next.error}');
       }
     });
 

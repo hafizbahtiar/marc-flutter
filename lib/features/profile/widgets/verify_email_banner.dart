@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc_flutter/app/theme.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
+import 'package:marc_flutter/shared/widgets/my_snackbar.dart';
 
 /// Banner amaran "email belum disahkan". Papar hanya bila profil dimuat
 /// dan `email_verified == false`. Butang buka sheet masukkan kod OTP.
@@ -77,22 +78,15 @@ class _VerifyEmailSheetState extends ConsumerState<_VerifyEmailSheet> {
     super.dispose();
   }
 
-  void _toast(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   Future<void> _send() async {
     setState(() => _sending = true);
     try {
       await ref.read(emailVerificationProvider).sendCode();
       if (!mounted) return;
       setState(() => _sent = true);
-      _toast('Kod dihantar ke email anda.');
-    } catch (e) {
-      _toast('Gagal hantar kod. Cuba lagi.');
+      MySnackBar.info(context, 'Kod dihantar ke email anda.');
+    } catch (_) {
+      if (mounted) MySnackBar.error(context, 'Gagal hantar kod. Cuba lagi.');
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -100,17 +94,18 @@ class _VerifyEmailSheetState extends ConsumerState<_VerifyEmailSheet> {
 
   Future<void> _verify() async {
     if (_code.text.trim().length < 6) {
-      _toast('Masukkan kod 6 digit.');
+      MySnackBar.error(context, 'Masukkan kod 6 digit.');
       return;
     }
     setState(() => _verifying = true);
     try {
       await ref.read(emailVerificationProvider).verifyCode(_code.text);
       if (!mounted) return;
+      // Papar sebelum pop supaya snackbar kekal selepas sheet ditutup.
+      MySnackBar.success(context, 'Email berjaya disahkan.');
       Navigator.of(context).pop();
-      _toast('Email berjaya disahkan.');
-    } catch (e) {
-      _toast('Kod tidak sah atau tamat tempoh.');
+    } catch (_) {
+      if (mounted) MySnackBar.error(context, 'Kod tidak sah atau tamat tempoh.');
     } finally {
       if (mounted) setState(() => _verifying = false);
     }
