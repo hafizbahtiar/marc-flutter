@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:marc_flutter/features/auth/auth_providers.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
 import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
+import 'package:marc_flutter/shared/widgets/confirm_dialog.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -44,18 +45,29 @@ class ProfilePage extends ConsumerWidget {
             _InfoCard(
               children: [
                 _InfoRow(label: 'Email', value: email),
-                _InfoRow(label: 'No. telefon', value: p?.phone ?? '—'),
-                _InfoRow(label: 'No. ahli', value: p?.memberId ?? '—'),
+                _InfoRow(label: 'No. telefon', value: p?.phone ?? '-'),
+                _InfoRow(label: 'No. ahli', value: p?.memberId ?? '-'),
                 _InfoRow(
                   label: 'Status email',
                   value: verified ? 'Disahkan' : 'Belum disahkan',
-                  valueColor: verified ? scheme.primary : const Color(0xFF8A5A00),
+                  valueColor: verified
+                      ? scheme.primary
+                      : const Color(0xFF8A5A00),
                 ),
               ],
             ),
             const SizedBox(height: 32),
             OutlinedButton.icon(
-              onPressed: () => ref.read(authServiceProvider).signOut(),
+              onPressed: () async {
+                final ok = await showConfirmDialog(
+                  context,
+                  title: 'Log keluar',
+                  message: 'Anda pasti mahu log keluar?',
+                  confirmLabel: 'Log keluar',
+                  isDestructive: true,
+                );
+                if (ok) await ref.read(authServiceProvider).signOut();
+              },
               icon: const Icon(Icons.logout, size: 20),
               label: const Text('Log keluar'),
               style: OutlinedButton.styleFrom(
@@ -63,7 +75,8 @@ class ProfilePage extends ConsumerWidget {
                 minimumSize: const Size.fromHeight(52),
                 side: BorderSide(color: scheme.error.withValues(alpha: 0.5)),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -87,8 +100,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final initial =
-        (name?.isNotEmpty ?? false) ? name![0].toUpperCase() : '?';
+    final initial = (name?.isNotEmpty ?? false) ? name![0].toUpperCase() : '?';
 
     return Row(
       children: [
@@ -116,8 +128,10 @@ class _Header extends StatelessWidget {
               const SizedBox(height: 6),
               if (roleName != null)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isManagement
                         ? scheme.primary.withValues(alpha: 0.12)
@@ -185,10 +199,9 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -196,8 +209,8 @@ class _InfoRow extends StatelessWidget {
               value,
               textAlign: TextAlign.right,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: valueColor ?? scheme.onSurface,
-                  ),
+                color: valueColor ?? scheme.onSurface,
+              ),
             ),
           ),
         ],

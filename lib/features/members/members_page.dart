@@ -29,7 +29,7 @@ class MembersPage extends ConsumerWidget {
             if (rows.isEmpty) {
               return const Center(child: Text('Tiada ahli.'));
             }
-            return RefreshIndicator(
+            return RefreshIndicator.adaptive(
               onRefresh: () async => ref.invalidate(membersProvider),
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(vertical: 8),
