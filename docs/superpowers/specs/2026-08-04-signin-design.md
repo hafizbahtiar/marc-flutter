@@ -38,7 +38,8 @@ lib/
 - Jalankan `AuthGate` sebagai root widget.
 
 ### AuthGate
-- `StreamBuilder` atas `Supabase.instance.client.auth.onAuthStateChange` (atau semak `auth.currentUser` + listen).
+- `StreamBuilder` atas `Supabase.instance.client.auth.onAuthStateChange`.
+- Nilai awal stream: semak `Supabase.instance.client.auth.currentUser` (supaya tak ada flash LoginPage ketika app start dengan session sedia ada).
 - Ada session → `HomePage`; tiada → `LoginPage`.
 - Navigation automatik bila login/logout (tak perlu `Navigator.push` manual).
 
