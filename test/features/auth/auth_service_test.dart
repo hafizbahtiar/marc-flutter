@@ -1,39 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/services/auth_service.dart';
+import 'package:marc_flutter/features/auth/auth_service.dart';
 
 void main() {
-  group('validateEmail', () {
-    test('kosong → mesej error', () {
-      expect(validateEmail(''), 'Email diperlukan');
-      expect(validateEmail(null), 'Email diperlukan');
-    });
-
-    test('format salah → mesej error', () {
-      expect(validateEmail('bukan-email'), 'Format email tidak sah');
-      expect(validateEmail('user@'), 'Format email tidak sah');
-    });
-
-    test('format sah → null', () {
-      expect(validateEmail('user@example.com'), isNull);
-    });
-  });
-
-  group('validatePassword', () {
-    test('kosong → mesej error', () {
-      expect(validatePassword(''), 'Kata laluan diperlukan');
-      expect(validatePassword(null), 'Kata laluan diperlukan');
-    });
-
-    test('kurang 6 aksara → mesej error', () {
-      expect(validatePassword('12345'), 'Kata laluan mesti sekurangnya 6 aksara');
-    });
-
-    test('6+ aksara → null', () {
-      expect(validatePassword('123456'), isNull);
-    });
-  });
-
   group('mapAuthErrorToMessage', () {
     test('invalid_credentials → mesej Melayu', () {
       final e = AuthException('x', code: 'invalid_credentials');
@@ -52,7 +21,8 @@ void main() {
 
     test('weak_password → mesej Melayu', () {
       final e = AuthException('x', code: 'weak_password');
-      expect(mapAuthErrorToMessage(e), 'Kata laluan terlalu lemah (minimum 6 aksara)');
+      expect(mapAuthErrorToMessage(e),
+          'Kata laluan terlalu lemah (minimum 6 aksara)');
     });
 
     test('kod tidak diketahui → fallback ke mesej asal', () {

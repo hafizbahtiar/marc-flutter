@@ -1,28 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Validator email — null = sah.
-String? validateEmail(String? value) {
-  if (value == null || value.trim().isEmpty) {
-    return 'Email diperlukan';
-  }
-  final regex = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
-  if (!regex.hasMatch(value.trim())) {
-    return 'Format email tidak sah';
-  }
-  return null;
-}
-
-/// Validator kata laluan — null = sah.
-String? validatePassword(String? value) {
-  if (value == null || value.isEmpty) {
-    return 'Kata laluan diperlukan';
-  }
-  if (value.length < 6) {
-    return 'Kata laluan mesti sekurangnya 6 aksara';
-  }
-  return null;
-}
-
 /// Petik AuthException ke mesej Melayu mesra.
 String mapAuthErrorToMessage(AuthException e) {
   switch (e.code) {
@@ -50,7 +27,7 @@ class AuthResult {
 /// Wrapper sekitar Supabase Auth. Boleh inject `SupabaseClient` untuk testing.
 class AuthService {
   AuthService([SupabaseClient? client])
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
   final SupabaseClient _client;
 
   Future<AuthResult> signIn(String email, String password) async {
@@ -60,7 +37,10 @@ class AuthService {
     } on AuthException catch (e) {
       return AuthResult(success: false, error: mapAuthErrorToMessage(e));
     } on Exception catch (_) {
-      return const AuthResult(success: false, error: 'Sambungan gagal. Semak internet anda');
+      return const AuthResult(
+        success: false,
+        error: 'Sambungan gagal. Semak internet anda',
+      );
     }
   }
 
@@ -71,7 +51,10 @@ class AuthService {
     } on AuthException catch (e) {
       return AuthResult(success: false, error: mapAuthErrorToMessage(e));
     } on Exception catch (_) {
-      return const AuthResult(success: false, error: 'Sambungan gagal. Semak internet anda');
+      return const AuthResult(
+        success: false,
+        error: 'Sambungan gagal. Semak internet anda',
+      );
     }
   }
 

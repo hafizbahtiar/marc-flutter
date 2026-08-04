@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class AuthTextField extends StatefulWidget {
-  const AuthTextField({
+class AuthField extends StatefulWidget {
+  const AuthField({
     super.key,
     required this.controller,
     required this.label,
-    required this.icon,
+    this.icon,
     this.obscureText = false,
     this.keyboardType,
     this.validator,
@@ -13,44 +13,40 @@ class AuthTextField extends StatefulWidget {
 
   final TextEditingController controller;
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final bool obscureText;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
 
   @override
-  State<AuthTextField> createState() => _AuthTextFieldState();
+  State<AuthField> createState() => _AuthFieldState();
 }
 
-class _AuthTextFieldState extends State<AuthTextField> {
+class _AuthFieldState extends State<AuthField> {
   late bool _obscure = widget.obscureText;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
+      obscureText: _obscure,
+      keyboardType: widget.keyboardType,
+      validator: widget.validator,
       decoration: InputDecoration(
         labelText: widget.label,
-        prefixIcon: Icon(widget.icon),
-        border: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        prefixIcon: widget.icon == null ? null : Icon(widget.icon, size: 20),
         suffixIcon: widget.obscureText
             ? IconButton(
                 icon: Icon(
-                  _obscure ? Icons.visibility : Icons.visibility_off,
+                  _obscure
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  size: 20,
                 ),
                 onPressed: () => setState(() => _obscure = !_obscure),
               )
             : null,
       ),
-      obscureText: _obscure,
-      keyboardType: widget.keyboardType,
-      validator: widget.validator,
     );
   }
 }
