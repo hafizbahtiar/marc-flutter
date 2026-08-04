@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:marc_flutter/app/theme.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
 import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
 
@@ -10,28 +9,27 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(myProfileProvider);
-    final name = profile.valueOrNull?.displayName;
+    final p = profile.valueOrNull;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Utama')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
           children: [
             const VerifyEmailBanner(),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Text(
-              name == null ? 'Selamat datang' : 'Hai, $name',
+              'SELAMAT DATANG',
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              p?.displayName == null ? 'Ahli MARC' : p!.displayName!,
               style: Theme.of(context).textTheme.displaySmall,
             ),
-            const SizedBox(height: 32),
-            _MemberIdCard(
-              child: profile.when(
-                loading: () => const _MemberIdText(value: '…'),
-                error: (_, _) => const _MemberIdText(value: '—'),
-                data: (p) => _MemberIdText(value: p?.memberId ?? '—'),
-              ),
-            ),
+            const SizedBox(height: 28),
+            _MemberCard(memberId: p?.memberId),
           ],
         ),
       ),
@@ -39,50 +37,47 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-class _MemberIdCard extends StatelessWidget {
-  const _MemberIdCard({required this.child});
+class _MemberCard extends StatelessWidget {
+  const _MemberCard({required this.memberId});
 
-  final Widget child;
+  final String? memberId;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppColors.fieldFill,
-        borderRadius: BorderRadius.circular(16),
+        color: scheme.primary,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Icon(Icons.badge_outlined,
+                  size: 18, color: scheme.onPrimary.withValues(alpha: 0.8)),
+              const SizedBox(width: 8),
+              Text(
+                'NO. AHLI',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onPrimary.withValues(alpha: 0.8),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           Text(
-            'NO. AHLI',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.muted,
-                  letterSpacing: 1.5,
+            memberId ?? '—',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: scheme.onPrimary,
+                  letterSpacing: 0.5,
                 ),
           ),
-          const SizedBox(height: 6),
-          child,
         ],
       ),
-    );
-  }
-}
-
-class _MemberIdText extends StatelessWidget {
-  const _MemberIdText({required this.value});
-
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: AppColors.accentDark,
-          ),
     );
   }
 }

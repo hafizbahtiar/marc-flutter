@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/app/theme.dart';
 import 'package:marc_flutter/features/auth/auth_providers.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
 import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
@@ -12,9 +11,12 @@ class ProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     final email = Supabase.instance.client.auth.currentUser?.email ?? '';
     final profile = ref.watch(myProfileProvider);
     final p = profile.valueOrNull;
+
+    final verified = p?.emailVerified ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -29,46 +31,39 @@ class ProfilePage extends ConsumerWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
           children: [
             const VerifyEmailBanner(),
-            const SizedBox(height: 24),
-            Text(
-              p?.displayName ?? '(Tiada nama)',
-              style: Theme.of(context).textTheme.displaySmall,
+            const SizedBox(height: 16),
+            _Header(
+              name: p?.displayName,
+              roleName: p?.roleName,
+              isManagement: p?.isManagement ?? false,
             ),
-            const SizedBox(height: 6),
-            if (p != null) _RoleChip(name: p.roleName, category: p.category),
             const SizedBox(height: 28),
-            _Field(label: 'EMAIL', value: email),
-            const SizedBox(height: 20),
-            _Field(label: 'NO. TELEFON', value: p?.phone ?? '—'),
-            const SizedBox(height: 20),
-            _Field(label: 'NO. AHLI', value: p?.memberId ?? '—'),
-            const SizedBox(height: 20),
-            _Field(
-              label: 'STATUS EMAIL',
-              value: switch (profile) {
-                AsyncData(:final value) =>
-                  (value?.emailVerified ?? false)
-                      ? 'Disahkan'
-                      : 'Belum disahkan',
-                AsyncError() => '—',
-                _ => '…',
-              },
-              valueColor: (p?.emailVerified ?? false)
-                  ? AppColors.accentDark
-                  : AppColors.warning,
+            _InfoCard(
+              children: [
+                _InfoRow(label: 'Email', value: email),
+                _InfoRow(label: 'No. telefon', value: p?.phone ?? '—'),
+                _InfoRow(label: 'No. ahli', value: p?.memberId ?? '—'),
+                _InfoRow(
+                  label: 'Status email',
+                  value: verified ? 'Disahkan' : 'Belum disahkan',
+                  valueColor: verified ? scheme.primary : const Color(0xFF8A5A00),
+                ),
+              ],
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             OutlinedButton.icon(
               onPressed: () => ref.read(authServiceProvider).signOut(),
-              icon: const Icon(Icons.logout),
+              icon: const Icon(Icons.logout, size: 20),
               label: const Text('Log keluar'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
+                foregroundColor: scheme.error,
                 minimumSize: const Size.fromHeight(52),
-                side: const BorderSide(color: AppColors.error),
+                side: BorderSide(color: scheme.error.withValues(alpha: 0.5)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -78,40 +73,103 @@ class ProfilePage extends ConsumerWidget {
   }
 }
 
-class _RoleChip extends StatelessWidget {
-  const _RoleChip({required this.name, required this.category});
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.name,
+    required this.roleName,
+    required this.isManagement,
+  });
 
-  final String name;
-  final String category;
+  final String? name;
+  final String? roleName;
+  final bool isManagement;
 
   @override
   Widget build(BuildContext context) {
-    final isManagement = category == 'management';
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isManagement
-              ? AppColors.accent.withValues(alpha: 0.12)
-              : AppColors.fieldFill,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          name,
-          style: TextStyle(
-            color: isManagement ? AppColors.accentDark : AppColors.muted,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
+    final scheme = Theme.of(context).colorScheme;
+    final initial =
+        (name?.isNotEmpty ?? false) ? name![0].toUpperCase() : '?';
+
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 30,
+          backgroundColor: scheme.primary.withValues(alpha: 0.12),
+          child: Text(
+            initial,
+            style: TextStyle(
+              color: scheme.primary,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name ?? '(Tiada nama)',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 6),
+              if (roleName != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isManagement
+                        ? scheme.primary.withValues(alpha: 0.12)
+                        : scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    roleName!,
+                    style: TextStyle(
+                      color: isManagement
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
+            children[i],
+          ],
+        ],
       ),
     );
   }
 }
 
-class _Field extends StatelessWidget {
-  const _Field({required this.label, required this.value, this.valueColor});
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value, this.valueColor});
 
   final String label;
   final String value;
@@ -119,24 +177,31 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.muted,
-            letterSpacing: 1.5,
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: scheme.onSurfaceVariant),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(color: valueColor ?? AppColors.ink),
-        ),
-      ],
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: valueColor ?? scheme.onSurface,
+                  ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -125,38 +125,3 @@ final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
       .toList();
 });
 
-final emailVerificationProvider =
-    Provider<EmailVerification>((ref) => EmailVerification(ref));
-
-/// Aliran pengesahan email diuruskan sendiri menggunakan OTP email Supabase.
-/// Nota: "soft nudge" UX, bukan gate keselamatan.
-class EmailVerification {
-  EmailVerification(this._ref);
-
-  final Ref _ref;
-  SupabaseClient get _client => Supabase.instance.client;
-
-  String? get emailForDisplay => _client.auth.currentUser?.email;
-
-  Future<void> sendCode() async {
-    final email = _client.auth.currentUser?.email;
-    if (email == null) {
-      throw const AuthException('Tiada email untuk disahkan');
-    }
-    await _client.auth.signInWithOtp(email: email, shouldCreateUser: false);
-  }
-
-  Future<void> verifyCode(String token) async {
-    final email = _client.auth.currentUser?.email;
-    if (email == null) {
-      throw const AuthException('Tiada email untuk disahkan');
-    }
-    await _client.auth.verifyOTP(
-      type: OtpType.email,
-      email: email,
-      token: token.trim(),
-    );
-    await _client.rpc('mark_email_verified');
-    _ref.invalidate(myProfileProvider);
-  }
-}

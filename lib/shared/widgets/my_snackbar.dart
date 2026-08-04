@@ -20,6 +20,8 @@ class MySnackBar {
     SnackBarAction? action,
   }) {
     final scheme = Theme.of(context).colorScheme;
+    // Background = inverseSurface (gelap), jadi foreground = onInverseSurface.
+    final fg = foreground ?? scheme.onInverseSurface;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -27,14 +29,11 @@ class MySnackBar {
           content: Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 18, color: foreground ?? scheme.onSurface),
+                Icon(icon, size: 18, color: fg),
                 const SizedBox(width: 10),
               ],
               Expanded(
-                child: Text(
-                  message,
-                  style: TextStyle(color: foreground ?? scheme.onSurface),
-                ),
+                child: Text(message, style: TextStyle(color: fg)),
               ),
             ],
           ),
