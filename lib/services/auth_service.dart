@@ -39,3 +39,41 @@ String mapAuthErrorToMessage(AuthException e) {
       return e.message;
   }
 }
+
+/// Hasil operasi auth. `error` null kalau berjaya.
+class AuthResult {
+  const AuthResult({required this.success, this.error});
+  final bool success;
+  final String? error;
+}
+
+/// Wrapper sekitar Supabase Auth. Boleh inject `SupabaseClient` untuk testing.
+class AuthService {
+  AuthService([SupabaseClient? client])
+      : _client = client ?? Supabase.instance.client;
+  final SupabaseClient _client;
+
+  Future<AuthResult> signIn(String email, String password) async {
+    try {
+      await _client.auth.signInWithPassword(email: email, password: password);
+      return const AuthResult(success: true);
+    } on AuthException catch (e) {
+      return AuthResult(success: false, error: mapAuthErrorToMessage(e));
+    } on Exception catch (_) {
+      return const AuthResult(success: false, error: 'Sambungan gagal. Semak internet anda');
+    }
+  }
+
+  Future<AuthResult> signUp(String email, String password) async {
+    try {
+      await _client.auth.signUp(email: email, password: password);
+      return const AuthResult(success: true);
+    } on AuthException catch (e) {
+      return AuthResult(success: false, error: mapAuthErrorToMessage(e));
+    } on Exception catch (_) {
+      return const AuthResult(success: false, error: 'Sambungan gagal. Semak internet anda');
+    }
+  }
+
+  Future<void> signOut() => _client.auth.signOut();
+}
