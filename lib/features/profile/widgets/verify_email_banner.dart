@@ -20,6 +20,7 @@ class VerifyEmailBanner extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
       decoration: BoxDecoration(
         color: AppColors.warningBg,

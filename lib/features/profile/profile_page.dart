@@ -34,10 +34,8 @@ class ProfilePage extends ConsumerWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
           children: [
-            const VerifyEmailBanner(),
-            const SizedBox(height: 16),
             Skeletonizer(
               enabled: loading,
               child: _Header(
@@ -47,6 +45,7 @@ class ProfilePage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 28),
+            const VerifyEmailBanner(),
             Skeletonizer(
               enabled: loading,
               child: _InfoCard(

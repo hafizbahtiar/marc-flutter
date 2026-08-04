@@ -17,10 +17,8 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Utama')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
           children: [
-            const VerifyEmailBanner(),
-            const SizedBox(height: 16),
             Text(
               'SELAMAT DATANG',
               style: Theme.of(context).textTheme.labelSmall,
@@ -40,6 +38,8 @@ class HomePage extends ConsumerWidget {
                 memberId: p?.memberId ?? 'MARC2026/08/0000',
               ),
             ),
+            const SizedBox(height: 20),
+            const VerifyEmailBanner(),
           ],
         ),
       ),
