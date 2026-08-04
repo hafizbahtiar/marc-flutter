@@ -9,6 +9,8 @@ class AppColors {
   static const error = Color(0xFFB3261E);
   static const fieldFill = Color(0xFFF1EFEA);
   static const muted = Color(0xFF6B6B6B);
+  static const warning = Color(0xFF8A5A00);
+  static const warningBg = Color(0xFFFBEFD3);
 }
 
 class AppTheme {

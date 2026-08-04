@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:marc_flutter/app/theme.dart';
 import 'package:marc_flutter/features/auth/auth_providers.dart';
 import 'package:marc_flutter/features/profile/profile_providers.dart';
+import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -17,6 +19,11 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         actions: [
           IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Profil',
+            onPressed: () => context.push('/profile'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Log keluar',
             onPressed: () => ref.read(authServiceProvider).signOut(),
@@ -24,27 +31,26 @@ class HomePage extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Anda telah log masuk',
-                style: Theme.of(context).textTheme.displaySmall,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
+          children: [
+            const VerifyEmailBanner(),
+            const SizedBox(height: 24),
+            Text(
+              'Anda telah log masuk',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+            const SizedBox(height: 8),
+            Text(email, style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 32),
+            _MemberIdCard(
+              child: profile.when(
+                loading: () => const _MemberIdText(value: '…'),
+                error: (_, _) => const _MemberIdText(value: '—'),
+                data: (p) => _MemberIdText(value: p?.memberId ?? '—'),
               ),
-              const SizedBox(height: 8),
-              Text(email, style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 32),
-              _MemberIdCard(
-                child: profile.when(
-                  loading: () => const _MemberIdText(value: '…'),
-                  error: (_, _) => const _MemberIdText(value: '—'),
-                  data: (p) => _MemberIdText(value: p?.memberId ?? '—'),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:marc_flutter/features/auth/login_page.dart';
 import 'package:marc_flutter/features/auth/register_page.dart';
 import 'package:marc_flutter/features/home/home_page.dart';
+import 'package:marc_flutter/features/profile/profile_page.dart';
 
 /// Adapter: dengar Stream, notify GoRouter untuk refresh redirect.
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -23,8 +24,9 @@ class GoRouterRefreshStream extends ChangeNotifier {
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final refresh =
-      GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange);
+  final refresh = GoRouterRefreshStream(
+    Supabase.instance.client.auth.onAuthStateChange,
+  );
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
@@ -35,13 +37,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
       final onAuthPage = loc == '/login' || loc == '/register';
       if (loggedIn && onAuthPage) return '/home';
-      if (!loggedIn && loc == '/home') return '/login';
+      if (!loggedIn && !onAuthPage) return '/login';
       return null;
     },
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterPage()),
       GoRoute(path: '/home', builder: (_, _) => const HomePage()),
+      GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
     ],
   );
 });
