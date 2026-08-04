@@ -37,19 +37,19 @@ class Profile {
   }
 }
 
-/// Profil user semasa. Dimuat semula bila auth berubah / selepas edit.
+/// Profil user semasa. Reaktif pada user id dari auth state — jadi ia
+/// re-fetch sebaik sahaja sesi wujud (tak perlu hot restart).
 final myProfileProvider = FutureProvider<Profile?>((ref) async {
-  ref.watch(authStateProvider);
+  final userId = ref.watch(
+    authStateProvider.select((s) => s.valueOrNull?.session?.user.id),
+  );
+  if (userId == null) return null;
 
-  final client = Supabase.instance.client;
-  final user = client.auth.currentUser;
-  if (user == null) return null;
-
-  final data = await client
+  final data = await Supabase.instance.client
       .from('profiles')
       .select('member_id, email_verified, display_name, phone, '
           'roles(key, name, category)')
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle();
 
   if (data == null) return null;
@@ -110,12 +110,12 @@ class MemberRow {
 /// Senarai ahli. RLS tentukan siapa nampak apa:
 /// management → semua; ahli biasa → diri sendiri sahaja.
 final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
-  ref.watch(authStateProvider);
+  final userId = ref.watch(
+    authStateProvider.select((s) => s.valueOrNull?.session?.user.id),
+  );
+  if (userId == null) return const [];
 
-  final client = Supabase.instance.client;
-  if (client.auth.currentUser == null) return const [];
-
-  final data = await client
+  final data = await Supabase.instance.client
       .from('profiles')
       .select('member_id, display_name, roles(name, category)')
       .order('member_id');
