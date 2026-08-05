@@ -52,8 +52,9 @@ final myProfileProvider = FutureProvider<Profile?>((ref) async {
   return Profile.fromJson(res.data as Map<String, dynamic>);
 });
 
-final profileRepositoryProvider =
-    Provider<ProfileRepository>((ref) => ProfileRepository(ref));
+final profileRepositoryProvider = Provider<ProfileRepository>(
+  (ref) => ProfileRepository(ref),
+);
 
 class ProfileRepository {
   ProfileRepository(this._ref);
@@ -65,12 +66,13 @@ class ProfileRepository {
     required String phone,
   }) async {
     final dio = _ref.read(dioProvider);
-    await dio.patch('/me', data: {
-      'display_name': displayName,
-      'phone': phone,
-    });
+    await dio.patch('/me', data: {'display_name': displayName, 'phone': phone});
 
     _ref.invalidate(myProfileProvider);
+    // membersProvider papar display_name yang sama — tanpa invalidate ni,
+    // tab Ahli kekal papar nama lama sampai logout/restart (non-autoDispose,
+    // cuma recompute bila isLoggedIn berubah).
+    _ref.invalidate(membersProvider);
   }
 }
 

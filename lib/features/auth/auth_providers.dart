@@ -2,12 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/auth/auth_service.dart';
+import 'package:marc/features/notifications/push_service.dart';
 
 final authServiceProvider = Provider<AuthService>(
   (ref) => AuthService(
     ref.watch(dioProvider),
     ref.watch(authNotifierProvider.notifier),
     ref.watch(tokenStorageProvider),
+    ref.watch(pushServiceProvider),
   ),
 );
 

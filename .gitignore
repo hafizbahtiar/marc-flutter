@@ -46,6 +46,7 @@ app.*.map.json
 
 # Env
 .env
+.env.staging
 
 # Build artifacts (output setup.sh)
 /apk/

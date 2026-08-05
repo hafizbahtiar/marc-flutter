@@ -24,24 +24,62 @@ class HomePage extends ConsumerWidget {
               style: Theme.of(context).textTheme.labelSmall,
             ),
             const SizedBox(height: 6),
-            Skeletonizer(
-              enabled: loading,
-              child: Text(
-                p?.displayName ?? 'Ahli MARC',
-                style: Theme.of(context).textTheme.displaySmall,
+            if (profile.hasError)
+              _ProfileErrorCard(
+                onRetry: () => ref.invalidate(myProfileProvider),
+              )
+            else ...[
+              Skeletonizer(
+                enabled: loading,
+                child: Text(
+                  p?.displayName ?? 'Ahli MARC',
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
               ),
-            ),
-            const SizedBox(height: 28),
-            Skeletonizer(
-              enabled: loading,
-              child: _MemberCard(
-                memberId: p?.memberId ?? 'MARC2026/08/0000',
+              const SizedBox(height: 28),
+              Skeletonizer(
+                enabled: loading,
+                child: _MemberCard(memberId: p?.memberId ?? 'MARC2026/08/0000'),
               ),
-            ),
+            ],
             const SizedBox(height: 20),
             const VerifyEmailBanner(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileErrorCard extends StatelessWidget {
+  const _ProfileErrorCard({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: scheme.onErrorContainer),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Gagal muat profil.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onErrorContainer),
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: const Text('Cuba lagi')),
+        ],
       ),
     );
   }
@@ -67,14 +105,17 @@ class _MemberCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.badge_outlined,
-                  size: 18, color: scheme.onPrimary.withValues(alpha: 0.8)),
+              Icon(
+                Icons.badge_outlined,
+                size: 18,
+                color: scheme.onPrimary.withValues(alpha: 0.8),
+              ),
               const SizedBox(width: 8),
               Text(
                 'NO. AHLI',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onPrimary.withValues(alpha: 0.8),
-                    ),
+                  color: scheme.onPrimary.withValues(alpha: 0.8),
+                ),
               ),
             ],
           ),
@@ -82,9 +123,9 @@ class _MemberCard extends StatelessWidget {
           Text(
             memberId,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: scheme.onPrimary,
-                  letterSpacing: 0.5,
-                ),
+              color: scheme.onPrimary,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),

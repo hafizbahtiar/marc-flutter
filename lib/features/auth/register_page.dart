@@ -33,8 +33,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         .submit(_email.text.trim(), _password.text);
     if (!mounted) return;
     if (ok) {
+      // Tak perlu context.pop() — signUp() dah setTokens(), authNotifier
+      // punya isLoggedIn jadi true, router punya redirect auto navigate
+      // ke /home terus. pop() manual di sini boleh clash dengan redirect
+      // tu (dua-dua cuba navigate serentak lepas state auth berubah).
       MySnackBar.success(context, 'Pendaftaran berjaya.');
-      context.pop();
     }
   }
 

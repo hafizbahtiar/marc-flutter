@@ -18,6 +18,12 @@ class MembersPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final members = ref.watch(membersProvider);
 
+    // Await refresh betul-betul sampai data baru sedia, bukan sekadar
+    // trigger invalidate — kalau tidak, spinner RefreshIndicator hilang
+    // serta-merta sementara list flip ke skeleton (invalidate() pulang
+    // segera, tak tunggu fetch baru siap).
+    Future<void> onRefresh() => ref.refresh(membersProvider.future);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Ahli')),
       body: SafeArea(
@@ -26,21 +32,48 @@ class MembersPage extends ConsumerWidget {
             enabled: true,
             child: _MemberList(rows: List.filled(6, _placeholderRow)),
           ),
-          error: (e, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(28),
-              child: Text(
-                'Gagal memuat senarai ahli.',
-                textAlign: TextAlign.center,
-              ),
+          error: (e, _) => RefreshIndicator.adaptive(
+            onRefresh: onRefresh,
+            child: ListView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 80,
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Gagal memuat senarai ahli.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton(
+                        onPressed: () => ref.invalidate(membersProvider),
+                        child: const Text('Cuba lagi'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           data: (rows) {
             if (rows.isEmpty) {
-              return const Center(child: Text('Tiada ahli.'));
+              return RefreshIndicator.adaptive(
+                onRefresh: onRefresh,
+                child: ListView(
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 80),
+                      child: Center(child: Text('Tiada ahli.')),
+                    ),
+                  ],
+                ),
+              );
             }
             return RefreshIndicator.adaptive(
-              onRefresh: () async => ref.invalidate(membersProvider),
+              onRefresh: onRefresh,
               child: _MemberList(rows: rows),
             );
           },

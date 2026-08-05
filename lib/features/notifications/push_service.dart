@@ -26,7 +26,24 @@ class PushService {
     }
   }
 
-  /// Dipanggil bila log keluar.
+  /// Buang pautan device token daripada user semasa di server. **Kena
+  /// panggil SEBELUM sesi di-clear** — lepas `AuthNotifier.clear()`,
+  /// access token dah takde untuk authorize call ni (401). Tak kritikal
+  /// kalau gagal — token lama akan di-overwrite lagipun bila user
+  /// seterusnya upsert dengan onesignal_id yang sama.
+  Future<void> unlinkCurrentDevice() async {
+    final id = OneSignal.User.pushSubscription.id;
+    if (id == null || id.isEmpty) return;
+    if (!_ref.read(authNotifierProvider).isLoggedIn) return;
+
+    try {
+      await _ref.read(dioProvider).delete('/device-tokens/by-onesignal/$id');
+    } catch (_) {}
+  }
+
+  /// Dipanggil bila log keluar (reaktif, selepas sesi clear) — OneSignal
+  /// SDK logout je; unlink server kena dah siap awal via
+  /// [unlinkCurrentDevice] sebelum sesi clear.
   Future<void> onSignedOut() async {
     try {
       await OneSignal.logout();
@@ -51,10 +68,12 @@ class PushService {
     if (!_ref.read(authNotifierProvider).isLoggedIn) return;
 
     try {
-      await _ref.read(dioProvider).post('/device-tokens', data: {
-        'onesignal_id': id,
-        'platform': defaultTargetPlatform.name,
-      });
+      await _ref
+          .read(dioProvider)
+          .post(
+            '/device-tokens',
+            data: {'onesignal_id': id, 'platform': defaultTargetPlatform.name},
+          );
     } catch (_) {
       // Gagal simpan token — tak kritikal, cuba lagi bila observer trigger semula.
     }

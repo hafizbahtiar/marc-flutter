@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/token_storage.dart';
+import 'package:marc/features/notifications/push_service.dart';
 
 /// Hasil operasi auth. `error` null kalau berjaya.
 class AuthResult {
@@ -21,11 +24,17 @@ String extractErrorMessage(DioException e) {
 
 /// Wrapper sekitar API auth backend Go (gantian Supabase Auth).
 class AuthService {
-  AuthService(this._dio, this._authNotifier, this._tokenStorage);
+  AuthService(
+    this._dio,
+    this._authNotifier,
+    this._tokenStorage,
+    this._pushService,
+  );
 
   final Dio _dio;
   final AuthNotifier _authNotifier;
   final TokenStorage _tokenStorage;
+  final PushService _pushService;
 
   Future<AuthResult> signIn(String email, String password) async {
     try {
@@ -44,7 +53,10 @@ class AuthService {
       // Ralat luar Dio (cth: .env tak dimuat, API_BASE_URL hilang) —
       // pastikan controller tetap dapat AsyncError, bukan throw tak
       // tertangkap yang buat butang submit stuck loading selama-lamanya.
-      return const AuthResult(success: false, error: 'Ralat tidak dijangka. Cuba lagi.');
+      return const AuthResult(
+        success: false,
+        error: 'Ralat tidak dijangka. Cuba lagi.',
+      );
     }
   }
 
@@ -62,19 +74,33 @@ class AuthService {
     } on DioException catch (e) {
       return AuthResult(success: false, error: extractErrorMessage(e));
     } catch (_) {
-      return const AuthResult(success: false, error: 'Ralat tidak dijangka. Cuba lagi.');
+      return const AuthResult(
+        success: false,
+        error: 'Ralat tidak dijangka. Cuba lagi.',
+      );
     }
   }
 
+  /// Clear sesi tempatan SERTA-MERTA (router redirect ke /login jadi
+  /// responsif), lepas tu baru cuba revoke refresh token di server dalam
+  /// latar belakang — tak `await`, supaya butang "Log keluar" tak nampak
+  /// mati bertahun-tahun kalau network perlahan/timeout.
   Future<void> signOut() async {
     final refresh = await _tokenStorage.readRefreshToken();
-    if (refresh != null) {
-      try {
-        await _dio.post('/auth/logout', data: {'refresh_token': refresh});
-      } catch (_) {
-        // Tak kisah kalau gagal revoke di server — clear sesi lokal tetap jalan.
-      }
-    }
+    // Kena sebelum clear() — lepas clear, access token dah takde utk
+    // authorize call unlink ni.
+    await _pushService.unlinkCurrentDevice();
     await _authNotifier.clear();
+
+    if (refresh != null) {
+      unawaited(
+        _dio.post('/auth/logout', data: {'refresh_token': refresh}).catchError((
+          _,
+        ) {
+          // Tak kisah kalau gagal revoke di server — sesi lokal dah clear.
+          return Response(requestOptions: RequestOptions());
+        }),
+      );
+    }
   }
 }

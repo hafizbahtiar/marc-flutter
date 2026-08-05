@@ -5,7 +5,12 @@ import 'package:marc/core/auth_state.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
-    BaseOptions(baseUrl: dotenv.get('API_BASE_URL')),
+    BaseOptions(
+      baseUrl: dotenv.get('API_BASE_URL'),
+      connectTimeout: const Duration(seconds: 12),
+      sendTimeout: const Duration(seconds: 12),
+      receiveTimeout: const Duration(seconds: 12),
+    ),
   );
   dio.interceptors.add(_AuthInterceptor(ref, dio));
   return dio;
@@ -39,6 +44,13 @@ class _AuthInterceptor extends Interceptor {
   /// terpisah akan gagal (token dah dipadam oleh refresh pertama) dan
   /// tersalah anggap sesi luput terus.
   Future<bool>? _refreshing;
+
+  /// Sama ada `_tryRefresh` terakhir gagal sebab server TOLAK refresh
+  /// token tu (401 — memang tak sah/luput), berbanding sekadar gagal
+  /// sambung (timeout/offline/5xx). Cuma clear sesi untuk kes pertama —
+  /// internet terputus sekejap tak patut log keluar user yang refresh
+  /// token dia sebenarnya masih sah.
+  bool _lastRefreshRejected = false;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -86,7 +98,9 @@ class _AuthInterceptor extends Interceptor {
         await _retryWithToken(opts, current.accessToken!, handler);
         return;
       }
-      await _ref.read(authNotifierProvider.notifier).clear();
+      if (_lastRefreshRejected) {
+        await _ref.read(authNotifierProvider.notifier).clear();
+      }
       handler.next(err);
       return;
     }
@@ -117,19 +131,30 @@ class _AuthInterceptor extends Interceptor {
   Future<bool> _tryRefresh() async {
     final storage = _ref.read(tokenStorageProvider);
     final refreshToken = await storage.readRefreshToken();
-    if (refreshToken == null) return false;
+    if (refreshToken == null) {
+      // Tiada refresh token langsung tersimpan — sesi memang tak sah,
+      // bukan sekadar gagal sambung.
+      _lastRefreshRejected = true;
+      return false;
+    }
 
     try {
       final response = await _dio.post(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
       );
-      await _ref.read(authNotifierProvider.notifier).setTokens(
+      await _ref
+          .read(authNotifierProvider.notifier)
+          .setTokens(
             access: response.data['access_token'] as String,
             refresh: response.data['refresh_token'] as String,
           );
       return true;
-    } on DioException {
+    } on DioException catch (e) {
+      // 401 = server tolak refresh token (memang tak sah/luput/dah
+      // dipakai). Selain tu (timeout, offline, 5xx) = gagal sambung —
+      // refresh token masih boleh sah, cuma belum sempat dipakai.
+      _lastRefreshRejected = e.response?.statusCode == 401;
       return false;
     }
   }

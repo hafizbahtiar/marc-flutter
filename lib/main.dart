@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,9 +30,7 @@ Future<void> main() async {
     // upgrade OS) — anggap logged out, biar user login semula.
   }
 
-  runApp(
-    UncontrolledProviderScope(container: container, child: const MyApp()),
-  );
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -44,6 +44,10 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget — prompt OS boleh block indefinitely kalau user
+    // backgroundkan app sebelum jawab, jadi jangan await sebelum UI
+    // pertama render (lihat komen initOneSignal()).
+    unawaited(requestNotificationPermission());
     ref.read(pushServiceProvider).startObserving();
 
     final initial = ref.read(authNotifierProvider);
