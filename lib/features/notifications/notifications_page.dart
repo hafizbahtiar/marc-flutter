@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marc_flutter/app/theme.dart';
+import 'package:marc/app/theme.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});

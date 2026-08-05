@@ -1,21 +1,6 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-/// Petik AuthException ke mesej Melayu mesra.
-String mapAuthErrorToMessage(AuthException e) {
-  switch (e.code) {
-    case 'invalid_credentials':
-      return 'Email atau kata laluan salah';
-    case 'email_not_confirmed':
-      return 'Sila sahkan email anda dahulu';
-    case 'user_already_exists':
-    case 'email_exists':
-      return 'Email ini sudah berdaftar';
-    case 'weak_password':
-      return 'Kata laluan terlalu lemah (minimum 6 aksara)';
-    default:
-      return e.message;
-  }
-}
+import 'package:dio/dio.dart';
+import 'package:marc/core/auth_state.dart';
+import 'package:marc/core/token_storage.dart';
 
 /// Hasil operasi auth. `error` null kalau berjaya.
 class AuthResult {
@@ -24,39 +9,72 @@ class AuthResult {
   final String? error;
 }
 
-/// Wrapper sekitar Supabase Auth. Boleh inject `SupabaseClient` untuk testing.
+/// Petik ralat dari response backend Go (`{"error": "..."}` dalam
+/// Bahasa Melayu) ke mesej mesra. Fallback kalau tiada sambungan.
+String extractErrorMessage(DioException e) {
+  final data = e.response?.data;
+  if (data is Map && data['error'] is String) {
+    return data['error'] as String;
+  }
+  return 'Sambungan gagal. Semak internet anda';
+}
+
+/// Wrapper sekitar API auth backend Go (gantian Supabase Auth).
 class AuthService {
-  AuthService([SupabaseClient? client])
-    : _client = client ?? Supabase.instance.client;
-  final SupabaseClient _client;
+  AuthService(this._dio, this._authNotifier, this._tokenStorage);
+
+  final Dio _dio;
+  final AuthNotifier _authNotifier;
+  final TokenStorage _tokenStorage;
 
   Future<AuthResult> signIn(String email, String password) async {
     try {
-      await _client.auth.signInWithPassword(email: email, password: password);
-      return const AuthResult(success: true);
-    } on AuthException catch (e) {
-      return AuthResult(success: false, error: mapAuthErrorToMessage(e));
-    } on Exception catch (_) {
-      return const AuthResult(
-        success: false,
-        error: 'Sambungan gagal. Semak internet anda',
+      final res = await _dio.post(
+        '/auth/login',
+        data: {'email': email, 'password': password},
       );
+      await _authNotifier.setTokens(
+        access: res.data['access_token'] as String,
+        refresh: res.data['refresh_token'] as String,
+      );
+      return const AuthResult(success: true);
+    } on DioException catch (e) {
+      return AuthResult(success: false, error: extractErrorMessage(e));
+    } catch (_) {
+      // Ralat luar Dio (cth: .env tak dimuat, API_BASE_URL hilang) —
+      // pastikan controller tetap dapat AsyncError, bukan throw tak
+      // tertangkap yang buat butang submit stuck loading selama-lamanya.
+      return const AuthResult(success: false, error: 'Ralat tidak dijangka. Cuba lagi.');
     }
   }
 
   Future<AuthResult> signUp(String email, String password) async {
     try {
-      await _client.auth.signUp(email: email, password: password);
-      return const AuthResult(success: true);
-    } on AuthException catch (e) {
-      return AuthResult(success: false, error: mapAuthErrorToMessage(e));
-    } on Exception catch (_) {
-      return const AuthResult(
-        success: false,
-        error: 'Sambungan gagal. Semak internet anda',
+      final res = await _dio.post(
+        '/auth/register',
+        data: {'email': email, 'password': password},
       );
+      await _authNotifier.setTokens(
+        access: res.data['access_token'] as String,
+        refresh: res.data['refresh_token'] as String,
+      );
+      return const AuthResult(success: true);
+    } on DioException catch (e) {
+      return AuthResult(success: false, error: extractErrorMessage(e));
+    } catch (_) {
+      return const AuthResult(success: false, error: 'Ralat tidak dijangka. Cuba lagi.');
     }
   }
 
-  Future<void> signOut() => _client.auth.signOut();
+  Future<void> signOut() async {
+    final refresh = await _tokenStorage.readRefreshToken();
+    if (refresh != null) {
+      try {
+        await _dio.post('/auth/logout', data: {'refresh_token': refresh});
+      } catch (_) {
+        // Tak kisah kalau gagal revoke di server — clear sesi lokal tetap jalan.
+      }
+    }
+    await _authNotifier.clear();
+  }
 }

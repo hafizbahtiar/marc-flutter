@@ -124,7 +124,7 @@ git commit -m "chore: setup flutter_dotenv & env config untuk Supabase"
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc_flutter/widgets/auth_text_field.dart';
+import 'package:marc/widgets/auth_text_field.dart';
 
 void main() {
   testWidgets('toggle obscure bila butang mata ditekan', (tester) async {
@@ -263,7 +263,7 @@ git commit -m "feat: tambah AuthTextField widget dengan toggle obscure"
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/services/auth_service.dart';
+import 'package:marc/services/auth_service.dart';
 
 void main() {
   group('validateEmail', () {
@@ -477,8 +477,8 @@ git commit -m "feat: AuthService wrapper untuk signIn/signUp/signOut"
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:marc_flutter/services/auth_service.dart';
-import 'package:marc_flutter/widgets/auth_text_field.dart';
+import 'package:marc/services/auth_service.dart';
+import 'package:marc/widgets/auth_text_field.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, this.onRegisterTap});
@@ -609,8 +609,8 @@ git commit -m "feat: halaman log masuk"
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:marc_flutter/services/auth_service.dart';
-import 'package:marc_flutter/widgets/auth_text_field.dart';
+import 'package:marc/services/auth_service.dart';
+import 'package:marc/widgets/auth_text_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key, this.onLoginTap});
@@ -800,9 +800,9 @@ class HomePage extends StatelessWidget {
 ```dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/pages/home_page.dart';
-import 'package:marc_flutter/pages/login_page.dart';
-import 'package:marc_flutter/pages/register_page.dart';
+import 'package:marc/pages/home_page.dart';
+import 'package:marc/pages/login_page.dart';
+import 'package:marc/pages/register_page.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -850,7 +850,7 @@ class AuthGate extends StatelessWidget {
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/pages/auth_gate.dart';
+import 'package:marc/pages/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

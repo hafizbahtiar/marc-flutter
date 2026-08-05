@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:marc_flutter/features/profile/profile_providers.dart';
-import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
+import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/features/profile/widgets/verify_email_banner.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});

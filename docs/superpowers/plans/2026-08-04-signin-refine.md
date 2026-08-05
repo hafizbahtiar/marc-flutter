@@ -61,14 +61,14 @@ git commit -m "chore: add riverpod, go_router, google_fonts"
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `String? validateEmail(String?)`, `String? validatePassword(String?)` from `package:marc_flutter/shared/validators.dart`.
+- Produces: `String? validateEmail(String?)`, `String? validatePassword(String?)` from `package:marc/shared/validators.dart`.
 
 - [ ] **Step 1: Write the failing test**
 
 Create `test/shared/validators_test.dart`:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc_flutter/shared/validators.dart';
+import 'package:marc/shared/validators.dart';
 
 void main() {
   group('validateEmail', () {
@@ -141,7 +141,7 @@ git commit -m "feat: extract auth validators into shared/"
 
 **Interfaces:**
 - Consumes: nothing new.
-- Produces: `AuthService` with `Future<AuthResult> signIn(String,String)`, `Future<AuthResult> signUp(String,String)`, `Future<void> signOut()`; `class AuthResult{bool success; String? error}`; `String mapAuthErrorToMessage(AuthException)` — all from `package:marc_flutter/features/auth/auth_service.dart`.
+- Produces: `AuthService` with `Future<AuthResult> signIn(String,String)`, `Future<AuthResult> signUp(String,String)`, `Future<void> signOut()`; `class AuthResult{bool success; String? error}`; `String mapAuthErrorToMessage(AuthException)` — all from `package:marc/features/auth/auth_service.dart`.
 
 - [ ] **Step 1: Create the moved file (validators removed)**
 
@@ -247,8 +247,8 @@ Create `test/features/auth/login_controller_test.dart`:
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
-import 'package:marc_flutter/features/auth/auth_service.dart';
+import 'package:marc/features/auth/auth_providers.dart';
+import 'package:marc/features/auth/auth_service.dart';
 
 class _FakeAuthService implements AuthService {
   _FakeAuthService(this._result);
@@ -299,7 +299,7 @@ Create `lib/features/auth/auth_providers.dart`:
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/features/auth/auth_service.dart';
+import 'package:marc/features/auth/auth_service.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
@@ -367,7 +367,7 @@ git commit -m "feat: riverpod auth providers + login/register controllers"
 
 **Interfaces:**
 - Consumes: `google_fonts`.
-- Produces: `AppColors` (static consts) and `AppTheme.light` → `ThemeData` from `package:marc_flutter/app/theme.dart`.
+- Produces: `AppColors` (static consts) and `AppTheme.light` → `ThemeData` from `package:marc/app/theme.dart`.
 
 - [ ] **Step 1: Create the theme**
 
@@ -484,7 +484,7 @@ git commit -m "feat: editorial app theme (palette + fraunces/inter)"
 
 **Interfaces:**
 - Consumes: nothing new (uses `InputDecorationTheme`).
-- Produces: `AuthField({required TextEditingController controller, required String label, IconData? icon, bool obscureText, TextInputType? keyboardType, String? Function(String?)? validator})` from `package:marc_flutter/features/auth/widgets/auth_field.dart`.
+- Produces: `AuthField({required TextEditingController controller, required String label, IconData? icon, bool obscureText, TextInputType? keyboardType, String? Function(String?)? validator})` from `package:marc/features/auth/widgets/auth_field.dart`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -492,7 +492,7 @@ Create `test/features/auth/auth_field_test.dart`:
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc_flutter/features/auth/widgets/auth_field.dart';
+import 'package:marc/features/auth/widgets/auth_field.dart';
 
 void main() {
   testWidgets('toggle tunjuk/sembunyi menukar keterlihatan', (tester) async {
@@ -616,9 +616,9 @@ Create `lib/features/auth/login_page.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
-import 'package:marc_flutter/features/auth/widgets/auth_field.dart';
-import 'package:marc_flutter/shared/validators.dart';
+import 'package:marc/features/auth/auth_providers.dart';
+import 'package:marc/features/auth/widgets/auth_field.dart';
+import 'package:marc/shared/validators.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -744,9 +744,9 @@ Create `lib/features/auth/register_page.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
-import 'package:marc_flutter/features/auth/widgets/auth_field.dart';
-import 'package:marc_flutter/shared/validators.dart';
+import 'package:marc/features/auth/auth_providers.dart';
+import 'package:marc/features/auth/widgets/auth_field.dart';
+import 'package:marc/shared/validators.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -911,7 +911,7 @@ Create `lib/features/home/home_page.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
+import 'package:marc/features/auth/auth_providers.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -988,10 +988,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
-import 'package:marc_flutter/features/auth/login_page.dart';
-import 'package:marc_flutter/features/auth/register_page.dart';
-import 'package:marc_flutter/features/home/home_page.dart';
+import 'package:marc/features/auth/auth_providers.dart';
+import 'package:marc/features/auth/login_page.dart';
+import 'package:marc/features/auth/register_page.dart';
+import 'package:marc/features/home/home_page.dart';
 
 /// Adapter: dengar Stream, notify GoRouter untuk refresh redirect.
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -1043,8 +1043,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/app/router.dart';
-import 'package:marc_flutter/app/theme.dart';
+import 'package:marc/app/router.dart';
+import 'package:marc/app/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

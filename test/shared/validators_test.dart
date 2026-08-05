@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc_flutter/shared/validators.dart';
+import 'package:marc/shared/validators.dart';
 
 void main() {
   group('validateEmail', () {

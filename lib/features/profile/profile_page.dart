@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
-import 'package:marc_flutter/features/profile/profile_providers.dart';
-import 'package:marc_flutter/features/profile/widgets/verify_email_banner.dart';
-import 'package:marc_flutter/shared/widgets/confirm_dialog.dart';
+import 'package:marc/features/auth/auth_providers.dart';
+import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/features/profile/widgets/verify_email_banner.dart';
+import 'package:marc/shared/widgets/confirm_dialog.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -14,10 +13,10 @@ class ProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final email = Supabase.instance.client.auth.currentUser?.email ?? '';
     final profile = ref.watch(myProfileProvider);
     final loading = profile.isLoading;
     final p = profile.valueOrNull;
+    final email = p?.email ?? '';
 
     final verified = p?.emailVerified ?? false;
 

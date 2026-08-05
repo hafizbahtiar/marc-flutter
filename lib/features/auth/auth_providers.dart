@@ -1,11 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/features/auth/auth_service.dart';
+import 'package:marc/core/api_client.dart';
+import 'package:marc/core/auth_state.dart';
+import 'package:marc/features/auth/auth_service.dart';
 
-final authServiceProvider = Provider<AuthService>((ref) => AuthService());
-
-final authStateProvider = StreamProvider<AuthState>(
-  (ref) => Supabase.instance.client.auth.onAuthStateChange,
+final authServiceProvider = Provider<AuthService>(
+  (ref) => AuthService(
+    ref.watch(dioProvider),
+    ref.watch(authNotifierProvider.notifier),
+    ref.watch(tokenStorageProvider),
+  ),
 );
 
 class LoginController extends AsyncNotifier<void> {

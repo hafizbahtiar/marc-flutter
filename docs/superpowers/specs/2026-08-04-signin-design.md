@@ -1,7 +1,7 @@
 # Design: Halaman Sign In & Sign Up (Flutter + Supabase)
 
 Tarikh: 2026-08-04
-Projek: `marc_flutter` (Flutter, `supabase_flutter: ^2.16.0`)
+Projek: `marc` (Flutter, `supabase_flutter: ^2.16.0`)
 
 ## Tujuan
 Membina halaman log masuk (sign in) dan pendaftaran (sign up) menggunakan email + kata laluan, dengan Supabase Auth. Pengguna belum ada project Supabase; credentials akan diisi sendiri kemudian. Env disediakan sekali supaya senang diisi.

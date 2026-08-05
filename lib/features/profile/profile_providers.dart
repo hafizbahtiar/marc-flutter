@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
+import 'package:marc/core/api_client.dart';
+import 'package:marc/core/auth_state.dart';
 
 class Profile {
   const Profile({
     required this.memberId,
+    required this.email,
     required this.emailVerified,
     required this.displayName,
     required this.phone,
@@ -14,6 +15,7 @@ class Profile {
   });
 
   final String memberId;
+  final String email;
   final bool emailVerified;
   final String? displayName;
   final String? phone;
@@ -23,37 +25,31 @@ class Profile {
 
   bool get isManagement => category == 'management';
 
-  factory Profile.fromMap(Map<String, dynamic> map) {
-    final role = map['roles'] as Map<String, dynamic>?;
+  factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
-      memberId: map['member_id'] as String,
-      emailVerified: (map['email_verified'] as bool?) ?? false,
-      displayName: map['display_name'] as String?,
-      phone: map['phone'] as String?,
-      roleKey: (role?['key'] as String?) ?? 'ahli',
-      roleName: (role?['name'] as String?) ?? 'Ahli',
-      category: (role?['category'] as String?) ?? 'ahli',
+      memberId: json['member_id'] as String,
+      email: json['email'] as String,
+      emailVerified: (json['email_verified'] as bool?) ?? false,
+      displayName: json['display_name'] as String?,
+      phone: json['phone'] as String?,
+      roleKey: (json['role_key'] as String?) ?? 'ahli',
+      roleName: (json['role_name'] as String?) ?? 'Ahli',
+      category: (json['category'] as String?) ?? 'ahli',
     );
   }
 }
 
-/// Profil user semasa. Reaktif pada user id dari auth state — jadi ia
-/// re-fetch sebaik sahaja sesi wujud (tak perlu hot restart).
+/// Profil user semasa. Reaktif pada status log masuk — jadi ia re-fetch
+/// sebaik sahaja sesi wujud (tak perlu hot restart).
 final myProfileProvider = FutureProvider<Profile?>((ref) async {
-  final userId = ref.watch(
-    authStateProvider.select((s) => s.valueOrNull?.session?.user.id),
+  final isLoggedIn = ref.watch(
+    authNotifierProvider.select((s) => s.isLoggedIn),
   );
-  if (userId == null) return null;
+  if (!isLoggedIn) return null;
 
-  final data = await Supabase.instance.client
-      .from('profiles')
-      .select('member_id, email_verified, display_name, phone, '
-          'roles(key, name, category)')
-      .eq('id', userId)
-      .maybeSingle();
-
-  if (data == null) return null;
-  return Profile.fromMap(data);
+  final dio = ref.watch(dioProvider);
+  final res = await dio.get('/me');
+  return Profile.fromJson(res.data as Map<String, dynamic>);
 });
 
 final profileRepositoryProvider =
@@ -68,16 +64,11 @@ class ProfileRepository {
     required String displayName,
     required String phone,
   }) async {
-    final client = Supabase.instance.client;
-    final uid = client.auth.currentUser?.id;
-    if (uid == null) throw StateError('Tiada sesi');
-
-    String? clean(String v) => v.trim().isEmpty ? null : v.trim();
-
-    await client.from('profiles').update({
-      'display_name': clean(displayName),
-      'phone': clean(phone),
-    }).eq('id', uid);
+    final dio = _ref.read(dioProvider);
+    await dio.patch('/me', data: {
+      'display_name': displayName,
+      'phone': phone,
+    });
 
     _ref.invalidate(myProfileProvider);
   }
@@ -96,32 +87,27 @@ class MemberRow {
   final String roleName;
   final String category;
 
-  factory MemberRow.fromMap(Map<String, dynamic> map) {
-    final role = map['roles'] as Map<String, dynamic>?;
+  factory MemberRow.fromJson(Map<String, dynamic> json) {
     return MemberRow(
-      memberId: map['member_id'] as String,
-      displayName: map['display_name'] as String?,
-      roleName: (role?['name'] as String?) ?? 'Ahli',
-      category: (role?['category'] as String?) ?? 'ahli',
+      memberId: json['member_id'] as String,
+      displayName: json['display_name'] as String?,
+      roleName: (json['role_name'] as String?) ?? 'Ahli',
+      category: (json['category'] as String?) ?? 'ahli',
     );
   }
 }
 
-/// Senarai ahli. RLS tentukan siapa nampak apa:
-/// management → semua; ahli biasa → diri sendiri sahaja.
+/// Senarai ahli. Backend tentukan siapa nampak apa: management → semua;
+/// ahli biasa → diri sendiri sahaja.
 final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
-  final userId = ref.watch(
-    authStateProvider.select((s) => s.valueOrNull?.session?.user.id),
+  final isLoggedIn = ref.watch(
+    authNotifierProvider.select((s) => s.isLoggedIn),
   );
-  if (userId == null) return const [];
+  if (!isLoggedIn) return const [];
 
-  final data = await Supabase.instance.client
-      .from('profiles')
-      .select('member_id, display_name, roles(name, category)')
-      .order('member_id');
-
-  return (data as List)
-      .map((m) => MemberRow.fromMap(m as Map<String, dynamic>))
+  final dio = ref.watch(dioProvider);
+  final res = await dio.get('/members');
+  return (res.data as List)
+      .map((m) => MemberRow.fromJson(m as Map<String, dynamic>))
       .toList();
 });
-

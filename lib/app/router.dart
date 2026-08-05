@@ -1,43 +1,44 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:marc_flutter/app/nav_shell.dart';
-import 'package:marc_flutter/features/auth/login_page.dart';
-import 'package:marc_flutter/features/auth/register_page.dart';
-import 'package:marc_flutter/features/home/home_page.dart';
-import 'package:marc_flutter/features/members/members_page.dart';
-import 'package:marc_flutter/features/notifications/notifications_page.dart';
-import 'package:marc_flutter/features/profile/edit_profile_page.dart';
-import 'package:marc_flutter/features/profile/profile_page.dart';
+import 'package:marc/app/nav_shell.dart';
+import 'package:marc/core/auth_state.dart';
+import 'package:marc/features/auth/login_page.dart';
+import 'package:marc/features/auth/register_page.dart';
+import 'package:marc/features/home/home_page.dart';
+import 'package:marc/features/members/members_page.dart';
+import 'package:marc/features/notifications/notifications_page.dart';
+import 'package:marc/features/profile/edit_profile_page.dart';
+import 'package:marc/features/profile/profile_page.dart';
 
-/// Adapter: dengar Stream, notify GoRouter untuk refresh redirect.
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _sub = stream.asBroadcastStream().listen((_) => notifyListeners());
+/// Adapter: dengar perubahan authNotifierProvider, notify GoRouter untuk
+/// refresh redirect. Gantian `GoRouterRefreshStream` yang dulu dengar
+/// stream Supabase `onAuthStateChange`.
+class _GoRouterRefreshNotifier extends ChangeNotifier {
+  _GoRouterRefreshNotifier(Ref ref) {
+    _sub = ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      if (previous?.isLoggedIn != next.isLoggedIn) notifyListeners();
+    });
   }
-  late final StreamSubscription<dynamic> _sub;
+
+  late final ProviderSubscription<AuthState> _sub;
 
   @override
   void dispose() {
-    _sub.cancel();
+    _sub.close();
     super.dispose();
   }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final refresh = GoRouterRefreshStream(
-    Supabase.instance.client.auth.onAuthStateChange,
-  );
+  final refresh = _GoRouterRefreshNotifier(ref);
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
     initialLocation: '/login',
     refreshListenable: refresh,
     redirect: (context, state) {
-      final loggedIn = Supabase.instance.client.auth.currentSession != null;
+      final loggedIn = ref.read(authNotifierProvider).isLoggedIn;
       final loc = state.matchedLocation;
       final onAuthPage = loc == '/login' || loc == '/register';
       if (loggedIn && onAuthPage) return '/home';

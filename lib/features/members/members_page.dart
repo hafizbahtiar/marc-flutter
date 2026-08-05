@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:marc_flutter/app/theme.dart';
-import 'package:marc_flutter/features/profile/profile_providers.dart';
+import 'package:marc/app/theme.dart';
+import 'package:marc/features/profile/profile_providers.dart';
 
 const _placeholderRow = MemberRow(
   memberId: 'MARC2026/08/0000',
@@ -30,7 +30,7 @@ class MembersPage extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(28),
               child: Text(
-                'Gagal memuat senarai ahli.\n$e',
+                'Gagal memuat senarai ahli.',
                 textAlign: TextAlign.center,
               ),
             ),

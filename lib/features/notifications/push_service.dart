@@ -1,21 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:marc/core/api_client.dart';
+import 'package:marc/core/auth_state.dart';
 
-final pushServiceProvider = Provider<PushService>(
-  (ref) => PushService(Supabase.instance.client),
-);
+final pushServiceProvider = Provider<PushService>((ref) => PushService(ref));
 
-/// Segerakkan identiti OneSignal dengan sesi Supabase, dan simpan
-/// subscription id setiap peranti ke jadual `device_tokens`.
+/// Segerakkan identiti OneSignal dengan sesi backend, dan simpan
+/// subscription id setiap peranti ke `POST /device-tokens`.
 ///
 /// Semua operasi dibalut try/catch — kalau OneSignal tak di-init
 /// (`ONESIGNAL_APP_ID` kosong), ia jadi no-op senyap.
 class PushService {
-  PushService(this._supabase);
+  PushService(this._ref);
 
-  final SupabaseClient _supabase;
+  final Ref _ref;
 
   /// Dipanggil bila sesi auth wujud (log masuk / initial session).
   Future<void> onSignedIn(String userId) async {
@@ -39,7 +38,7 @@ class PushService {
   void startObserving() {
     try {
       OneSignal.User.pushSubscription.addObserver((_) {
-        if (_supabase.auth.currentUser != null) {
+        if (_ref.read(authNotifierProvider).isLoggedIn) {
           _upsertCurrent();
         }
       });
@@ -49,10 +48,15 @@ class PushService {
   Future<void> _upsertCurrent() async {
     final id = OneSignal.User.pushSubscription.id;
     if (id == null || id.isEmpty) return;
-    if (_supabase.auth.currentUser == null) return;
-    await _supabase.rpc(
-      'upsert_device_token',
-      params: {'p_onesignal_id': id, 'p_platform': defaultTargetPlatform.name},
-    );
+    if (!_ref.read(authNotifierProvider).isLoggedIn) return;
+
+    try {
+      await _ref.read(dioProvider).post('/device-tokens', data: {
+        'onesignal_id': id,
+        'platform': defaultTargetPlatform.name,
+      });
+    } catch (_) {
+      // Gagal simpan token — tak kritikal, cuba lagi bila observer trigger semula.
+    }
   }
 }

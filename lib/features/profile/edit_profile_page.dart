@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:marc_flutter/features/auth/widgets/auth_field.dart';
-import 'package:marc_flutter/features/profile/profile_providers.dart';
-import 'package:marc_flutter/shared/widgets/my_snackbar.dart';
+import 'package:marc/features/auth/widgets/auth_field.dart';
+import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/widgets/my_snackbar.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});

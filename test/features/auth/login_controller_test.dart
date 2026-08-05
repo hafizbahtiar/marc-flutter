@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc_flutter/features/auth/auth_providers.dart';
-import 'package:marc_flutter/features/auth/auth_service.dart';
+import 'package:marc/features/auth/auth_providers.dart';
+import 'package:marc/features/auth/auth_service.dart';
 
 class _FakeAuthService implements AuthService {
   _FakeAuthService(this._result);

@@ -1,7 +1,7 @@
 # Design: Refine Auth — Riverpod + go_router + UI Editorial
 
 Tarikh: 2026-08-04
-Projek: `marc_flutter` (Flutter, `supabase_flutter: ^2.16.0`)
+Projek: `marc` (Flutter, `supabase_flutter: ^2.16.0`)
 Status: refine ke atas kerja sedia ada (sign in / sign up Supabase)
 
 ## Tujuan
