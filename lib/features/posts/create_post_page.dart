@@ -1,0 +1,197 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:marc/features/posts/post_providers.dart';
+import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/widgets/my_snackbar.dart';
+
+class CreatePostPage extends ConsumerStatefulWidget {
+  const CreatePostPage({super.key});
+
+  @override
+  ConsumerState<CreatePostPage> createState() => _CreatePostPageState();
+}
+
+class _CreatePostPageState extends ConsumerState<CreatePostPage> {
+  final _contentController = TextEditingController();
+  final _picker = ImagePicker();
+  final List<XFile> _images = [];
+  bool _isAnnouncement = false;
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    final picked = await _picker.pickMultiImage(imageQuality: 85);
+    if (picked.isEmpty) return;
+    setState(() => _images.addAll(picked));
+  }
+
+  Future<void> _submit() async {
+    final content = _contentController.text.trim();
+    if (content.isEmpty && _images.isEmpty) {
+      MySnackBar.error(context, 'Tulis sesuatu atau lampirkan gambar dahulu.');
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      final repo = ref.read(postRepositoryProvider);
+      final r2Keys = <String>[];
+      for (final image in _images) {
+        r2Keys.add(await repo.uploadImage(image));
+      }
+
+      await repo.createPost(
+        content: content,
+        type: _isAnnouncement ? 'announcement' : 'normal',
+        r2Keys: r2Keys,
+      );
+
+      ref.invalidate(feedProvider);
+      if (!mounted) return;
+      MySnackBar.success(context, 'Post dihantar.');
+      context.pop();
+    } catch (_) {
+      if (!mounted) return;
+      MySnackBar.error(context, 'Gagal hantar post. Cuba lagi.');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isManagement =
+        ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Post baru'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: FilledButton(
+              onPressed: _submitting ? null : _submit,
+              child: _submitting
+                  ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator.adaptive(),
+                    )
+                  : const Text('Hantar'),
+            ),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isManagement)
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Jadikan Pengumuman'),
+                  subtitle: const Text(
+                    'Semua ahli akan nampak label "Pengumuman"',
+                  ),
+                  value: _isAnnouncement,
+                  onChanged: (v) => setState(() => _isAnnouncement = v),
+                ),
+              TextField(
+                controller: _contentController,
+                maxLines: 8,
+                minLines: 4,
+                decoration: const InputDecoration(
+                  hintText: 'Apa yang berlaku?',
+                  border: InputBorder.none,
+                ),
+              ),
+              if (_images.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 90,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _images.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) => _ImageThumb(
+                      image: _images[i],
+                      onRemove: () => setState(() => _images.removeAt(i)),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _pickImages,
+                icon: const Icon(Icons.image_outlined),
+                label: const Text('Tambah gambar'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageThumb extends StatelessWidget {
+  const _ImageThumb({required this.image, required this.onRemove});
+
+  final XFile image;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: FutureBuilder<Uint8List>(
+            future: image.readAsBytes(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Container(
+                  width: 90,
+                  height: 90,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                );
+              }
+              return Image.memory(
+                snapshot.data!,
+                width: 90,
+                height: 90,
+                fit: BoxFit.cover,
+              );
+            },
+          ),
+        ),
+        Positioned(
+          top: 2,
+          right: 2,
+          child: InkWell(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

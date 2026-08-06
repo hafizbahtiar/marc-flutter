@@ -5,9 +5,11 @@ import 'package:marc/app/nav_shell.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/auth/login_page.dart';
 import 'package:marc/features/auth/register_page.dart';
-import 'package:marc/features/home/home_page.dart';
 import 'package:marc/features/members/members_page.dart';
 import 'package:marc/features/notifications/notifications_page.dart';
+import 'package:marc/features/posts/create_post_page.dart';
+import 'package:marc/features/posts/feed_page.dart';
+import 'package:marc/features/posts/post_detail_page.dart';
 import 'package:marc/features/profile/edit_profile_page.dart';
 import 'package:marc/features/profile/profile_page.dart';
 
@@ -41,7 +43,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loggedIn = ref.read(authNotifierProvider).isLoggedIn;
       final loc = state.matchedLocation;
       final onAuthPage = loc == '/login' || loc == '/register';
-      if (loggedIn && onAuthPage) return '/home';
+      if (loggedIn && onAuthPage) return '/feed';
       if (!loggedIn && !onAuthPage) return '/login';
       return null;
     },
@@ -52,25 +54,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/edit-profile',
         builder: (_, _) => const EditProfilePage(),
       ),
+      GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, _) => const NotificationsPage(),
+      ),
+      GoRoute(path: '/posts/new', builder: (_, _) => const CreatePostPage()),
+      GoRoute(
+        path: '/posts/:id',
+        builder: (_, state) =>
+            PostDetailPage(postId: state.pathParameters['id']!),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => NavShell(shell: shell),
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/home', builder: (_, _) => const HomePage()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/notifications',
-                builder: (_, _) => const NotificationsPage(),
-              ),
+              GoRoute(path: '/feed', builder: (_, _) => const FeedPage()),
             ],
           ),
           StatefulShellBranch(

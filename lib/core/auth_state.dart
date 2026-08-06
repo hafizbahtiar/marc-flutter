@@ -26,7 +26,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState(isLoggedIn: access != null, accessToken: access);
   }
 
-  Future<void> setTokens({required String access, required String refresh}) async {
+  Future<void> setTokens({
+    required String access,
+    required String refresh,
+  }) async {
     await _storage.save(access: access, refresh: refresh);
     state = AuthState(isLoggedIn: true, accessToken: access);
   }

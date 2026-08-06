@@ -19,8 +19,10 @@ class AppTheme {
   static const _seed = Color(0xFF2F6B4F);
 
   static ColorScheme get lightScheme =>
-      ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.light)
-          .copyWith(
+      ColorScheme.fromSeed(
+        seedColor: _seed,
+        brightness: Brightness.light,
+      ).copyWith(
         primary: const Color(0xFF2F6B4F),
         onPrimary: Colors.white,
         secondary: const Color(0xFF55635B),
@@ -59,7 +61,10 @@ class AppTheme {
         fontWeight: FontWeight.w500,
         color: scheme.onSurface,
       ),
-      bodyMedium: GoogleFonts.inter(fontSize: 15, color: scheme.onSurfaceVariant),
+      bodyMedium: GoogleFonts.inter(
+        fontSize: 15,
+        color: scheme.onSurfaceVariant,
+      ),
       labelSmall: GoogleFonts.inter(
         fontSize: 11,
         fontWeight: FontWeight.w600,
@@ -86,8 +91,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surfaceContainerHighest,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -111,10 +118,13 @@ class AppTheme {
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
           minimumSize: const Size.fromHeight(54),
-          textStyle:
-              GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -125,8 +135,7 @@ class AppTheme {
         backgroundColor: scheme.inverseSurface,
         contentTextStyle: GoogleFonts.inter(color: scheme.onInverseSurface),
         actionTextColor: scheme.inversePrimary,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         insetPadding: const EdgeInsets.all(16),
       ),
       navigationBarTheme: NavigationBarThemeData(
