@@ -29,7 +29,7 @@ class MySnackBar {
           content: Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 18, color: fg),
+                Icon(icon, color: fg),
                 const SizedBox(width: 10),
               ],
               Expanded(

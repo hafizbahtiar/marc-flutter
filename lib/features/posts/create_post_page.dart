@@ -15,6 +15,9 @@ class CreatePostPage extends ConsumerStatefulWidget {
   ConsumerState<CreatePostPage> createState() => _CreatePostPageState();
 }
 
+const _maxImagesPerPost = 4;
+const _maxImageSizeBytes = 5 * 1024 * 1024;
+
 class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   final _contentController = TextEditingController();
   final _picker = ImagePicker();
@@ -29,9 +32,43 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   }
 
   Future<void> _pickImages() async {
-    final picked = await _picker.pickMultiImage(imageQuality: 85);
+    final remaining = _maxImagesPerPost - _images.length;
+    if (remaining <= 0) {
+      MySnackBar.error(
+        context,
+        'Maksimum $_maxImagesPerPost gambar setiap post.',
+      );
+      return;
+    }
+
+    // pickMultiImage(limit: 1) throws — kena guna pickImage() tunggal bila
+    // baki slot cuma 1.
+    final picked = remaining == 1
+        ? await _picker
+              .pickImage(source: ImageSource.gallery, imageQuality: 85)
+              .then((x) => x == null ? <XFile>[] : [x])
+        : await _picker.pickMultiImage(imageQuality: 85, limit: remaining);
     if (picked.isEmpty) return;
-    setState(() => _images.addAll(picked));
+
+    final accepted = <XFile>[];
+    var rejectedTooLarge = false;
+    for (final image in picked.take(remaining)) {
+      final size = await image.length();
+      if (size > _maxImageSizeBytes) {
+        rejectedTooLarge = true;
+        continue;
+      }
+      accepted.add(image);
+    }
+
+    if (!mounted) return;
+    if (accepted.isNotEmpty) setState(() => _images.addAll(accepted));
+    if (rejectedTooLarge) {
+      MySnackBar.error(
+        context,
+        'Sesetengah gambar melebihi had 5MB dan diabaikan.',
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -133,9 +170,13 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
               ],
               const SizedBox(height: 16),
               OutlinedButton.icon(
-                onPressed: _pickImages,
+                onPressed: _images.length >= _maxImagesPerPost
+                    ? null
+                    : _pickImages,
                 icon: const Icon(Icons.image_outlined),
-                label: const Text('Tambah gambar'),
+                label: Text(
+                  'Tambah gambar (${_images.length}/$_maxImagesPerPost)',
+                ),
               ),
             ],
           ),

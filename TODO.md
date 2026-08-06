@@ -46,13 +46,25 @@ Flutter sahaja.
     masih 403 AccessDenied** — nampak macam isu permission scope R2 API
     token (bukan code), lihat "Belum" di bawah
 
+- **Had saiz & bilangan gambar** ✅ (done) — `create_post_page.dart`:
+  `_pickImages` cap slot baki (max 4 total imej setiap post; kalau baki 1
+  slot, guna `pickImage()` tunggal sebab `pickMultiImage(limit: 1)`
+  throws), pre-check saiz fail (5MB) lepas pick, tolak gambar lebih besar
+  dengan snackbar mesra tanpa attempt upload. Butang "Tambah gambar" papar
+  kaunter `(n/4)` dan disable bila dah cukup 4. **Ni UX sahaja** — security
+  boundary sebenar ada di backend (`VerifyImageSize` via `HeadObject` +
+  had `r2_keys` array di `posts.go`), client-side check ni boleh
+  di-bypass kalau panggil API terus, tapi backend tetap tolak.
+
 ## Belum
 
 - [ ] **R2 API token permission** — perlu semak Cloudflare dashboard: token
   ada "Object Read & Write" untuk bucket `marc-staging`? Account ID/bucket
   name betul-betul padan dengan yang di `.env`? Upload gambar backend dah
   betul code-wise (verified presign + checksum fix), tapi PUT sebenar ke R2
-  masih 403 — bukan sesuatu yang boleh saya diagnose lagi tanpa akses dashboard
+  masih 403 — bukan sesuatu yang boleh saya diagnose lagi tanpa akses
+  dashboard. Confirm semula semasa kerja had saiz gambar — 403 sama
+  berlaku, bukan regresi baru
 - [ ] Isi `R2_PUBLIC_URL` dalam `.env` (marc_go) — kosong sekarang, jadi
   gambar yang berjaya upload pun takkan ada URL untuk dipaparkan balik
 - [ ] Widget test: `post_card.dart`, `comment_tile.dart` nested rendering

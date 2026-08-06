@@ -14,7 +14,7 @@ class ButtonBusy extends StatelessWidget {
         const SizedBox(
           height: 16,
           width: 16,
-          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          child: CircularProgressIndicator.adaptive(),
         ),
         const SizedBox(width: 12),
         Text(label),

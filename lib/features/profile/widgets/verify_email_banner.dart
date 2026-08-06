@@ -52,16 +52,18 @@ class _VerifyEmailBannerState extends ConsumerState<VerifyEmailBanner> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.mark_email_unread_outlined,
-              size: 20, color: AppColors.warning),
+          const Icon(
+            Icons.mark_email_unread_outlined,
+            color: AppColors.warning,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Email anda belum disahkan.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.warning,
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: AppColors.warning,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           TextButton(
@@ -71,7 +73,7 @@ class _VerifyEmailBannerState extends ConsumerState<VerifyEmailBanner> {
                 ? const SizedBox(
                     height: 14,
                     width: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator.adaptive(),
                   )
                 : const Text('Sahkan'),
           ),

@@ -80,7 +80,8 @@ class _AdaptiveAction extends StatelessWidget {
       onPressed: onPressed,
       style: isDestructive
           ? TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error)
+              foregroundColor: Theme.of(context).colorScheme.error,
+            )
           : null,
       child: Text(label),
     );

@@ -90,8 +90,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       ? const SizedBox(
                           height: 16,
                           width: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator.adaptive(),
                         )
                       : const Text('Simpan'),
                 ),
