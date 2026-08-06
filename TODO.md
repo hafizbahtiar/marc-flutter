@@ -9,63 +9,54 @@ Flutter sahaja.
 - **Supabase → Go backend integration penuh** (Dio, secure storage token,
   refresh interceptor, semua provider guna REST API). Independent review
   (Opus) + audit susulan jumpa & fix 9 isu (session handling, device token
-  unlink waktu logout, UX error state, dsb) — lihat git log untuk detail.
+  unlink waktu logout, UX error state, dsb).
 
----
+- **Stage 10 — Posts feature UI** ✅ (done, kecuali R2 upload — lihat "Belum")
+  Nav restructure (keputusan user): 2 tab bawah (Feed, Profil) — Feed jadi
+  home screen app (Twitter/FB-style), Ahli + Notifikasi jadi icon button
+  kat AppBar Feed (bukan tab berasingan). `home_page.dart` dibuang, gantikan
+  `feed_page.dart`.
 
-## Stage 10 (Flutter) — Posts feature UI
+  Struktur baru:
+  ```
+  lib/features/posts/
+    post_models.dart           -- Post/Comment/Author/AppNotification
+    post_providers.dart        -- FeedNotifier (paginated, optimistic like),
+                                PostRepository (create/edit/delete/like/upload)
+    feed_page.dart              -- infinite scroll, AppBar Ahli+Notifikasi icon, FAB
+    post_detail_page.dart       -- post + nested comment thread (depth 2) + reply box
+    create_post_page.dart       -- text + multi-image + toggle Pengumuman (management)
+    widgets/
+      post_card.dart, comment_tile.dart, image_carousel.dart
+  lib/features/notifications/
+    notifications_providers.dart, notifications_page.dart (REWRITE penuh)
+  lib/shared/relative_time.dart
+  ```
 
-Design & keputusan produk penuh ada di `marc_go/TODO.md` Stage 10 — rujuk
-situ untuk data model + API contract. Fail ni cuma checklist kerja UI.
+  **Verified** (bukan cuma `flutter analyze`):
+  - `flutter analyze` 0 isu, 17 test lulus, `flutter build web --debug` compile bersih
+  - **Contract test lawan Go backend sebenar** (local, bukan mock): feed →
+    post detail → comments deserialize field-for-field betul; nested reply
+    (depth 3 attempt) — client confirm `parent_comment_id` betul-betul
+    flatten ke comment depth-1 (padan dgn backend); like count + liked_by_me
+    tepat; notifications shape parse betul
+  - **Upload R2 sebenar diuji** — jumpa & fix bug backend (`aws-sdk-go-v2`
+    auto-checksum pecahkan signature presigned URL, lihat `marc_go` commit
+    `7c2fe81`). Lepas fix tu, presign URL jana betul tapi **PUT sebenar
+    masih 403 AccessDenied** — nampak macam isu permission scope R2 API
+    token (bukan code), lihat "Belum" di bawah
 
-### Struktur baru
+## Belum
 
-```
-lib/features/posts/
-  post_providers.dart       -- Post/Comment model (fromJson), postsProvider
-                              (paginated FutureProvider / infinite scroll),
-                              PostRepository (create/edit/delete/like)
-  feed_page.dart             -- infinite scroll list, pull-to-refresh
-  post_detail_page.dart      -- satu post + nested comment thread (depth 2)
-  create_post_page.dart      -- compose: text + pilih gambar (image_picker)
-  widgets/
-    post_card.dart           -- ringkasan post untuk feed (content, imej,
-                              like count, comment count, "(disunting)")
-    comment_tile.dart        -- recursive sampai depth 2, reply inline
-    image_carousel.dart      -- papar 1+ gambar dalam post
-```
-
-### Kerja
-
-- [ ] Package baru: `image_picker` (pilih gambar dari galeri/kamera)
-- [ ] `PostRepository` — upload flow: `POST /uploads/presign` → upload
-  terus ke R2 guna URL tu (`http.put` biasa, bukan Dio — presigned URL
-  bukan endpoint backend kita) → `POST /posts` dengan `r2_keys[]`
-- [ ] `postsProvider` — infinite scroll (cursor-based), gate
-  `email_verified` di UI jugak (papar mesej "sahkan email dulu" kalau
-  belum, bukan panggil API yang akan 403)
-- [ ] `feed_page.dart` — list post, like button (optimistic update — toggle
-  UI serta-merta, revert kalau API gagal), tap → `post_detail_page.dart`
-- [ ] `post_detail_page.dart` — comment thread nested (indent depth 2),
-  reply inline, like comment
-- [ ] `create_post_page.dart` — form: text + attach gambar (multi), submit.
-  Kalau role management → toggle "Jadikan Pengumuman" (`type: announcement`)
-- [ ] Edit/delete UI — owner nampak butang edit/delete pada post/comment
-  sendiri; **management nampak butang delete pada SEMUA post/comment**
-  (moderation)
-- [ ] `notifications_page.dart` — REWRITE penuh (sekarang placeholder
-  kosong): `GET /notifications`, tap notification → navigate ke post/comment
-  berkaitan, tanda dibaca
-- [ ] Router (`app/router.dart`) — route baru: `/posts`, `/posts/:id`,
-  `/posts/new`
-- [ ] **Keputusan UI belum dibuat** (kena putus sebelum/semasa implement):
-  tab feed ni letak kat mana dalam `nav_shell.dart`? Ganti tab Home sedia
-  ada, atau tab baru? (Home sekarang papar member card + welcome — mungkin
-  Feed jadi tab utama baru, Home jadi kurang penting / digabung)
-
-### Test
-
-- [ ] Widget test: `post_card.dart` papar content/like count betul
-- [ ] Widget test: `comment_tile.dart` nested rendering depth 2 (reply
-  kat reply-paras-2 papar sebagai top-level reply baru, bukan indent lagi)
-- [ ] Unit test: `PostRepository` upload flow (mock presign response)
+- [ ] **R2 API token permission** — perlu semak Cloudflare dashboard: token
+  ada "Object Read & Write" untuk bucket `marc-staging`? Account ID/bucket
+  name betul-betul padan dengan yang di `.env`? Upload gambar backend dah
+  betul code-wise (verified presign + checksum fix), tapi PUT sebenar ke R2
+  masih 403 — bukan sesuatu yang boleh saya diagnose lagi tanpa akses dashboard
+- [ ] Isi `R2_PUBLIC_URL` dalam `.env` (marc_go) — kosong sekarang, jadi
+  gambar yang berjaya upload pun takkan ada URL untuk dipaparkan balik
+- [ ] Widget test: `post_card.dart`, `comment_tile.dart` nested rendering
+- [ ] Unit test: `PostRepository.uploadImage` (mock presign response)
+- [ ] Test app betul-betul di simulator/device (setakat ni verified guna
+  `flutter build web` + contract test API sahaja, belum run visual UI
+  sebenar)
