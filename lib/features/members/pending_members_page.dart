@@ -76,8 +76,8 @@ class PendingMembersPage extends ConsumerWidget {
             enabled: true,
             child: _PendingList(
               rows: List.filled(4, _placeholderPendingRow),
-              onApprove: (_) {},
-              onReject: (_) {},
+              onApprove: (_) async {},
+              onReject: (_) async {},
             ),
           ),
           error: (e, _) => RefreshIndicator.adaptive(
@@ -145,8 +145,8 @@ class _PendingList extends StatelessWidget {
   });
 
   final List<MemberRow> rows;
-  final void Function(MemberRow row) onApprove;
-  final void Function(MemberRow row) onReject;
+  final Future<void> Function(MemberRow row) onApprove;
+  final Future<void> Function(MemberRow row) onReject;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +163,7 @@ class _PendingList extends StatelessWidget {
   }
 }
 
-class _PendingTile extends StatelessWidget {
+class _PendingTile extends StatefulWidget {
   const _PendingTile({
     required this.row,
     required this.onApprove,
@@ -171,8 +171,25 @@ class _PendingTile extends StatelessWidget {
   });
 
   final MemberRow row;
-  final VoidCallback onApprove;
-  final VoidCallback onReject;
+  final Future<void> Function() onApprove;
+  final Future<void> Function() onReject;
+
+  @override
+  State<_PendingTile> createState() => _PendingTileState();
+}
+
+class _PendingTileState extends State<_PendingTile> {
+  bool _busy = false;
+
+  Future<void> _run(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,8 +200,8 @@ class _PendingTile extends StatelessWidget {
           CircleAvatar(
             backgroundColor: AppColors.fieldFill,
             child: Text(
-              (row.displayName?.isNotEmpty ?? false)
-                  ? row.displayName![0].toUpperCase()
+              (widget.row.displayName?.isNotEmpty ?? false)
+                  ? widget.row.displayName![0].toUpperCase()
                   : '?',
               style: const TextStyle(color: AppColors.ink),
             ),
@@ -194,9 +211,9 @@ class _PendingTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(row.displayName ?? '(Tiada nama)'),
+                Text(widget.row.displayName ?? '(Tiada nama)'),
                 Text(
-                  row.memberId,
+                  widget.row.memberId,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -208,12 +225,12 @@ class _PendingTile extends StatelessWidget {
               color: AppColors.accent,
             ),
             tooltip: 'Luluskan',
-            onPressed: onApprove,
+            onPressed: _busy ? null : () => _run(widget.onApprove),
           ),
           IconButton(
             icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
             tooltip: 'Tolak',
-            onPressed: onReject,
+            onPressed: _busy ? null : () => _run(widget.onReject),
           ),
         ],
       ),

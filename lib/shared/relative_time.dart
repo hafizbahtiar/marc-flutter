@@ -22,5 +22,6 @@ String relativeTime(DateTime dateTime) {
     'Nov',
     'Dis',
   ];
-  return '${dateTime.day} ${months[dateTime.month - 1]}';
+  final local = dateTime.toLocal();
+  return '${local.day} ${months[local.month - 1]}';
 }

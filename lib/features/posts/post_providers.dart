@@ -224,22 +224,45 @@ class PostRepository {
   PostRepository(this._ref);
   final Ref _ref;
 
-  String _contentTypeFor(String path) {
-    final ext = path.split('.').last.toLowerCase();
-    switch (ext) {
-      case 'png':
-        return 'image/png';
-      case 'webp':
-        return 'image/webp';
-      default:
-        return 'image/jpeg';
+  /// Sniff bait sebenar fail untuk tentukan content-type — TIDAK boleh
+  /// percaya extension nama fail sebab image_picker (imageQuality: 85)
+  /// boleh re-encode gambar ke JPEG walaupun fail asal .png/.webp. Simetri
+  /// dengan magic-byte check backend.
+  Future<String> _contentTypeFor(XFile file) async {
+    final chunks = await file.openRead(0, 12).toList();
+    final bytes = chunks.expand((c) => c).toList();
+
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xFF &&
+        bytes[1] == 0xD8 &&
+        bytes[2] == 0xFF) {
+      return 'image/jpeg';
     }
+    if (bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return 'image/png';
+    }
+    if (bytes.length >= 12 &&
+        bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return 'image/webp';
+    }
+    return 'image/jpeg'; // fallback — sepadan default picker app ini
   }
 
   /// Minta presigned URL dari backend, upload gambar TERUS ke R2 (bukan
   /// melalui backend kita), pulangkan r2_key untuk attach ke post.
   Future<String> uploadImage(XFile file) async {
-    final contentType = _contentTypeFor(file.path);
+    final contentType = await _contentTypeFor(file);
     final dio = _ref.read(dioProvider);
 
     final presign = await dio.post(

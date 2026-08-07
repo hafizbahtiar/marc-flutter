@@ -24,6 +24,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   final _contentController = TextEditingController();
   final _picker = ImagePicker();
   final List<XFile> _images = [];
+  final List<String> _uploadedKeys = [];
   bool _isAnnouncement = false;
   bool _submitting = false;
 
@@ -83,15 +84,19 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     setState(() => _submitting = true);
     try {
       final repo = ref.read(postRepositoryProvider);
-      final r2Keys = <String>[];
-      for (final image in _images) {
-        r2Keys.add(await repo.uploadImage(image));
+      // Retry-safe: kalau submit gagal separuh jalan lepas sesetengah
+      // gambar dah berjaya upload, jangan re-upload gambar yang dah
+      // berjaya tu bila user cuba "Hantar" semula — elak orphan R2
+      // object bertambah setiap kali retry.
+      while (_uploadedKeys.length < _images.length) {
+        final key = await repo.uploadImage(_images[_uploadedKeys.length]);
+        _uploadedKeys.add(key);
       }
 
       await repo.createPost(
         content: content,
         type: _isAnnouncement ? 'announcement' : 'normal',
-        r2Keys: r2Keys,
+        r2Keys: _uploadedKeys,
       );
 
       ref.invalidate(feedProvider);
