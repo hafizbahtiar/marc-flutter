@@ -142,7 +142,11 @@ final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
 });
 
 /// Ahli status=pending sahaja (Stage 11) — untuk skrin approve/reject
-/// management. Backend 403 kalau caller bukan management.
+/// management. Endpoint list ni sendiri TAK 403 untuk non-management
+/// (backend pulangkan profil caller sendiri je) — access sebenar
+/// dikawal di client (lihat guard `isManagement` dalam
+/// PendingMembersPage) dan di backend pada endpoint approve/reject
+/// (yang memang 403 kalau caller bukan management).
 final pendingMembersProvider = FutureProvider<List<MemberRow>>((ref) async {
   final isLoggedIn = ref.watch(
     authNotifierProvider.select((s) => s.isLoggedIn),

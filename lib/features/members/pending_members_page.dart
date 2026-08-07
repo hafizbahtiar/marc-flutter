@@ -19,6 +19,17 @@ class PendingMembersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isManagement =
+        ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false;
+    if (!isManagement) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Ahli Pending')),
+        body: const SafeArea(
+          child: Center(child: Text('Anda tiada akses ke skrin ini.')),
+        ),
+      );
+    }
+
     final pending = ref.watch(pendingMembersProvider);
 
     Future<void> onRefresh() => ref.refresh(pendingMembersProvider.future);

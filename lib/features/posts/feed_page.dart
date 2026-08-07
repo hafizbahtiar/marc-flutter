@@ -51,7 +51,12 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     if (profileStatus != null && profileStatus != 'approved') {
       return _PendingStatusView(
         status: profileStatus,
-        onRefresh: () => ref.refresh(myProfileProvider.future),
+        onRefresh: () async {
+          final profile = await ref.refresh(myProfileProvider.future);
+          if (profile?.status == 'approved') {
+            ref.invalidate(feedProvider);
+          }
+        },
       );
     }
 
@@ -171,7 +176,7 @@ class _PendingStatusView extends StatelessWidget {
   const _PendingStatusView({required this.status, required this.onRefresh});
 
   final String status;
-  final VoidCallback onRefresh;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
