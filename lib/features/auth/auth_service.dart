@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:marc/core/auth_state.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/core/token_storage.dart';
 import 'package:marc/features/notifications/push_service.dart';
 
@@ -10,16 +11,6 @@ class AuthResult {
   const AuthResult({required this.success, this.error});
   final bool success;
   final String? error;
-}
-
-/// Petik ralat dari response backend Go (`{"error": "..."}` dalam
-/// Bahasa Melayu) ke mesej mesra. Fallback kalau tiada sambungan.
-String extractErrorMessage(DioException e) {
-  final data = e.response?.data;
-  if (data is Map && data['error'] is String) {
-    return data['error'] as String;
-  }
-  return 'Sambungan gagal. Semak internet anda';
 }
 
 /// Wrapper sekitar API auth backend Go (gantian Supabase Auth).

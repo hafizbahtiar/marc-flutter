@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/auth/widgets/auth_field.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
@@ -43,9 +45,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (!mounted) return;
       MySnackBar.success(context, 'Profil dikemas kini.');
       context.pop();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      MySnackBar.error(context, 'Gagal simpan. Cuba lagi.');
+      MySnackBar.error(
+        context,
+        e is DioException ? extractErrorMessage(e) : 'Gagal simpan. Cuba lagi.',
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/theme.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -40,9 +42,12 @@ class PendingMembersPage extends ConsumerWidget {
         if (context.mounted) {
           MySnackBar.success(context, '${row.memberId} diluluskan.');
         }
-      } catch (_) {
+      } catch (e) {
         if (context.mounted) {
-          MySnackBar.error(context, 'Gagal luluskan ahli.');
+          MySnackBar.error(
+            context,
+            e is DioException ? extractErrorMessage(e) : 'Gagal luluskan ahli.',
+          );
         }
       }
     }
@@ -53,9 +58,12 @@ class PendingMembersPage extends ConsumerWidget {
         if (context.mounted) {
           MySnackBar.success(context, '${row.memberId} ditolak.');
         }
-      } catch (_) {
+      } catch (e) {
         if (context.mounted) {
-          MySnackBar.error(context, 'Gagal tolak ahli.');
+          MySnackBar.error(
+            context,
+            e is DioException ? extractErrorMessage(e) : 'Gagal tolak ahli.',
+          );
         }
       }
     }

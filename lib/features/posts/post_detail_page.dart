@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/comment_tile.dart';
@@ -43,8 +45,13 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
           );
       _commentController.clear();
       setState(() => _replyingTo = null);
-    } catch (_) {
-      if (mounted) MySnackBar.error(context, 'Gagal hantar comment.');
+    } catch (e) {
+      if (mounted) {
+        MySnackBar.error(
+          context,
+          e is DioException ? extractErrorMessage(e) : 'Gagal hantar comment.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -77,9 +84,14 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                             await ref
                                 .read(postRepositoryProvider)
                                 .togglePostLike(post.id, post.likedByMe);
-                          } catch (_) {
+                          } catch (e) {
                             if (context.mounted) {
-                              MySnackBar.error(context, 'Gagal like post.');
+                              MySnackBar.error(
+                                context,
+                                e is DioException
+                                    ? extractErrorMessage(e)
+                                    : 'Gagal like post.',
+                              );
                             }
                           }
                         },
@@ -97,9 +109,14 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                                 .read(postRepositoryProvider)
                                 .deletePost(post.id);
                             if (context.mounted) context.pop();
-                          } catch (_) {
+                          } catch (e) {
                             if (context.mounted) {
-                              MySnackBar.error(context, 'Gagal padam post.');
+                              MySnackBar.error(
+                                context,
+                                e is DioException
+                                    ? extractErrorMessage(e)
+                                    : 'Gagal padam post.',
+                              );
                             }
                           }
                         },

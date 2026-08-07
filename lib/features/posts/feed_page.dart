@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/api_client.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
@@ -193,9 +195,14 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                             .read(postRepositoryProvider)
                             .deletePost(post.id);
                         ref.read(feedProvider.notifier).removePost(post.id);
-                      } catch (_) {
+                      } catch (e) {
                         if (context.mounted) {
-                          MySnackBar.error(context, 'Gagal padam post.');
+                          MySnackBar.error(
+                            context,
+                            e is DioException
+                                ? extractErrorMessage(e)
+                                : 'Gagal padam post.',
+                          );
                         }
                       }
                     },
@@ -282,9 +289,14 @@ class _EmailNotVerifiedViewState extends ConsumerState<_EmailNotVerifiedView> {
         context,
         'Email pengesahan dihantar. Sila semak inbox anda.',
       );
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      MySnackBar.error(context, 'Gagal hantar email pengesahan. Cuba lagi.');
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal hantar email pengesahan. Cuba lagi.',
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }

@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc/features/auth/auth_service.dart';
+import 'package:marc/core/error_utils.dart';
 
 DioException _errorWithResponse(int statusCode, Map<String, dynamic> data) {
   final requestOptions = RequestOptions(path: '/auth/login');
@@ -18,7 +18,9 @@ DioException _errorWithResponse(int statusCode, Map<String, dynamic> data) {
 void main() {
   group('extractErrorMessage', () {
     test('response ada {"error": ...} → guna mesej dari backend', () {
-      final e = _errorWithResponse(401, {'error': 'Email atau kata laluan salah'});
+      final e = _errorWithResponse(401, {
+        'error': 'Email atau kata laluan salah',
+      });
       expect(extractErrorMessage(e), 'Email atau kata laluan salah');
     });
 
@@ -28,10 +30,9 @@ void main() {
     });
 
     test('400 validation → guna mesej dari backend', () {
-      final e = _errorWithResponse(
-        400,
-        {'error': 'Kata laluan diperlukan (minimum 6 aksara)'},
-      );
+      final e = _errorWithResponse(400, {
+        'error': 'Kata laluan diperlukan (minimum 6 aksara)',
+      });
       expect(
         extractErrorMessage(e),
         'Kata laluan diperlukan (minimum 6 aksara)',

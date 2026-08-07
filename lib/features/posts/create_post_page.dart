@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
@@ -96,9 +98,14 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
       if (!mounted) return;
       MySnackBar.success(context, 'Post dihantar.');
       context.pop();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      MySnackBar.error(context, 'Gagal hantar post. Cuba lagi.');
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal hantar post. Cuba lagi.',
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

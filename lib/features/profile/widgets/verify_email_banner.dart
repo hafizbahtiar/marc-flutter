@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/api_client.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
@@ -28,9 +30,14 @@ class _VerifyEmailBannerState extends ConsumerState<VerifyEmailBanner> {
         context,
         'Email pengesahan dihantar. Sila semak inbox anda.',
       );
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      MySnackBar.error(context, 'Gagal hantar email pengesahan. Cuba lagi.');
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal hantar email pengesahan. Cuba lagi.',
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }
