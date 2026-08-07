@@ -129,20 +129,23 @@ class AppNotification {
   final String id;
   final String actorId;
   final String type;
-  final String postId;
+  final String? postId;
   final String? commentId;
   final bool read;
   final DateTime createdAt;
 
   bool get isLike => type == 'post_like';
   bool get isComment => type == 'post_comment';
+  bool get isMemberPending => type == 'member_pending';
+  bool get isMemberApproved => type == 'member_approved';
+  bool get isMemberRejected => type == 'member_rejected';
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
       id: json['id'] as String,
       actorId: json['actor_id'] as String,
       type: json['type'] as String,
-      postId: json['post_id'] as String,
+      postId: json['post_id'] as String?,
       commentId: json['comment_id'] as String?,
       read: json['read'] as bool,
       createdAt: DateTime.parse(json['created_at'] as String),

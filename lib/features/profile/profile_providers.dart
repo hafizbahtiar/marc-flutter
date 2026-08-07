@@ -7,6 +7,7 @@ class Profile {
     required this.memberId,
     required this.email,
     required this.emailVerified,
+    required this.status,
     required this.displayName,
     required this.phone,
     required this.roleKey,
@@ -17,6 +18,7 @@ class Profile {
   final String memberId;
   final String email;
   final bool emailVerified;
+  final String status;
   final String? displayName;
   final String? phone;
   final String roleKey;
@@ -30,6 +32,7 @@ class Profile {
       memberId: json['member_id'] as String,
       email: json['email'] as String,
       emailVerified: (json['email_verified'] as bool?) ?? false,
+      status: (json['status'] as String?) ?? 'approved',
       displayName: json['display_name'] as String?,
       phone: json['phone'] as String?,
       roleKey: (json['role_key'] as String?) ?? 'ahli',
@@ -74,27 +77,51 @@ class ProfileRepository {
     // cuma recompute bila isLoggedIn berubah).
     _ref.invalidate(membersProvider);
   }
+
+  /// Luluskan pendaftaran ahli (Stage 11) — management sahaja, backend
+  /// tolak 403 kalau bukan.
+  Future<void> approveMember(String userId) async {
+    final dio = _ref.read(dioProvider);
+    await dio.post('/members/$userId/approve');
+    _ref.invalidate(membersProvider);
+    _ref.invalidate(pendingMembersProvider);
+  }
+
+  /// Tolak pendaftaran ahli (Stage 11) — row KEKAL di backend (bukan
+  /// padam), boleh diluluskan semula lain kali.
+  Future<void> rejectMember(String userId) async {
+    final dio = _ref.read(dioProvider);
+    await dio.post('/members/$userId/reject');
+    _ref.invalidate(membersProvider);
+    _ref.invalidate(pendingMembersProvider);
+  }
 }
 
 class MemberRow {
   const MemberRow({
+    required this.userId,
     required this.memberId,
     required this.displayName,
     required this.roleName,
     required this.category,
+    required this.status,
   });
 
+  final String userId;
   final String memberId;
   final String? displayName;
   final String roleName;
   final String category;
+  final String status;
 
   factory MemberRow.fromJson(Map<String, dynamic> json) {
     return MemberRow(
+      userId: json['user_id'] as String,
       memberId: json['member_id'] as String,
       displayName: json['display_name'] as String?,
       roleName: (json['role_name'] as String?) ?? 'Ahli',
       category: (json['category'] as String?) ?? 'ahli',
+      status: (json['status'] as String?) ?? 'approved',
     );
   }
 }
@@ -109,6 +136,21 @@ final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
 
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/members');
+  return (res.data as List)
+      .map((m) => MemberRow.fromJson(m as Map<String, dynamic>))
+      .toList();
+});
+
+/// Ahli status=pending sahaja (Stage 11) — untuk skrin approve/reject
+/// management. Backend 403 kalau caller bukan management.
+final pendingMembersProvider = FutureProvider<List<MemberRow>>((ref) async {
+  final isLoggedIn = ref.watch(
+    authNotifierProvider.select((s) => s.isLoggedIn),
+  );
+  if (!isLoggedIn) return const [];
+
+  final dio = ref.watch(dioProvider);
+  final res = await dio.get('/members', queryParameters: {'status': 'pending'});
   return (res.data as List)
       .map((m) => MemberRow.fromJson(m as Map<String, dynamic>))
       .toList();

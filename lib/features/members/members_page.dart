@@ -5,10 +5,12 @@ import 'package:marc/app/theme.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
 const _placeholderRow = MemberRow(
+  userId: '00000000-0000-0000-0000-000000000000',
   memberId: 'MARC2026/08/0000',
   displayName: 'Nama Ahli',
   roleName: 'Ahli',
   category: 'ahli',
+  status: 'approved',
 );
 
 class MembersPage extends ConsumerWidget {
