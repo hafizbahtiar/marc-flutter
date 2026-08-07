@@ -82,12 +82,3 @@ Flutter sahaja.
 - [ ] Test app betul-betul di simulator/device (setakat ni verified guna
   `flutter build web` + contract test API sahaja, belum run visual UI
   sebenar)
-- [ ] `GET /notifications`'s `post_id` field kini nullable (dulu
-  sentiasa String) untuk jenis notification baru `member_pending`/
-  `member_approved`/`member_rejected` yang ditambah dalam marc_go
-  Stage 11 (row tak ada post berkaitan). `AppNotification.postId` kena
-  jadi `String?`, dan notification-tap handler kena branch on `type`
-  dulu sebelum navigate ke `/posts/:id` (jenis `member_*` takde post
-  untuk navigate). Coordinated backend+frontend contract change — field
-  backend dah betul/nullable sekarang, frontend kena catch up sebelum
-  release seterusnya yang sentuh Posts feature.
