@@ -6,6 +6,7 @@ import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/auth/login_page.dart';
 import 'package:marc/features/auth/register_page.dart';
 import 'package:marc/features/members/members_page.dart';
+import 'package:marc/features/members/pending_members_page.dart';
 import 'package:marc/features/notifications/notifications_page.dart';
 import 'package:marc/features/posts/create_post_page.dart';
 import 'package:marc/features/posts/feed_page.dart';
@@ -55,6 +56,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const EditProfilePage(),
       ),
       GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
+      GoRoute(
+        path: '/members/pending',
+        builder: (_, _) => const PendingMembersPage(),
+      ),
       GoRoute(
         path: '/notifications',
         builder: (_, _) => const NotificationsPage(),

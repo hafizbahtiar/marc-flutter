@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/profile/profile_providers.dart';
@@ -27,7 +28,17 @@ class MembersPage extends ConsumerWidget {
     Future<void> onRefresh() => ref.refresh(membersProvider.future);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Ahli')),
+      appBar: AppBar(
+        title: const Text('Ahli'),
+        actions: [
+          if (ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false)
+            IconButton(
+              icon: const Icon(Icons.pending_actions_outlined),
+              tooltip: 'Ahli Pending',
+              onPressed: () => context.push('/members/pending'),
+            ),
+        ],
+      ),
       body: SafeArea(
         child: members.when(
           loading: () => Skeletonizer(
