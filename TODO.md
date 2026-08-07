@@ -56,6 +56,20 @@ Flutter sahaja.
   had `r2_keys` array di `posts.go`), client-side check ni boleh
   di-bypass kalau panggil API terus, tapi backend tetap tolak.
 
+## Stage 11 — Status pendaftaran ahli (approval MAIWP) — belum design
+
+Padanan backend Stage 11 (`marc_go/TODO.md`) — app khusus kakitangan
+MAIWP, pendaftaran baru kena approve oleh management sebelum akses
+penuh. **Belum di-brainstorm penuh**, tunggu design soalan di
+`marc_go/TODO.md` Stage 11 dijawab dulu.
+
+- [ ] State/skrin baru selepas register: "Menunggu kelulusan" (beza dari
+  gate email-verify sedia ada — rujuk pattern `verify_email_banner.dart`)
+- [ ] Router guard (`app/router.dart`): block akses Feed/Posts kalau
+  status ahli bukan `approved`
+- [ ] Skrin management: senarai ahli pending + approve/reject
+- [ ] Notification UI bila status ahli berubah (approved/rejected)
+
 ## Belum
 
 - [ ] **R2 API token permission** — perlu semak Cloudflare dashboard: token
@@ -72,3 +86,12 @@ Flutter sahaja.
 - [ ] Test app betul-betul di simulator/device (setakat ni verified guna
   `flutter build web` + contract test API sahaja, belum run visual UI
   sebenar)
+- [ ] `GET /notifications`'s `post_id` field kini nullable (dulu
+  sentiasa String) untuk jenis notification baru `member_pending`/
+  `member_approved`/`member_rejected` yang ditambah dalam marc_go
+  Stage 11 (row tak ada post berkaitan). `AppNotification.postId` kena
+  jadi `String?`, dan notification-tap handler kena branch on `type`
+  dulu sebelum navigate ke `/posts/:id` (jenis `member_*` takde post
+  untuk navigate). Coordinated backend+frontend contract change — field
+  backend dah betul/nullable sekarang, frontend kena catch up sebelum
+  release seterusnya yang sentuh Posts feature.
