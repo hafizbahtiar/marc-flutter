@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/token_storage.dart';
+import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
 
 /// AuthNotifier subclass yang terus start dalam keadaan log masuk — elak
@@ -233,5 +234,99 @@ void main() {
     // loadMore must NOT resurrect stale p1/p2 or clobber the refreshed
     // r1/r2 with its now-stale result.
     expect(finalState.posts.map((p) => p.id), ['r1', 'r2']);
+  });
+
+  test('FeedNotifier.patchPost menggantikan satu post sahaja dengan versi '
+      'baru — post lain dalam feed tak terjejas', () async {
+    final dio = _dioWith((options) async {
+      if (options.method == 'GET' && options.path == '/posts') {
+        return _jsonResponse({
+          'posts': [_postJson('p1'), _postJson('p2')],
+          'next_cursor': null,
+        });
+      }
+      throw StateError('Unexpected request ${options.method} ${options.path}');
+    });
+
+    final container = _containerWith(dio);
+    await container.read(feedProvider.future);
+    final notifier = container.read(feedProvider.notifier);
+
+    final updatedP1 = Post.fromJson(
+      _postJson('p1', likeCount: 5, likedByMe: true),
+    );
+    notifier.patchPost(updatedP1);
+
+    final finalState = container.read(feedProvider).value!;
+    final p1 = finalState.posts.firstWhere((p) => p.id == 'p1');
+    final p2 = finalState.posts.firstWhere((p) => p.id == 'p2');
+    expect(p1.likeCount, 5);
+    expect(p1.likedByMe, isTrue);
+    // p2 must remain the original, untouched instance.
+    expect(p2.likeCount, 0);
+    expect(p2.likedByMe, isFalse);
+  });
+
+  test('M8: togglePostLike (dari post detail) sync balik ke feed cache '
+      'tanpa perlu pull-to-refresh manual', () async {
+    var likeCount = 0;
+    var likedByMe = false;
+
+    final dio = _dioWith((options) async {
+      if (options.method == 'GET' && options.path == '/posts') {
+        return _jsonResponse({
+          'posts': [
+            _postJson('p1', likeCount: likeCount, likedByMe: likedByMe),
+            _postJson('p2'),
+          ],
+          'next_cursor': null,
+        });
+      }
+      if (options.method == 'GET' && options.path == '/posts/p1') {
+        return _jsonResponse(
+          _postJson('p1', likeCount: likeCount, likedByMe: likedByMe),
+        );
+      }
+      if (options.method == 'POST' && options.path == '/posts/p1/like') {
+        likeCount = 1;
+        likedByMe = true;
+        return _jsonResponse({});
+      }
+      throw StateError('Unexpected request ${options.method} ${options.path}');
+    });
+
+    final container = _containerWith(dio);
+    // Feed's cached view of p1 starts unliked, count 0.
+    await container.read(feedProvider.future);
+    final before = container
+        .read(feedProvider)
+        .value!
+        .posts
+        .firstWhere((p) => p.id == 'p1');
+    expect(before.likedByMe, isFalse);
+    expect(before.likeCount, 0);
+
+    // Simulate: user opened p1 from feed, liked it from the detail page.
+    await container.read(postRepositoryProvider).togglePostLike('p1', false);
+
+    // Feed card for p1 must now reflect the server-confirmed state,
+    // without a manual pull-to-refresh.
+    final after = container
+        .read(feedProvider)
+        .value!
+        .posts
+        .firstWhere((p) => p.id == 'p1');
+    expect(after.likedByMe, isTrue);
+    expect(after.likeCount, 1);
+    // p2 untouched.
+    expect(
+      container
+          .read(feedProvider)
+          .value!
+          .posts
+          .firstWhere((p) => p.id == 'p2')
+          .likedByMe,
+      isFalse,
+    );
   });
 }

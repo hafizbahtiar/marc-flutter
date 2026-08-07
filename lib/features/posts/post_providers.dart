@@ -145,6 +145,21 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
       ),
     );
   }
+
+  /// Ganti satu post dalam feed dengan versi terkini — dipanggil lepas
+  /// mutation (like/edit/comment) dari post detail page berjaya, supaya
+  /// feed sync balik tanpa perlu pull-to-refresh manual.
+  void patchPost(Post updated) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = AsyncData(
+      current.copyWith(
+        posts: current.posts
+            .map((p) => p.id == updated.id ? updated : p)
+            .toList(),
+      ),
+    );
+  }
 }
 
 final feedProvider = AsyncNotifierProvider<FeedNotifier, FeedState>(
@@ -268,6 +283,7 @@ class PostRepository {
       await dio.post('/posts/$id/like');
     }
     _ref.invalidate(postDetailProvider(id));
+    await _syncPostToFeed(id);
   }
 
   Future<void> editPost(String id, String content) async {
@@ -275,6 +291,7 @@ class PostRepository {
         .read(dioProvider)
         .patch('/posts/$id', data: {'content': content});
     _ref.invalidate(postDetailProvider(id));
+    await _syncPostToFeed(id);
   }
 
   Future<void> createComment(
@@ -290,12 +307,27 @@ class PostRepository {
         );
     _ref.invalidate(commentsProvider(postId));
     _ref.invalidate(postDetailProvider(postId));
+    await _syncPostToFeed(postId);
   }
 
   Future<void> deleteComment(String postId, String commentId) async {
     await _ref.read(dioProvider).delete('/comments/$commentId');
     _ref.invalidate(commentsProvider(postId));
     _ref.invalidate(postDetailProvider(postId));
+    await _syncPostToFeed(postId);
+  }
+
+  /// Refetch post terkini dari server dan patch ke dalam feed cache — best
+  /// effort, tak boleh gagalkan mutation utama (like/edit/comment) yang dah
+  /// pun berjaya.
+  Future<void> _syncPostToFeed(String postId) async {
+    try {
+      final updated = await _ref.read(postDetailProvider(postId).future);
+      _ref.read(feedProvider.notifier).patchPost(updated);
+    } catch (_) {
+      // Feed cuma tak sync sehingga pull-to-refresh seterusnya — bukan
+      // kritikal, mutation utama (like/edit/comment) dah pun berjaya.
+    }
   }
 
   Future<void> editComment(
