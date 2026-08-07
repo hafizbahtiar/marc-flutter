@@ -15,9 +15,11 @@ class _FakeAuthService implements AuthService {
 }
 
 ProviderContainer _containerWith(AuthResult result) {
-  final c = ProviderContainer(overrides: [
-    authServiceProvider.overrideWithValue(_FakeAuthService(result)),
-  ]);
+  final c = ProviderContainer(
+    overrides: [
+      authServiceProvider.overrideWithValue(_FakeAuthService(result)),
+    ],
+  );
   addTearDown(c.dispose);
   return c;
 }
@@ -32,7 +34,8 @@ void main() {
 
   test('login gagal → state AsyncError dengan mesej', () async {
     final c = _containerWith(
-        const AuthResult(success: false, error: 'Email atau kata laluan salah'));
+      const AuthResult(success: false, error: 'Email atau kata laluan salah'),
+    );
     await c.read(loginControllerProvider.notifier).submit('a@b.com', 'wrong1');
     final state = c.read(loginControllerProvider);
     expect(state.hasError, isTrue);

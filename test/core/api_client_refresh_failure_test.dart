@@ -66,7 +66,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await container.read(authNotifierProvider.notifier).setTokens(
+      await container
+          .read(authNotifierProvider.notifier)
+          .setTokens(
             access: 'expired-access-token',
             refresh: 'still-valid-refresh-token',
           );
@@ -116,7 +118,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await container.read(authNotifierProvider.notifier).setTokens(
+      await container
+          .read(authNotifierProvider.notifier)
+          .setTokens(
             access: 'expired-access-token',
             refresh: 'genuinely-invalid-refresh-token',
           );
@@ -131,7 +135,8 @@ void main() {
       expect(
         container.read(authNotifierProvider).isLoggedIn,
         isFalse,
-        reason: 'refresh token betul-betul ditolak server (401) — sesi '
+        reason:
+            'refresh token betul-betul ditolak server (401) — sesi '
             'memang tak sah, patut di-clear.',
       );
     },

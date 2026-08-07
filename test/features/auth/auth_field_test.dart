@@ -5,15 +5,17 @@ import 'package:marc/features/auth/widgets/auth_field.dart';
 void main() {
   testWidgets('toggle tunjuk/sembunyi menukar keterlihatan', (tester) async {
     final controller = TextEditingController(text: 'rahsia');
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: AuthField(
-          controller: controller,
-          label: 'Kata Laluan',
-          obscureText: true,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AuthField(
+            controller: controller,
+            label: 'Kata Laluan',
+            obscureText: true,
+          ),
         ),
       ),
-    ));
+    );
 
     EditableText field() =>
         tester.widget<EditableText>(find.byType(EditableText));
