@@ -5,6 +5,7 @@ import 'package:marc/app/theme.dart';
 import 'package:marc/features/notifications/notifications_providers.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/shared/relative_time.dart';
+import 'package:marc/shared/widgets/my_snackbar.dart';
 
 IconData _iconFor(AppNotification n) {
   if (n.isLike) return Icons.favorite;
@@ -40,8 +41,15 @@ class NotificationsPage extends ConsumerWidget {
         title: const Text('Notifikasi'),
         actions: [
           TextButton(
-            onPressed: () =>
-                ref.read(notificationRepositoryProvider).markAllRead(),
+            onPressed: () async {
+              try {
+                await ref.read(notificationRepositoryProvider).markAllRead();
+              } catch (_) {
+                if (context.mounted) {
+                  MySnackBar.error(context, 'Gagal tanda semua dibaca.');
+                }
+              }
+            },
             child: const Text('Tanda semua dibaca'),
           ),
         ],
@@ -117,11 +125,19 @@ class NotificationsPage extends ConsumerWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                    onTap: () {
+                    onTap: () async {
                       if (!n.read) {
-                        ref.read(notificationRepositoryProvider).markRead(n.id);
+                        try {
+                          await ref
+                              .read(notificationRepositoryProvider)
+                              .markRead(n.id);
+                        } catch (_) {
+                          if (context.mounted) {
+                            MySnackBar.error(context, 'Gagal tanda dibaca.');
+                          }
+                        }
                       }
-                      if (n.postId != null) {
+                      if (n.postId != null && context.mounted) {
                         context.push('/posts/${n.postId}');
                       }
                     },

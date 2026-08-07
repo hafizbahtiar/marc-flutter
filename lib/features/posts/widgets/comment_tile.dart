@@ -6,6 +6,7 @@ import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/widgets/my_snackbar.dart';
 
 /// Satu comment top-level + reply-reply di bawahnya (indent sekali sahaja
 /// — backend dah cap depth 2, jadi `replies` sentiasa leaf, tak recurse).
@@ -129,13 +130,21 @@ class _CommentRow extends ConsumerWidget {
                 Row(
                   children: [
                     InkWell(
-                      onTap: () => ref
-                          .read(postRepositoryProvider)
-                          .toggleCommentLike(
-                            postId,
-                            comment.id,
-                            comment.likedByMe,
-                          ),
+                      onTap: () async {
+                        try {
+                          await ref
+                              .read(postRepositoryProvider)
+                              .toggleCommentLike(
+                                postId,
+                                comment.id,
+                                comment.likedByMe,
+                              );
+                        } catch (_) {
+                          if (context.mounted) {
+                            MySnackBar.error(context, 'Gagal like comment.');
+                          }
+                        }
+                      },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -185,9 +194,18 @@ class _CommentRow extends ConsumerWidget {
                             isDestructive: true,
                           );
                           if (ok) {
-                            await ref
-                                .read(postRepositoryProvider)
-                                .deleteComment(postId, comment.id);
+                            try {
+                              await ref
+                                  .read(postRepositoryProvider)
+                                  .deleteComment(postId, comment.id);
+                            } catch (_) {
+                              if (context.mounted) {
+                                MySnackBar.error(
+                                  context,
+                                  'Gagal padam comment.',
+                                );
+                              }
+                            }
                           }
                         },
                         child: Text(

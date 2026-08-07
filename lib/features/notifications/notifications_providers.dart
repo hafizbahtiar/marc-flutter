@@ -32,6 +32,7 @@ class NotificationRepository {
 
   Future<void> markRead(String id) async {
     await _ref.read(dioProvider).post('/notifications/$id/read');
+    _ref.invalidate(notificationsProvider);
   }
 
   Future<void> markAllRead() async {
