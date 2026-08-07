@@ -151,4 +151,16 @@ class AppNotification {
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
+
+  AppNotification copyWith({bool? read}) {
+    return AppNotification(
+      id: id,
+      actorId: actorId,
+      type: type,
+      postId: postId,
+      commentId: commentId,
+      read: read ?? this.read,
+      createdAt: createdAt,
+    );
+  }
 }

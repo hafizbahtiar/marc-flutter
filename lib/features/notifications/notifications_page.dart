@@ -29,11 +29,38 @@ String _titleFor(AppNotification n) {
   return 'Pendaftaran anda tidak diluluskan.'; // isMemberRejected
 }
 
-class NotificationsPage extends ConsumerWidget {
+class NotificationsPage extends ConsumerStatefulWidget {
   const NotificationsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsPage> createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends ConsumerState<NotificationsPage> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >
+        _scrollController.position.maxScrollExtent - 300) {
+      ref.read(notificationsProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final notifications = ref.watch(notificationsProvider);
 
     return Scaffold(
@@ -74,36 +101,54 @@ class NotificationsPage extends ConsumerWidget {
               ),
             ),
           ),
-          data: (items) {
-            if (items.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.notifications_none,
-                        color: AppColors.muted,
+          data: (state) {
+            if (state.items.isEmpty) {
+              return RefreshIndicator.adaptive(
+                onRefresh: () =>
+                    ref.read(notificationsProvider.notifier).refresh(),
+                child: ListView(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(28),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 72),
+                          const Icon(
+                            Icons.notifications_none,
+                            color: AppColors.muted,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Tiada notifikasi buat masa ini.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Tiada notifikasi buat masa ini.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               );
             }
 
             return RefreshIndicator.adaptive(
-              onRefresh: () => ref.refresh(notificationsProvider.future),
+              onRefresh: () =>
+                  ref.read(notificationsProvider.notifier).refresh(),
               child: ListView.separated(
-                itemCount: items.length,
+                controller: _scrollController,
+                itemCount: state.items.length + (state.hasMore ? 1 : 0),
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, i) {
-                  final n = items[i];
+                  if (i >= state.items.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      ),
+                    );
+                  }
+
+                  final n = state.items[i];
                   return ListTile(
                     leading: Icon(_iconFor(n), color: _colorFor(context, n)),
                     title: Text(
