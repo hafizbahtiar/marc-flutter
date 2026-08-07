@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:marc/core/api_client.dart';
+import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/posts/post_models.dart';
 
 /// State feed: senarai post + cursor untuk load-more (infinite scroll).
@@ -33,7 +34,17 @@ class FeedState {
 
 class FeedNotifier extends AsyncNotifier<FeedState> {
   @override
-  Future<FeedState> build() => _fetchPage(cursor: null);
+  Future<FeedState> build() async {
+    // Reaktif pada status log masuk — sama macam `membersProvider` — supaya
+    // feed user lama tak kekal terpapar untuk user seterusnya pada peranti
+    // sama (ProviderContainer dicipta sekali sahaja dalam main.dart).
+    final isLoggedIn = ref.watch(
+      authNotifierProvider.select((s) => s.isLoggedIn),
+    );
+    if (!isLoggedIn) return const FeedState();
+
+    return _fetchPage(cursor: null);
+  }
 
   Future<FeedState> _fetchPage({required String? cursor}) async {
     final dio = ref.read(dioProvider);
@@ -117,19 +128,42 @@ final feedProvider = AsyncNotifierProvider<FeedNotifier, FeedState>(
   FeedNotifier.new,
 );
 
+/// Post tunggal (halaman detail). Reaktif pada status log masuk — bukan
+/// senarai, jadi takde "empty state" semula jadi macam `feedProvider`; kita
+/// throw supaya `PostDetailPage` papar error state sedia ada ("Gagal memuat
+/// post.") dan bukan cache post user lama. Route ni sepatutnya tak boleh
+/// dicapai selepas logout pun (GoRouter redirect ke /login), jadi ini
+/// defence-in-depth untuk senario sama-peranti/timing edge case.
 final postDetailProvider = FutureProvider.family<Post, String>((
   ref,
   postId,
 ) async {
+  final isLoggedIn = ref.watch(
+    authNotifierProvider.select((s) => s.isLoggedIn),
+  );
+  if (!isLoggedIn) {
+    throw StateError('Sesi tamat — sila log masuk semula.');
+  }
+
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/posts/$postId');
   return Post.fromJson(res.data as Map<String, dynamic>);
 });
 
+/// Comment untuk satu post. Sama rasional dengan `postDetailProvider` di
+/// atas — throw bila logout supaya `PostDetailPage` guna error state
+/// sedia ada ("Gagal memuat comment.") dan bukan papar comment user lama.
 final commentsProvider = FutureProvider.family<List<Comment>, String>((
   ref,
   postId,
 ) async {
+  final isLoggedIn = ref.watch(
+    authNotifierProvider.select((s) => s.isLoggedIn),
+  );
+  if (!isLoggedIn) {
+    throw StateError('Sesi tamat — sila log masuk semula.');
+  }
+
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/posts/$postId/comments');
   final data = res.data as Map<String, dynamic>;
