@@ -3,7 +3,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/notifications/notifications_providers.dart';
+import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/shared/relative_time.dart';
+
+IconData _iconFor(AppNotification n) {
+  if (n.isLike) return Icons.favorite;
+  if (n.isComment) return Icons.mode_comment_outlined;
+  if (n.isMemberPending) return Icons.person_add_alt_outlined;
+  if (n.isMemberApproved) return Icons.check_circle_outline;
+  return Icons.cancel_outlined; // isMemberRejected
+}
+
+Color _colorFor(BuildContext context, AppNotification n) {
+  if (n.isLike || n.isMemberRejected) return AppColors.error;
+  if (n.isMemberApproved) return AppColors.accent;
+  return Theme.of(context).colorScheme.primary; // comment, member_pending
+}
+
+String _titleFor(AppNotification n) {
+  if (n.isLike) return 'Seseorang menyukai post anda';
+  if (n.isComment) return 'Seseorang comment pada post anda';
+  if (n.isMemberPending) return 'Ahli baru menunggu kelulusan anda';
+  if (n.isMemberApproved) return 'Pendaftaran anda telah diluluskan.';
+  return 'Pendaftaran anda tidak diluluskan.'; // isMemberRejected
+}
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -74,16 +97,9 @@ class NotificationsPage extends ConsumerWidget {
                 itemBuilder: (context, i) {
                   final n = items[i];
                   return ListTile(
-                    leading: Icon(
-                      n.isLike ? Icons.favorite : Icons.mode_comment_outlined,
-                      color: n.isLike
-                          ? AppColors.error
-                          : Theme.of(context).colorScheme.primary,
-                    ),
+                    leading: Icon(_iconFor(n), color: _colorFor(context, n)),
                     title: Text(
-                      n.isLike
-                          ? 'Seseorang menyukai post anda'
-                          : 'Seseorang comment pada post anda',
+                      _titleFor(n),
                       style: TextStyle(
                         fontWeight: n.read
                             ? FontWeight.normal
@@ -105,7 +121,9 @@ class NotificationsPage extends ConsumerWidget {
                       if (!n.read) {
                         ref.read(notificationRepositoryProvider).markRead(n.id);
                       }
-                      context.push('/posts/${n.postId}');
+                      if (n.postId != null) {
+                        context.push('/posts/${n.postId}');
+                      }
                     },
                   );
                 },
