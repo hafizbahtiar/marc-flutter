@@ -51,3 +51,5 @@ app.*.map.json
 # Build artifacts (output setup.sh)
 /apk/
 /aab/
+
+.superpowers/
