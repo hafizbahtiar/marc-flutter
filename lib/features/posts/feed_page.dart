@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/app/theme.dart';
+import 'package:marc/core/api_client.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
@@ -45,16 +46,53 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     // router redirect) sebab myProfileProvider async — lihat design spec
     // untuk rasional penuh. Fail-open kalau /me gagal fetch (error state)
     // — jangan block user approved sebab isu rangkaian sekejap.
-    final profileStatus = ref.watch(
-      myProfileProvider.select((p) => p.valueOrNull?.status),
-    );
+    //
+    // Backend (marc_go router.go) chains RequireApprovedStatus THEN
+    // RequireVerifiedEmail on every Posts/comments/uploads/notifications
+    // route — jadi client kena semak KEDUA-DUA status DAN emailVerified,
+    // bukan status sahaja, atau ahli approved-tapi-belum-sahkan-email
+    // terperangkap pada 403 generic tanpa jalan keluar.
+    //
+    // Guna .select dengan record supaya widget ni hanya rebuild bila
+    // status ATAU emailVerified berubah — bukan pada sebarang field
+    // Profile lain.
+    final (status: profileStatus, emailVerified: profileEmailVerified) = ref
+        .watch(
+          myProfileProvider.select(
+            (p) => (
+              status: p.valueOrNull?.status,
+              emailVerified: p.valueOrNull?.emailVerified,
+            ),
+          ),
+        );
+
     if (profileStatus != null && profileStatus != 'approved') {
       return _PendingStatusView(
         status: profileStatus,
         onRefresh: () async {
-          final profile = await ref.refresh(myProfileProvider.future);
-          if (profile?.status == 'approved') {
-            ref.invalidate(feedProvider);
+          try {
+            final refreshed = await ref.refresh(myProfileProvider.future);
+            if (refreshed?.status == 'approved') {
+              ref.invalidate(feedProvider);
+            }
+          } catch (_) {
+            if (context.mounted) {
+              MySnackBar.error(context, 'Gagal semak status. Cuba lagi.');
+            }
+          }
+        },
+      );
+    }
+
+    if (profileStatus == 'approved' && profileEmailVerified == false) {
+      return _EmailNotVerifiedView(
+        onRefresh: () async {
+          try {
+            final _ = await ref.refresh(myProfileProvider.future);
+          } catch (_) {
+            if (context.mounted) {
+              MySnackBar.error(context, 'Gagal semak status. Cuba lagi.');
+            }
           }
         },
       );
@@ -207,6 +245,93 @@ class _PendingStatusView extends StatelessWidget {
                 OutlinedButton(
                   onPressed: onRefresh,
                   child: const Text('Semak semula'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gate untuk ahli yang approved tapi email belum disahkan. Backend
+/// (RequireVerifiedEmail) 403 semua route Posts/comments/uploads/
+/// notifications untuk kes ni — beri jalan keluar terus di sini (hantar
+/// semula email pengesahan, atau semak semula status) supaya user tak
+/// terperangkap pada Feed yang error generic.
+class _EmailNotVerifiedView extends ConsumerStatefulWidget {
+  const _EmailNotVerifiedView({required this.onRefresh});
+
+  final Future<void> Function() onRefresh;
+
+  @override
+  ConsumerState<_EmailNotVerifiedView> createState() =>
+      _EmailNotVerifiedViewState();
+}
+
+class _EmailNotVerifiedViewState extends ConsumerState<_EmailNotVerifiedView> {
+  bool _sending = false;
+
+  Future<void> _requestVerification() async {
+    setState(() => _sending = true);
+    try {
+      await ref.read(dioProvider).post('/auth/verify-email/request');
+      if (!mounted) return;
+      MySnackBar.success(
+        context,
+        'Email pengesahan dihantar. Sila semak inbox anda.',
+      );
+    } catch (_) {
+      if (!mounted) return;
+      MySnackBar.error(context, 'Gagal hantar email pengesahan. Cuba lagi.');
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('MARC')),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.mark_email_unread_outlined,
+                  size: 48,
+                  color: AppColors.warning,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Sila sahkan email anda untuk teruskan.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    OutlinedButton(
+                      onPressed: _sending ? null : _requestVerification,
+                      child: _sending
+                          ? const SizedBox(
+                              height: 14,
+                              width: 14,
+                              child: CircularProgressIndicator.adaptive(),
+                            )
+                          : const Text('Hantar semula'),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton(
+                      onPressed: widget.onRefresh,
+                      child: const Text('Semak semula'),
+                    ),
+                  ],
                 ),
               ],
             ),
