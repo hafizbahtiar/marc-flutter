@@ -66,6 +66,63 @@ Flutter sahaja.
   `member_rejected`) dirender dengan icon/copy sendiri, tap-guard elak
   navigate ke post yang tak wujud.
 
+- **Security/correctness audit (Opus, 2026-08-07)** ✅ (done, all fixed)
+  Independent audit atas seluruh `lib/` (bukan diff-scoped). Ringkasan:
+  tiada Critical, `flutter analyze` bersih sepanjang, satu je force-unwrap
+  (`!`) dalam seluruh app dan provably safe, JSON parsing padan
+  nullability backend hampir field-for-field.
+
+  **High (1/1 fixed, commit `4b18cfe`):** cached feed/notifications/
+  postDetail/comments provider kekal terpapar lepas logout (bukan
+  `autoDispose`, tak watch auth state) — user seterusnya pada peranti
+  sama boleh nampak data user sebelum dia. Fix: `.select(isLoggedIn)`
+  guard di semua 4 provider (padanan pattern `membersProvider` sedia ada).
+
+  **Medium (8/8 fixed, commits `e461bed`, `f751228`, `794e5b5`,
+  `68fc42e`, `3b4b3b0`, `bae98ef`):**
+  - Optimistic like-revert (`FeedNotifier.toggleLike`) snapshot SEMUA
+    state lama bila gagal, bukan cuma 1 post — boleh hapus post yang
+    baru loadMore. Fix: revert cuma post berkenaan, atas state TERKINI.
+  - `loadMore()` race dengan `refresh()` — hasil loadMore lambat boleh
+    overwrite refresh yang dah siap. Fix: generation counter guard.
+  - Feed gate cuma check `status`, bukan `email_verified` — approved-
+    tapi-belum-verify user stuck kat skrin ralat generic yang tak boleh
+    pulih. Fix: `_EmailNotVerifiedView` baru (resend + semak semula).
+  - "Semak semula" punya refresh tiada try/catch — unhandled exception,
+    tiada feedback. Fix: try/catch + snackbar (verified `copyWithPrevious`
+    Riverpod dah handle fail-open concern, tak perlu extra state).
+  - `signOut()` block sampai 12s (await unlink SEBELUM clear, walaupun
+    comment cakap sepatutnya serta-merta) — tiada busy state, boleh
+    double-tap. Fix: tangkap token dulu, clear() serta-merta, unlink +
+    logout server jalan unawaited lepas tu guna token yang ditangkap.
+  - 4 aksara (like comment, padam comment, mark-read, mark-all-read)
+    fire-and-forget tanpa error handling/feedback. Fix: try/catch +
+    snackbar konsisten, `markRead` tambah invalidation yang hilang.
+  - Like/comment dari detail page tak sync balik ke feed card. Fix:
+    `FeedNotifier.patchPost` + `_syncPostToFeed` helper lepas setiap
+    mutation (like/edit/comment/delete comment).
+  - Mesej ralat backend yang spesifik (cth: "cuma management boleh buat
+    pengumuman") dibuang, ganti generic "Gagal...Cuba lagi." di mana-mana
+    selain auth. Fix: `extractErrorMessage` dipindah ke `core/error_utils.dart`,
+    dipakai di 8 lokasi.
+
+  **Low (11/11 fixed, commits `fd5deb0`, `ce54003`, `cf28f8f`, `4743c70`,
+  `8feecbe`, `4a38f44`):** r2_key ownership (dah selesai side-effect
+  backend H2); auth-refresh race (`_lastRefreshRejected` shared state →
+  `_RefreshOutcome` enum returned terus); "Edit" menu post/comment yang
+  dulu dead sekarang wired penuh (dialog-based); relative-time UTC bug;
+  status fail-open default (`'approved'`→`'pending'`); tiada handler tap
+  push notification (navigate ke `/notifications` — deep-link terus ke
+  post perlukan backend hantar `additionalData`, dicatat sebagai
+  follow-up, bukan skop sekarang); status field default fail-open;
+  notification pagination tak implement (kini infinite-scroll, padanan
+  pattern `FeedNotifier`); pull-to-refresh flash skrin kosong; upload
+  content-type dari extension bukan byte sebenar (kini sniff magic
+  bytes); gambar diupload orphan bila post gagal separuh jalan (kini
+  retry-safe, tak re-upload gambar yang dah berjaya); approve/reject
+  tiada double-tap guard; `_ImageThumb` re-read file dari disk setiap
+  rebuild.
+
 ## Belum
 
 - [ ] **R2 API token permission** — perlu semak Cloudflare dashboard: token
