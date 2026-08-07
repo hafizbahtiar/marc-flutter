@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:marc/app/router.dart';
 import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
 
@@ -58,11 +59,23 @@ class PushService {
 
   /// Dengar perubahan subscription id. Selepas permission diberi, id
   /// selalunya belum sedia serta-merta; observer ini tangkap bila ia masuk.
+  ///
+  /// Dengar juga bila push notification DITAP (dari tray OS) — navigate
+  /// ke skrin Notifikasi dalam app. Backend belum hantar `additionalData`
+  /// (cuma title/message) jadi tak boleh deep-link terus ke post/ahli
+  /// berkenaan setakat ni — itu perlu perubahan backend berasingan
+  /// (tambah additionalData pada OneSignal send), catat sebagai
+  /// follow-up, bukan skop fix ni.
   void startObserving() {
     try {
       OneSignal.User.pushSubscription.addObserver((_) {
         if (_ref.read(authNotifierProvider).isLoggedIn) {
           _upsertCurrent();
+        }
+      });
+      OneSignal.Notifications.addClickListener((event) {
+        if (_ref.read(authNotifierProvider).isLoggedIn) {
+          _ref.read(routerProvider).push('/notifications');
         }
       });
     } catch (_) {}
