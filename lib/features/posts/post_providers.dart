@@ -33,11 +33,14 @@ class FeedState {
 }
 
 class FeedNotifier extends AsyncNotifier<FeedState> {
+  int _generation = 0;
+
   @override
   Future<FeedState> build() async {
     // Reaktif pada status log masuk — sama macam `membersProvider` — supaya
     // feed user lama tak kekal terpapar untuk user seterusnya pada peranti
     // sama (ProviderContainer dicipta sekali sahaja dalam main.dart).
+    _generation++;
     final isLoggedIn = ref.watch(
       authNotifierProvider.select((s) => s.isLoggedIn),
     );
@@ -60,26 +63,34 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
   }
 
   Future<void> refresh() async {
+    final gen = ++_generation;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetchPage(cursor: null));
+    final result = await AsyncValue.guard(() => _fetchPage(cursor: null));
+    if (gen != _generation) return;
+    state = result;
   }
 
   Future<void> loadMore() async {
     final current = state.valueOrNull;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
 
+    final gen = _generation;
     state = AsyncData(current.copyWith(isLoadingMore: true));
     try {
       final next = await _fetchPage(cursor: current.nextCursor);
+      if (gen != _generation) return;
+      final latest = state.valueOrNull ?? current;
       state = AsyncData(
-        current.copyWith(
-          posts: [...current.posts, ...next.posts],
+        latest.copyWith(
+          posts: [...latest.posts, ...next.posts],
           nextCursor: () => next.nextCursor,
           isLoadingMore: false,
         ),
       );
     } catch (_) {
-      state = AsyncData(current.copyWith(isLoadingMore: false));
+      if (gen != _generation) return;
+      final latest = state.valueOrNull ?? current;
+      state = AsyncData(latest.copyWith(isLoadingMore: false));
     }
   }
 
@@ -109,7 +120,19 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
         await dio.post('/posts/${post.id}/like');
       }
     } catch (_) {
-      state = AsyncData(current);
+      final latest = state.valueOrNull;
+      if (latest == null) return;
+      state = AsyncData(
+        latest.copyWith(
+          posts: latest.posts.map((p) {
+            if (p.id != post.id) return p;
+            return p.copyWith(
+              likedByMe: wasLiked,
+              likeCount: p.likeCount + (wasLiked ? 1 : -1),
+            );
+          }).toList(),
+        ),
+      );
     }
   }
 
