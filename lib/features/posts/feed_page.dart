@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:marc/app/theme.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
+import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
@@ -38,6 +40,21 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Stage 11: user pending/rejected tak boleh akses Feed (backend 403
+    // semua endpoint selain /me). Gate content-level di sini (bukan
+    // router redirect) sebab myProfileProvider async — lihat design spec
+    // untuk rasional penuh. Fail-open kalau /me gagal fetch (error state)
+    // — jangan block user approved sebab isu rangkaian sekejap.
+    final profileStatus = ref.watch(
+      myProfileProvider.select((p) => p.valueOrNull?.status),
+    );
+    if (profileStatus != null && profileStatus != 'approved') {
+      return _PendingStatusView(
+        status: profileStatus,
+        onRefresh: () => ref.refresh(myProfileProvider.future),
+      );
+    }
+
     final feed = ref.watch(feedProvider);
 
     return Scaffold(
@@ -144,6 +161,51 @@ class _FeedPageState extends ConsumerState<FeedPage> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _PendingStatusView extends StatelessWidget {
+  const _PendingStatusView({required this.status, required this.onRefresh});
+
+  final String status;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final isRejected = status == 'rejected';
+    return Scaffold(
+      appBar: AppBar(title: const Text('MARC')),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isRejected ? Icons.error_outline : Icons.hourglass_empty,
+                  size: 48,
+                  color: isRejected ? AppColors.error : AppColors.warning,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isRejected
+                      ? 'Pendaftaran anda tidak diluluskan. Sila hubungi pihak pengurusan MAIWP.'
+                      : 'Pendaftaran anda sedang disemak oleh pihak pengurusan MAIWP.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 20),
+                OutlinedButton(
+                  onPressed: onRefresh,
+                  child: const Text('Semak semula'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
