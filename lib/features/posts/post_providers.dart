@@ -64,7 +64,13 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
 
   Future<void> refresh() async {
     final gen = ++_generation;
-    state = const AsyncLoading();
+    // copyWithPrevious (isRefresh: true default) keeps the previous data
+    // accessible via isRefreshing/valueOrNull so `feed.when(...)` in
+    // feed_page.dart (skipLoadingOnRefresh: true by default in this
+    // Riverpod version) skips the loading branch and keeps showing the
+    // existing list instead of flashing a full-screen spinner + losing
+    // scroll position during pull-to-refresh.
+    state = AsyncLoading<FeedState>().copyWithPrevious(state);
     final result = await AsyncValue.guard(() => _fetchPage(cursor: null));
     if (gen != _generation) return;
     state = result;

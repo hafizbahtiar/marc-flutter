@@ -43,14 +43,7 @@ class _AuthInterceptor extends Interceptor {
   /// di-rotate sekali sahaja setiap panggilan, jadi refresh kedua yang
   /// terpisah akan gagal (token dah dipadam oleh refresh pertama) dan
   /// tersalah anggap sesi luput terus.
-  Future<bool>? _refreshing;
-
-  /// Sama ada `_tryRefresh` terakhir gagal sebab server TOLAK refresh
-  /// token tu (401 — memang tak sah/luput), berbanding sekadar gagal
-  /// sambung (timeout/offline/5xx). Cuma clear sesi untuk kes pertama —
-  /// internet terputus sekejap tak patut log keluar user yang refresh
-  /// token dia sebenarnya masih sah.
-  bool _lastRefreshRejected = false;
+  Future<_RefreshOutcome>? _refreshing;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -84,9 +77,9 @@ class _AuthInterceptor extends Interceptor {
     }
 
     final tokenBeforeRefresh = _ref.read(authNotifierProvider).accessToken;
-    final refreshed = await _refreshOnce();
+    final outcome = await _refreshOnce();
 
-    if (!refreshed) {
+    if (outcome != _RefreshOutcome.success) {
       // _refreshOnce dedupe request yang benar-benar overlap, tapi tak
       // jamin SEMUA 401 serentak overlap sempurna (bergantung timing
       // network sebenar). Kalau refresh KITA gagal tapi access token dah
@@ -98,7 +91,7 @@ class _AuthInterceptor extends Interceptor {
         await _retryWithToken(opts, current.accessToken!, handler);
         return;
       }
-      if (_lastRefreshRejected) {
+      if (outcome == _RefreshOutcome.rejected) {
         await _ref.read(authNotifierProvider.notifier).clear();
       }
       handler.next(err);
@@ -124,18 +117,17 @@ class _AuthInterceptor extends Interceptor {
     }
   }
 
-  Future<bool> _refreshOnce() {
+  Future<_RefreshOutcome> _refreshOnce() {
     return _refreshing ??= _tryRefresh().whenComplete(() => _refreshing = null);
   }
 
-  Future<bool> _tryRefresh() async {
+  Future<_RefreshOutcome> _tryRefresh() async {
     final storage = _ref.read(tokenStorageProvider);
     final refreshToken = await storage.readRefreshToken();
     if (refreshToken == null) {
       // Tiada refresh token langsung tersimpan — sesi memang tak sah,
       // bukan sekadar gagal sambung.
-      _lastRefreshRejected = true;
-      return false;
+      return _RefreshOutcome.rejected;
     }
 
     try {
@@ -149,13 +141,21 @@ class _AuthInterceptor extends Interceptor {
             access: response.data['access_token'] as String,
             refresh: response.data['refresh_token'] as String,
           );
-      return true;
+      return _RefreshOutcome.success;
     } on DioException catch (e) {
       // 401 = server tolak refresh token (memang tak sah/luput/dah
       // dipakai). Selain tu (timeout, offline, 5xx) = gagal sambung —
       // refresh token masih boleh sah, cuma belum sempat dipakai.
-      _lastRefreshRejected = e.response?.statusCode == 401;
-      return false;
+      return e.response?.statusCode == 401
+          ? _RefreshOutcome.rejected
+          : _RefreshOutcome.networkFailure;
     }
   }
 }
+
+/// Hasil `_tryRefresh` — kenapa perlu enum (bukan `bool` + shared field):
+/// outcome dipulangkan TERUS dari `_refreshOnce()` sebagai nilai LOCAL di
+/// `onError`, jadi tak boleh tertimpa oleh panggilan refresh berasingan
+/// (bukan-dedupe) yang selesai antara masa `_tryRefresh` siap dengan masa
+/// continuation `onError` baca outcome tu.
+enum _RefreshOutcome { success, rejected, networkFailure }

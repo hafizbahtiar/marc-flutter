@@ -193,11 +193,18 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   }
 }
 
-class _ImageThumb extends StatelessWidget {
+class _ImageThumb extends StatefulWidget {
   const _ImageThumb({required this.image, required this.onRemove});
 
   final XFile image;
   final VoidCallback onRemove;
+
+  @override
+  State<_ImageThumb> createState() => _ImageThumbState();
+}
+
+class _ImageThumbState extends State<_ImageThumb> {
+  late final Future<Uint8List> _bytesFuture = widget.image.readAsBytes();
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +213,7 @@ class _ImageThumb extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: FutureBuilder<Uint8List>(
-            future: image.readAsBytes(),
+            future: _bytesFuture,
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return Container(
@@ -228,7 +235,7 @@ class _ImageThumb extends StatelessWidget {
           top: 2,
           right: 2,
           child: InkWell(
-            onTap: onRemove,
+            onTap: widget.onRemove,
             child: Container(
               padding: const EdgeInsets.all(2),
               decoration: const BoxDecoration(

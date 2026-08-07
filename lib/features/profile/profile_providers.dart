@@ -32,7 +32,7 @@ class Profile {
       memberId: json['member_id'] as String,
       email: json['email'] as String,
       emailVerified: (json['email_verified'] as bool?) ?? false,
-      status: (json['status'] as String?) ?? 'approved',
+      status: (json['status'] as String?) ?? 'pending',
       displayName: json['display_name'] as String?,
       phone: json['phone'] as String?,
       roleKey: (json['role_key'] as String?) ?? 'ahli',
@@ -121,7 +121,7 @@ class MemberRow {
       displayName: json['display_name'] as String?,
       roleName: (json['role_name'] as String?) ?? 'Ahli',
       category: (json['category'] as String?) ?? 'ahli',
-      status: (json['status'] as String?) ?? 'approved',
+      status: (json['status'] as String?) ?? 'pending',
     );
   }
 }
