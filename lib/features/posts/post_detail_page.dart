@@ -8,6 +8,7 @@ import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/comment_tile.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 class PostDetailPage extends ConsumerStatefulWidget {
@@ -91,6 +92,28 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                                 e is DioException
                                     ? extractErrorMessage(e)
                                     : 'Gagal like post.',
+                              );
+                            }
+                          }
+                        },
+                        onEdit: () async {
+                          final newContent = await showEditTextDialog(
+                            context,
+                            title: 'Edit post',
+                            initialValue: post.content,
+                          );
+                          if (newContent == null) return;
+                          try {
+                            await ref
+                                .read(postRepositoryProvider)
+                                .editPost(post.id, newContent);
+                          } catch (e) {
+                            if (context.mounted) {
+                              MySnackBar.error(
+                                context,
+                                e is DioException
+                                    ? extractErrorMessage(e)
+                                    : 'Gagal edit post.',
                               );
                             }
                           }

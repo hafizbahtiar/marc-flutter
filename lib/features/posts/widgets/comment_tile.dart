@@ -1,11 +1,14 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/theme.dart';
+import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 /// Satu comment top-level + reply-reply di bawahnya (indent sekali sahaja
@@ -182,6 +185,42 @@ class _CommentRow extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    if (isOwner) ...[
+                      const SizedBox(width: 16),
+                      InkWell(
+                        onTap: () async {
+                          final newContent = await showEditTextDialog(
+                            context,
+                            title: 'Edit comment',
+                            initialValue: comment.content,
+                            maxLines: 3,
+                          );
+                          if (newContent == null) return;
+                          try {
+                            await ref
+                                .read(postRepositoryProvider)
+                                .editComment(postId, comment.id, newContent);
+                          } catch (e) {
+                            if (context.mounted) {
+                              MySnackBar.error(
+                                context,
+                                e is DioException
+                                    ? extractErrorMessage(e)
+                                    : 'Gagal edit comment.',
+                              );
+                            }
+                          }
+                        },
+                        child: Text(
+                          'Edit',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                     if (canDelete) ...[
                       const SizedBox(width: 16),
                       InkWell(

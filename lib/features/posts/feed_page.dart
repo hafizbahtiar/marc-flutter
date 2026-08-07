@@ -9,6 +9,7 @@ import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
@@ -180,7 +181,28 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                     onTap: () => context.push('/posts/${post.id}'),
                     onToggleLike: () =>
                         ref.read(feedProvider.notifier).toggleLike(post),
-                    onEdit: () => context.push('/posts/${post.id}'),
+                    onEdit: () async {
+                      final newContent = await showEditTextDialog(
+                        context,
+                        title: 'Edit post',
+                        initialValue: post.content,
+                      );
+                      if (newContent == null) return;
+                      try {
+                        await ref
+                            .read(postRepositoryProvider)
+                            .editPost(post.id, newContent);
+                      } catch (e) {
+                        if (context.mounted) {
+                          MySnackBar.error(
+                            context,
+                            e is DioException
+                                ? extractErrorMessage(e)
+                                : 'Gagal edit post.',
+                          );
+                        }
+                      }
+                    },
                     onDelete: () async {
                       final ok = await showConfirmDialog(
                         context,
