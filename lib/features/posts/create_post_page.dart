@@ -175,7 +175,12 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (context, i) => _ImageThumb(
                       image: _images[i],
-                      onRemove: () => setState(() => _images.removeAt(i)),
+                      onRemove: () => setState(() {
+                        _images.removeAt(i);
+                        if (i < _uploadedKeys.length) {
+                          _uploadedKeys.removeAt(i);
+                        }
+                      }),
                     ),
                   ),
                 ),
