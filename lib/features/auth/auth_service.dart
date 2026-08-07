@@ -82,15 +82,21 @@ class AuthService {
   }
 
   /// Clear sesi tempatan SERTA-MERTA (router redirect ke /login jadi
-  /// responsif), lepas tu baru cuba revoke refresh token di server dalam
-  /// latar belakang — tak `await`, supaya butang "Log keluar" tak nampak
-  /// mati bertahun-tahun kalau network perlahan/timeout.
+  /// responsif) — tangkap access/refresh token dulu untuk 2 panggilan
+  /// latar belakang (unlink device + revoke refresh token di server),
+  /// KEDUA-DUA tak di-`await`, supaya butang "Log keluar" betul-betul
+  /// tak block pada network perlahan/timeout macam yang comment ni
+  /// dulu cakap (tapi kod sebenar tak buat — H1 punya sibling bug,
+  /// dah fix di sini).
   Future<void> signOut() async {
+    final access = await _tokenStorage.readAccessToken();
     final refresh = await _tokenStorage.readRefreshToken();
-    // Kena sebelum clear() — lepas clear, access token dah takde utk
-    // authorize call unlink ni.
-    await _pushService.unlinkCurrentDevice();
+
     await _authNotifier.clear();
+
+    if (access != null) {
+      unawaited(_pushService.unlinkDevice(access));
+    }
 
     if (refresh != null) {
       unawaited(

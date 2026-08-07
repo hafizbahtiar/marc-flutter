@@ -7,11 +7,35 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/profile/widgets/verify_email_banner.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  bool _signingOut = false;
+
+  Future<void> _handleLogout() async {
+    final ok = await showConfirmDialog(
+      context,
+      title: 'Log keluar',
+      message: 'Anda pasti mahu log keluar?',
+      confirmLabel: 'Log keluar',
+      isDestructive: true,
+    );
+    if (!ok || _signingOut) return;
+    setState(() => _signingOut = true);
+    try {
+      await ref.read(authServiceProvider).signOut();
+    } finally {
+      if (mounted) setState(() => _signingOut = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final profile = ref.watch(myProfileProvider);
     final loading = profile.isLoading;
@@ -78,17 +102,14 @@ class ProfilePage extends ConsumerWidget {
             ],
             const SizedBox(height: 32),
             OutlinedButton.icon(
-              onPressed: () async {
-                final ok = await showConfirmDialog(
-                  context,
-                  title: 'Log keluar',
-                  message: 'Anda pasti mahu log keluar?',
-                  confirmLabel: 'Log keluar',
-                  isDestructive: true,
-                );
-                if (ok) await ref.read(authServiceProvider).signOut();
-              },
-              icon: const Icon(Icons.logout, size: 20),
+              onPressed: _signingOut ? null : _handleLogout,
+              icon: _signingOut
+                  ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator.adaptive(),
+                    )
+                  : const Icon(Icons.logout, size: 20),
               label: const Text('Log keluar'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: scheme.error,

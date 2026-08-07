@@ -28,13 +28,11 @@ class _FakeTokenStorage implements TokenStorage {
 }
 
 class _RecordingPushService implements PushService {
-  bool wasLoggedInWhenUnlinkCalled = false;
-  final AuthNotifier authNotifier;
-  _RecordingPushService(this.authNotifier);
+  String? tokenPassedToUnlinkDevice;
 
   @override
-  Future<void> unlinkCurrentDevice() async {
-    wasLoggedInWhenUnlinkCalled = authNotifier.state.isLoggedIn;
+  Future<void> unlinkDevice(String accessToken) async {
+    tokenPassedToUnlinkDevice = accessToken;
   }
 
   @override
@@ -47,14 +45,15 @@ class _RecordingPushService implements PushService {
 
 void main() {
   test(
-    'signOut: unlinkCurrentDevice dipanggil SEBELUM sesi clear (token masih ada)',
+    'signOut: tangkap access token SEBELUM clear() dan hantar ke '
+    'unlinkDevice (bukan bergantung pada token tersimpan/state semasa)',
     () async {
       final storage = _FakeTokenStorage();
       final notifier = AuthNotifier(storage);
       await notifier.hydrate();
       expect(notifier.state.isLoggedIn, isTrue);
 
-      final pushService = _RecordingPushService(notifier);
+      final pushService = _RecordingPushService();
       // dio null-safe: signOut hanya guna _dio.post untuk revoke di
       // background (unawaited) — tak perlu network sebenar untuk assert
       // ordering ni, cuma perlu ia tak throw sebelum unawaited() dipanggil.
@@ -62,13 +61,17 @@ void main() {
 
       await service.signOut();
 
+      // signOut() sepatutnya tak `await` unlinkDevice/logout — tapi
+      // panggilan sync sebelum await pertama di dalam unlinkDevice tetap
+      // jalan serta-merta bila unawaited() dipanggil, jadi assert ini sah
+      // walaupun keseluruhan Future tak ditunggu.
       expect(
-        pushService.wasLoggedInWhenUnlinkCalled,
-        isTrue,
+        pushService.tokenPassedToUnlinkDevice,
+        'seed-access',
         reason:
-            'unlinkCurrentDevice mesti dipanggil SEBELUM clear() — '
-            'kalau tidak, call DELETE /device-tokens tiada Authorization '
-            'header (access token dah kosong) dan gagal 401',
+            'access token mesti ditangkap SEBELUM clear() dan dihantar '
+            'terus ke unlinkDevice() — bukan bergantung pada interceptor '
+            'menarik token tersimpan yang dah tiada lepas clear()',
       );
       expect(
         notifier.state.isLoggedIn,

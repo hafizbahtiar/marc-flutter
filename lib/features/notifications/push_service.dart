@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -26,24 +27,29 @@ class PushService {
     }
   }
 
-  /// Buang pautan device token daripada user semasa di server. **Kena
-  /// panggil SEBELUM sesi di-clear** — lepas `AuthNotifier.clear()`,
-  /// access token dah takde untuk authorize call ni (401). Tak kritikal
-  /// kalau gagal — token lama akan di-overwrite lagipun bila user
-  /// seterusnya upsert dengan onesignal_id yang sama.
-  Future<void> unlinkCurrentDevice() async {
+  /// Buang pautan device token daripada user semasa di server, guna
+  /// access token yang DAH DITANGKAP awal (sebelum sesi di-clear) —
+  /// benarkan panggilan ni jalan unawaited SELEPAS clear() tanpa
+  /// bergantung pada token tersimpan yang dah tiada. Tak kritikal kalau
+  /// gagal — token lama akan di-overwrite lagipun bila user seterusnya
+  /// upsert dengan onesignal_id yang sama.
+  Future<void> unlinkDevice(String accessToken) async {
     final id = OneSignal.User.pushSubscription.id;
     if (id == null || id.isEmpty) return;
-    if (!_ref.read(authNotifierProvider).isLoggedIn) return;
 
     try {
-      await _ref.read(dioProvider).delete('/device-tokens/by-onesignal/$id');
+      await _ref
+          .read(dioProvider)
+          .delete(
+            '/device-tokens/by-onesignal/$id',
+            options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+          );
     } catch (_) {}
   }
 
   /// Dipanggil bila log keluar (reaktif, selepas sesi clear) — OneSignal
   /// SDK logout je; unlink server kena dah siap awal via
-  /// [unlinkCurrentDevice] sebelum sesi clear.
+  /// [unlinkDevice] (dipanggil unawaited dalam `AuthService.signOut`).
   Future<void> onSignedOut() async {
     try {
       await OneSignal.logout();
