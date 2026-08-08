@@ -12,6 +12,7 @@ class Profile {
     required this.phone,
     required this.roleKey,
     required this.roleName,
+    required this.roleRank,
     required this.category,
   });
 
@@ -23,6 +24,7 @@ class Profile {
   final String? phone;
   final String roleKey;
   final String roleName;
+  final int roleRank;
   final String category;
 
   bool get isManagement => category == 'management';
@@ -37,6 +39,7 @@ class Profile {
       phone: json['phone'] as String?,
       roleKey: (json['role_key'] as String?) ?? 'ahli',
       roleName: (json['role_name'] as String?) ?? 'Ahli',
+      roleRank: (json['role_rank'] as num?)?.toInt() ?? 0,
       category: (json['category'] as String?) ?? 'ahli',
     );
   }
@@ -95,6 +98,14 @@ class ProfileRepository {
     _ref.invalidate(membersProvider);
     _ref.invalidate(pendingMembersProvider);
   }
+
+  /// Tukar role ahli (Stage 12) — backend kuatkuasakan hierarki rank,
+  /// client cuma hantar niat.
+  Future<void> updateMemberRole(String userId, String roleKey) async {
+    final dio = _ref.read(dioProvider);
+    await dio.patch('/members/$userId/role', data: {'role_key': roleKey});
+    _ref.invalidate(membersProvider);
+  }
 }
 
 class MemberRow {
@@ -102,7 +113,10 @@ class MemberRow {
     required this.userId,
     required this.memberId,
     required this.displayName,
+    required this.email,
+    required this.roleKey,
     required this.roleName,
+    required this.roleRank,
     required this.category,
     required this.status,
   });
@@ -110,7 +124,10 @@ class MemberRow {
   final String userId;
   final String memberId;
   final String? displayName;
+  final String email;
+  final String roleKey;
   final String roleName;
+  final int roleRank;
   final String category;
   final String status;
 
@@ -119,12 +136,44 @@ class MemberRow {
       userId: json['user_id'] as String,
       memberId: json['member_id'] as String,
       displayName: json['display_name'] as String?,
+      email: (json['email'] as String?) ?? '',
+      roleKey: (json['role_key'] as String?) ?? 'ahli',
       roleName: (json['role_name'] as String?) ?? 'Ahli',
+      roleRank: (json['role_rank'] as num?)?.toInt() ?? 0,
       category: (json['category'] as String?) ?? 'ahli',
       status: (json['status'] as String?) ?? 'pending',
     );
   }
 }
+
+class RoleOption {
+  const RoleOption({required this.key, required this.name, required this.rank});
+
+  final String key;
+  final String name;
+  final int rank;
+
+  factory RoleOption.fromJson(Map<String, dynamic> json) {
+    return RoleOption(
+      key: json['key'] as String,
+      name: json['name'] as String,
+      rank: (json['rank'] as num).toInt(),
+    );
+  }
+}
+
+/// Senarai role tersedia (Stage 12) — untuk UI edit role management.
+final rolesProvider = FutureProvider<List<RoleOption>>((ref) async {
+  final isManagement =
+      ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false;
+  if (!isManagement) return const [];
+
+  final dio = ref.watch(dioProvider);
+  final res = await dio.get('/roles');
+  return (res.data as List)
+      .map((r) => RoleOption.fromJson(r as Map<String, dynamic>))
+      .toList();
+});
 
 /// Senarai ahli. Backend tentukan siapa nampak apa: management → semua;
 /// ahli biasa → diri sendiri sahaja.

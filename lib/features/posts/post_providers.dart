@@ -125,6 +125,13 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
       } else {
         await dio.post('/posts/${post.id}/like');
       }
+      // postDetailProvider (FutureProvider.family, bukan autoDispose)
+      // cache per post id tanpa had masa — kalau detail page post ni
+      // pernah dibuka sebelum ni, cache lama tak refetch sendiri bila
+      // like berubah dari list. Invalidate supaya lawatan detail
+      // seterusnya fetch fresh (bukan force refetch serta-merta kalau
+      // takde sesiapa watch sekarang).
+      ref.invalidate(postDetailProvider(post.id));
     } catch (_) {
       final latest = state.valueOrNull;
       if (latest == null) return;

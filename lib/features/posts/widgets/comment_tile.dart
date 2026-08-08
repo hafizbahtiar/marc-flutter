@@ -37,15 +37,38 @@ class CommentThread extends StatelessWidget {
           comment: comment,
           onReply: () => onReply(comment),
         ),
-        for (final reply in replies)
+        if (replies.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(left: 40),
-            child: _CommentRow(
-              postId: postId,
-              comment: reply,
-              onReply: () => onReply(
-                comment,
-              ), // reply kat reply -> attach kat root jua (flatten)
+            // 14 (align stem bawah tengah avatar induk, radius 14) + 2
+            // (lebar stem) + 24 (jarak sebelum avatar reply) = 40, sama
+            // dgn indent asal — reply avatar kekal posisi sama, cuma
+            // tambah garis dalam jarak yang dah ada.
+            padding: const EdgeInsets.only(left: 14),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 2,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        for (final reply in replies)
+                          _CommentRow(
+                            postId: postId,
+                            comment: reply,
+                            onReply: () => onReply(
+                              comment,
+                            ), // reply kat reply -> attach kat root jua (flatten)
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
       ],

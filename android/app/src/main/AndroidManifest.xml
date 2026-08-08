@@ -4,6 +4,12 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Android 13+ : prompt kebenaran notifikasi OneSignal. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Kebenaran galeri untuk lampiran gambar post: READ_MEDIA_IMAGES
+         (Android 13+) dan READ_EXTERNAL_STORAGE untuk versi lebih lama. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
 
     <application
         android:label="MARC"
@@ -14,6 +20,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
+            android:enableOnBackInvokedCallback="true"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -46,6 +53,12 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Diperlukan url_launcher (Android 11+ package visibility) untuk
+             buka pautan https, contoh pautan pembangun di About page. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

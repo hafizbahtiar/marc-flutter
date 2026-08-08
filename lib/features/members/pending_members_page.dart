@@ -11,7 +11,10 @@ const _placeholderPendingRow = MemberRow(
   userId: '00000000-0000-0000-0000-000000000000',
   memberId: 'MARC2026/08/0000',
   displayName: 'Nama Ahli',
+  email: 'ahli@contoh.com',
+  roleKey: 'ahli',
   roleName: 'Ahli',
+  roleRank: 10,
   category: 'ahli',
   status: 'pending',
 );
@@ -214,6 +217,10 @@ class _PendingTileState extends State<_PendingTile> {
                 Text(widget.row.displayName ?? '(Tiada nama)'),
                 Text(
                   widget.row.memberId,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                Text(
+                  widget.row.email,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

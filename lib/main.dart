@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/onesignal.dart';
 import 'package:marc/app/router.dart';
+import 'package:marc/app/stripe.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/jwt.dart';
@@ -18,6 +19,7 @@ Future<void> main() async {
     // .env belum diisi — salin .env.example ke .env dan isi kredential.
   }
   await initOneSignal();
+  await initStripe();
 
   // Baca token tersimpan dulu sebelum runApp, supaya redirect pertama
   // GoRouter betul terus (elak "flicker" ke /login sebelum sempat tahu

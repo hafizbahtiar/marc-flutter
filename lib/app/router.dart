@@ -5,13 +5,16 @@ import 'package:marc/app/nav_shell.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/auth/login_page.dart';
 import 'package:marc/features/auth/register_page.dart';
+import 'package:marc/features/donation/donation_page.dart';
 import 'package:marc/features/members/members_page.dart';
 import 'package:marc/features/members/pending_members_page.dart';
 import 'package:marc/features/notifications/notifications_page.dart';
 import 'package:marc/features/posts/create_post_page.dart';
 import 'package:marc/features/posts/feed_page.dart';
 import 'package:marc/features/posts/post_detail_page.dart';
+import 'package:marc/features/profile/about_page.dart';
 import 'package:marc/features/profile/edit_profile_page.dart';
+import 'package:marc/features/profile/faq_page.dart';
 import 'package:marc/features/profile/profile_page.dart';
 
 /// Adapter: dengar perubahan authNotifierProvider, notify GoRouter untuk
@@ -55,6 +58,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/edit-profile',
         builder: (_, _) => const EditProfilePage(),
       ),
+      GoRoute(path: '/about', builder: (_, _) => const AboutPage()),
+      GoRoute(path: '/faq', builder: (_, _) => const FaqPage()),
+      GoRoute(path: '/donate', builder: (_, _) => const DonationPage()),
       GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
       GoRoute(
         path: '/members/pending',

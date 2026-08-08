@@ -125,6 +125,45 @@ Flutter sahaja.
 
 ## Belum
 
+- [ ] **Donation page (Stripe, Payment Element)** — backend dah siap
+  (`marc_go/TODO.md` Stage 12), refactor 2026-08-09 guna interface
+  `payment.Gateway`: `POST /donations/checkout` (awam, boleh guest —
+  hantar `donor_email` wajib kalau tak log masuk, optional kalau log
+  masuk sebab dikaitkan `user_id` auto) pulang
+  `{gateway, client_secret, redirect_url}` — **bukan `client_secret`
+  je lagi**. Buat masa ni `gateway` selalu `"stripe"` +
+  `redirect_url` selalu kosong (SociaBuzz/ToyyibPay belum wired), tapi
+  client kena baca field `gateway` untuk tentukan flow, JANGAN andaikan
+  Stripe terus — bila SociaBuzz siap, response boleh jadi
+  `redirect_url` diisi sebaliknya. **Belum start di Flutter.** Kerja:
+  - [ ] Tambah `flutter_stripe` dependency, init `Stripe.publishableKey`
+    di `main.dart` (perlu `STRIPE_PUBLISHABLE_KEY` — boleh hardcode/env,
+    bukan secret, selamat di client)
+  - [ ] **Cerminkan Strategy pattern backend di Dart** (keputusan user
+    2026-08-09, "frontend dan backend guna interface"): abstract class
+    `DonationCheckoutHandler` (method `handle(DonationCheckoutResponse)
+    -> Future<DonationResult>`), implementation `StripeCheckoutHandler`
+    (guna `flutter_stripe` confirmPayment bila `client_secret` terisi)
+    + `RedirectCheckoutHandler` (guna `url_launcher` bila `redirect_url`
+    terisi — untuk ToyyibPay/SociaBuzz kemudian). `donation_page.dart`
+    cuma panggil `/donations/checkout`, lookup handler ikut
+    `response.gateway`, delegate — tak perlu tahu logik Stripe/ToyyibPay
+    spesifik.
+  - [ ] `donation_page.dart` baru: form amount + nama/emel (emel wajib
+    kalau user tak log masuk — cocokkan validation server), call
+    `/donations/checkout`, papar `CardFormField` (bukan `PaymentSheet`
+    — keputusan elak setup Apple Pay/Google Pay buat masa ni), confirm
+    guna `Stripe.instance.confirmPayment(clientSecret)`, skrin result
+  - [ ] Route `/donate` + letak entry point (Profile page buat masa ni;
+    lokasi "betul" — tab ke landing luar — belum putus, lihat TODO
+    backend)
+  - [ ] Test dengan Stripe test card (`4242 4242 4242 4242`) lepas
+    `STRIPE_SECRET_KEY` diisi backend `.env`
+- [ ] **Yuran ahli (ToyyibPay) + SociaBuzz (<RM500)** — belum start
+  langsung, backend pun belum (lihat "belum putus" di `marc_go/TODO.md`
+  Stage 12). Bila ToyyibPay siap: perlu skrin dues-status/gate baharu
+  (pattern sama macam `_EmailNotVerifiedView`/`_PendingStatusView` di
+  `feed_page.dart`).
 - [ ] **R2 API token permission** — perlu semak Cloudflare dashboard: token
   ada "Object Read & Write" untuk bucket `marc-staging`? Account ID/bucket
   name betul-betul padan dengan yang di `.env`? Upload gambar backend dah

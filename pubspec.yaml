@@ -44,6 +44,15 @@ dependencies:
   skeletonizer: ^2.1.3
   image_picker: ^1.1.2
   intl: ^0.20.2
+  # Dipin ke 12.0.3 (bukan ^13.0.0) — versi 13.x tarik
+  # permission_handler_android 14.x yang perlukan compileSdk 37 (Android
+  # SDK 37.0/"Android 17", bleeding-edge, folder platform "android-37.0"
+  # tak sepadan dgn hash "android-37" yang AGP semasa cari). 12.0.3 guna
+  # permission_handler_android ^13.0.0 yang cuma perlukan compileSdk 35.
+  permission_handler: 12.0.3
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.2
+  flutter_stripe: ^13.1.0
 
 dev_dependencies:
   flutter_test:
@@ -75,7 +84,12 @@ flutter_native_splash:
   image: assets/splash/logo.png
   android_12:
     color: "#2F6B4F"
-    image: assets/splash/logo.png
+    # Ikon logo.png penuh sampai tepi (bbox alpha = kanvas penuh, 519x481,
+    # takde padding). Android 12+ splash mask ikon dalam bulatan 768px atas
+    # kanvas 1152x1152 — tanpa padding, tepi/penjuru logo kena potong oleh
+    # mask tu. logo_android12.png ialah versi berkanvas 1152x1152 dgn logo
+    # diskalakan ke ~620px, jadi selamat dalam bulatan safe-zone.
+    image: assets/splash/logo_android12.png
   android: true
   ios: true
   web: false
@@ -92,6 +106,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/splash/logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

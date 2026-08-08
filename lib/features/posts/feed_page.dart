@@ -148,6 +148,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
               return RefreshIndicator.adaptive(
                 onRefresh: () => ref.read(feedProvider.notifier).refresh(),
                 child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   children: const [
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 100),
@@ -164,6 +165,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
               onRefresh: () => ref.read(feedProvider.notifier).refresh(),
               child: ListView.builder(
                 controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: state.posts.length + (state.hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index >= state.posts.length) {
@@ -174,7 +176,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                       ),
                     );
                   }
-
+              
                   final post = state.posts[index];
                   return PostCard(
                     post: post,

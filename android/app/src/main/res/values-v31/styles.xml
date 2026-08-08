@@ -15,7 +15,10 @@
          running.
          
          This Theme is only used starting with V2 of Flutter's Android embedding. -->
-    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+    <!-- MaterialComponents — lihat values/styles.xml untuk sebab (flutter_stripe CardFormField). -->
+    <style name="NormalTheme" parent="@style/Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowBackground">?android:colorBackground</item>
+        <!-- Force Dark off — lihat values/styles.xml untuk sebab penuh. -->
+        <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>

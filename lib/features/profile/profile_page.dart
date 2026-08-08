@@ -100,6 +100,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
               ),
             ],
+            const SizedBox(height: 28),
+            _InfoCard(
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.favorite_outline),
+                  title: const Text('Donate'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/donate'),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.help_outline),
+                  title: const Text('Soalan Lazim'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/faq'),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('Tentang'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/about'),
+                ),
+              ],
+            ),
             const SizedBox(height: 32),
             OutlinedButton.icon(
               onPressed: _signingOut ? null : _handleLogout,
@@ -240,11 +266,14 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    // Material (bukan Container+BoxDecoration) — ListTile lukis ink
+    // splash pada Material ANCESTOR terdekat; kalau bg+radius kat
+    // Container/DecoratedBox biasa, splash terlukis DI BAWAH decoration
+    // tu (tersorok). Jadikan card ni sendiri Material elak isu tu.
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[

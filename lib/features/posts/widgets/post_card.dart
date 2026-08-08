@@ -116,7 +116,7 @@ class PostCard extends ConsumerWidget {
                 ),
                 if (isOwner || canDelete)
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_horiz, size: 20),
+                    icon: const Icon(Icons.more_vert, size: 20),
                     onSelected: (value) {
                       if (value == 'edit') onEdit?.call();
                       if (value == 'delete') onDelete?.call();

@@ -9,6 +9,7 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CreatePostPage extends ConsumerStatefulWidget {
   const CreatePostPage({super.key});
@@ -34,6 +35,43 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     super.dispose();
   }
 
+  // Permission.photos merangkumi READ_MEDIA_IMAGES (Android 13+) dan
+  // Photos (iOS); pada Android <13 permission_handler pulangkan granted
+  // terus sebab READ_MEDIA_IMAGES tak wujud pada versi tu.
+  Future<bool> _ensurePhotoPermission() async {
+    final status = await Permission.photos.request();
+    if (status.isGranted || status.isLimited) return true;
+    if (!mounted) return false;
+
+    if (status.isPermanentlyDenied) {
+      final openSettings = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Kebenaran galeri diperlukan'),
+          content: const Text(
+            'MARC perlukan akses ke galeri untuk lampirkan gambar pada post. '
+            'Sila benarkan akses dalam Tetapan.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Buka Tetapan'),
+            ),
+          ],
+        ),
+      );
+      if (openSettings ?? false) await openAppSettings();
+      return false;
+    }
+
+    MySnackBar.error(context, 'Kebenaran galeri ditolak.');
+    return false;
+  }
+
   Future<void> _pickImages() async {
     final remaining = _maxImagesPerPost - _images.length;
     if (remaining <= 0) {
@@ -43,6 +81,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
       );
       return;
     }
+
+    if (!await _ensurePhotoPermission()) return;
+    if (!mounted) return;
 
     // pickMultiImage(limit: 1) throws — kena guna pickImage() tunggal bila
     // baki slot cuma 1.
@@ -121,83 +162,128 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     final isManagement =
         ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Post baru'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: FilledButton(
-              onPressed: _submitting ? null : _submit,
-              child: _submitting
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator.adaptive(),
-                    )
-                  : const Text('Hantar'),
-            ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isManagement)
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Jadikan Pengumuman'),
-                  subtitle: const Text(
-                    'Semua ahli akan nampak label "Pengumuman"',
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Post baru')),
+        bottomNavigationBar: _ComposerBar(
+          imageCount: _images.length,
+          maxImages: _maxImagesPerPost,
+          submitting: _submitting,
+          onPickImages: _images.length >= _maxImagesPerPost
+              ? null
+              : _pickImages,
+          onSubmit: _submitting ? null : _submit,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isManagement)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Jadikan Pengumuman'),
+                    subtitle: const Text(
+                      'Semua ahli akan nampak label "Pengumuman"',
+                    ),
+                    value: _isAnnouncement,
+                    onChanged: (v) => setState(() => _isAnnouncement = v),
                   ),
-                  value: _isAnnouncement,
-                  onChanged: (v) => setState(() => _isAnnouncement = v),
+                TextField(
+                  controller: _contentController,
+                  maxLines: 8,
+                  minLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: 'Apa yang berlaku?',
+                    border: InputBorder.none,
+                  ),
                 ),
-              TextField(
-                controller: _contentController,
-                maxLines: 8,
-                minLines: 4,
-                decoration: const InputDecoration(
-                  hintText: 'Apa yang berlaku?',
-                  border: InputBorder.none,
-                ),
-              ),
-              if (_images.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 90,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _images.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, i) => _ImageThumb(
-                      image: _images[i],
-                      onRemove: () => setState(() {
-                        _images.removeAt(i);
-                        if (i < _uploadedKeys.length) {
-                          _uploadedKeys.removeAt(i);
-                        }
-                      }),
+                if (_images.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 90,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _images.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) => _ImageThumb(
+                        image: _images[i],
+                        onRemove: () => setState(() {
+                          _images.removeAt(i);
+                          if (i < _uploadedKeys.length) {
+                            _uploadedKeys.removeAt(i);
+                          }
+                        }),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: _images.length >= _maxImagesPerPost
-                    ? null
-                    : _pickImages,
-                icon: const Icon(Icons.image_outlined),
-                label: Text(
-                  'Tambah gambar (${_images.length}/$_maxImagesPerPost)',
-                ),
-              ),
-            ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ComposerBar extends StatelessWidget {
+  const _ComposerBar({
+    required this.imageCount,
+    required this.maxImages,
+    required this.submitting,
+    required this.onPickImages,
+    required this.onSubmit,
+  });
+
+  final int imageCount;
+  final int maxImages;
+  final bool submitting;
+  final VoidCallback? onPickImages;
+  final VoidCallback? onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    // bottomNavigationBar tak ikut viewInsets keyboard secara automatik
+    // (lain dengan `body`) — kena tambah padding sendiri, guna paras
+    // keyboard bila terbuka, fallback ke safe-area device (home
+    // indicator) bila keyboard tertutup.
+    final bottomInset = mediaQuery.viewInsets.bottom > 0
+        ? mediaQuery.viewInsets.bottom
+        : mediaQuery.padding.bottom;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 100),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+      ),
+      padding: EdgeInsets.fromLTRB(12, 1, 12, 1 + bottomInset),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: submitting ? null : onPickImages,
+            icon: const Icon(Icons.image_outlined),
+          ),
+          Text(
+            '$imageCount/$maxImages',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const Spacer(),
+          FilledButton(
+            style: FilledButton.styleFrom(minimumSize: const Size(64, 40)),
+            onPressed: onSubmit,
+            child: submitting
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator.adaptive(),
+                  )
+                : const Text('Hantar'),
+          ),
+        ],
       ),
     );
   }
