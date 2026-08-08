@@ -165,10 +165,16 @@ cmd/api/main.go                           -- registry: map[string]payment.Gatewa
 lib/features/donation/donation_models.dart     -- DonationCheckoutResponse, DonationResult
 lib/features/donation/donation_gateway.dart    -- DonationCheckoutHandler + StripeCheckoutHandler (PaymentSheet) / RedirectCheckoutHandler
 lib/features/donation/donation_providers.dart  -- handler registry, DonationRepository
-lib/features/donation/donation_page.dart       -- form -> checkout -> handler.handle()
+lib/features/donation/donation_page.dart       -- form -> checkout -> handler.handle(); prefill nama/emel drpd profil bila log masuk
 lib/app/stripe.dart                             -- init Stripe.publishableKey + urlScheme (no-op kalau kosong)
 lib/app/theme.dart                              -- AppTheme.light/dark + AppSemanticColors
 lib/core/theme_mode_provider.dart               -- ThemeMode toggle, persisted
+```
+
+**Backend — resit (tambahan)**
+```
+internal/receipt/receipt.go   -- jana PDF resit (go-pdf/fpdf)
+internal/email/client.go      -- SendWithAttachments (base64, Resend)
 ```
 
 Entry point: Profile page → "Donate" → `/donate`.
@@ -230,18 +236,31 @@ ada di GitHub langsung), jadi secret **tidak pernah bocor** ke remote.
 **Peraturan**: `.env.example` — placeholder/kosong SAHAJA, tak kira
 environment. Real credential (test ATAU live) letak `.env` je.
 
+## Webhook API-version gotcha (2026-08-09) — WAJIB baca kalau webhook 400 lagi
+
+`stripe-go` v82.5.1 pin API version `2025-08-27.basil`. Kalau akaun
+Stripe kau emit event dgn API version release-train lain (cth
+`2025-10-29.clover` — semak `curl https://api.stripe.com/v1/events -u
+$STRIPE_SECRET_KEY:`), `webhook.ConstructEvent` akan **reject event yg
+signature-nya SAH** dgn error generic — nampak SAMA PERSIS macam
+signing secret salah (400 "signature tidak sah"), tapi puncanya version
+mismatch, bukan secret. `internal/payment/stripe.go` dah fix guna
+`ConstructEventWithOptions{IgnoreAPIVersionMismatch: true}`. Kalau
+jumpa 400 webhook lagi lepas ni — **jangan terus syak secret/delete-
+recreate endpoint**, semak log server dulu (`donations.go` webhook
+400-path skrg log ralat SEBENAR drpd `VerifyWebhook`, bukan senyap).
+
 ## Yang belum (lihat `marc_go/TODO.md` Stage 12 untuk detail penuh)
 
-- [ ] **Verify end-to-end lawan Stripe sebenar** — test keys dah masuk
-  `.env`, belum run full flow (checkout -> PaymentSheet -> confirm ->
-  webhook update status) atas device sebenar, termasuk test FPX redirect
-  round-trip sebenar (bukan setakat kad)
+- [x] ~~Verify end-to-end lawan Stripe sebenar~~ — **done 2026-08-09**,
+  donation sebenar (checkout → Stripe API confirm → webhook 200 → DB
+  `succeeded` → resit PDF+emel) diverify penuh lawan staging
+- [x] ~~Webhook belum register~~ — **done**, satu endpoint
+  (`we_1U2FwsFV4EgsAdJtmpB7SrcG`) enabled, `STRIPE_WEBHOOK_SECRET` set
+  di Railway staging + local `.env`
 - [ ] Enable FPX di Stripe Dashboard (Settings → Payment methods) — kau
-  punya langkah, bukan code
-- [ ] Webhook belum register di Stripe Dashboard (`STRIPE_WEBHOOK_SECRET`
-  masih kosong) — perlu `stripe listen --forward-to
-  localhost:8080/webhooks/stripe` untuk test lokal, atau daftar endpoint
-  awam untuk staging/prod
+  punya langkah, bukan code; FPX redirect round-trip sendiri belum
+  ditest sebenar (setakat ni kad je diverify end-to-end)
 - [ ] Threshold RM500 (Stripe vs SociaBuzz) belum implement —
   `DonationHandler.selectGateway` di backend sekarang SELALU pulang
   Stripe tak kira amount
