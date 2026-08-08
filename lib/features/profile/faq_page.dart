@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:marc/app/theme.dart';
 
 class _Faq {
   const _Faq(this.question, this.answer);
@@ -66,13 +65,14 @@ class FaqPage extends StatelessWidget {
           separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, i) {
             final faq = _faqs[i];
+            final scheme = Theme.of(context).colorScheme;
             return ExpansionTile(
               title: Text(
                 faq.question,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              iconColor: AppColors.accent,
-              collapsedIconColor: AppColors.muted,
+              iconColor: scheme.primary,
+              collapsedIconColor: scheme.onSurfaceVariant,
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               expandedCrossAxisAlignment: CrossAxisAlignment.start,
               children: [

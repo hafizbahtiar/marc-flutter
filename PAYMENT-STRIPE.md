@@ -1,10 +1,11 @@
 # Stripe Donation — Setup & Reference
 
-Status: **backend + Flutter UI done, belum diverify end-to-end lawan Stripe
-sebenar** (test keys dah ada dlm `.env` kedua-dua repo). Ni bahagian
-**Stripe sahaja** drpd payment module (Stage 12) — yuran ahli (ToyyibPay)
-dan donation <RM500 (SociaBuzz) **belum start**, lihat "Yang belum" di
-bawah dan `marc_go/TODO.md` Stage 12 untuk gambaran penuh.
+Status: **backend + Flutter UI done (PaymentSheet + FPX), belum diverify
+end-to-end lawan Stripe sebenar** (test keys dah ada dlm `.env`
+kedua-dua repo). Ni bahagian **Stripe sahaja** drpd payment module
+(Stage 12) — yuran ahli (ToyyibPay) dan donation <RM500 (SociaBuzz)
+**belum start**, lihat "Yang belum" di bawah dan `marc_go/TODO.md`
+Stage 12 untuk gambaran penuh.
 
 ## Kenapa dua akaun berasingan
 
@@ -13,6 +14,76 @@ bawah dan `marc_go/TODO.md` Stage 12 untuk gambaran penuh.
 - **Stripe** — akaun **peribadi** (pemaju app), khas untuk "Donate to
   us". Amount ≥RM500 guna Stripe; <RM500 akan guna SociaBuzz (belum
   wired). Currency **MYR sahaja** — elak isu penukaran mata wang.
+
+## Cara bayar: `PaymentSheet` (bukan `CardFormField`)
+
+Keputusan 2026-08-09: guna Stripe **`PaymentSheet`**, bukan
+`CardFormField` manual. Sebab: donor Malaysia jauh lebih biasa guna
+**FPX** (online banking terus dari akaun bank) drpd kad — `CardFormField`
+cuma boleh kad, `PaymentSheet` auto-papar SEMUA payment method yang
+aktif di dashboard Stripe (kad + FPX sekali), termasuk uruskan
+round-trip redirect FPX (keluar app ke bank, authenticate, balik) sendiri.
+
+Kesan pada `donation_page.dart`: borang amount → terus panggil
+`handler.handle()`, TIADA lagi skrin "isi maklumat kad" berasingan —
+`PaymentSheet` ialah UI pembayaran sepenuhnya, dikawal Stripe sendiri.
+
+## Setup redirect FPX (urlScheme) — WAJIB untuk FPX
+
+FPX perlukan URL scheme khusus supaya app boleh "resume" lepas user
+authenticate kat laman bank:
+
+- `lib/app/stripe.dart`: `Stripe.urlScheme = 'marc'` (dipanggil sebelum
+  `applySettings()`); `stripeReturnUrl = 'marc://stripe-redirect'`
+  dihantar sebagai `returnURL` masa `initPaymentSheet()`
+  (`donation_gateway.dart`).
+- **Android** (`AndroidManifest.xml`): intent-filter `VIEW` +
+  `BROWSABLE` dengan `android:scheme="marc"
+  android:host="stripe-redirect"` pada `.MainActivity`, + meta-data
+  `com.google.android.gms.wallet.api.enabled` (diperlukan internal
+  Stripe PaymentSheet).
+- **iOS** (`Info.plist`): `CFBundleURLTypes` dengan
+  `CFBundleURLSchemes: [marc]`.
+
+**Stripe Dashboard**: FPX kena di-enable manual di Settings → Payment
+methods — bukan sesuatu code boleh buat, langkah kau.
+
+## Native Android — `MainActivity` mesti `FlutterFragmentActivity`
+
+Satu je perubahan native WAJIB yang tinggal (dulu ada beberapa lagi khas
+untuk `CardFormField`'s `MaterialCardView`/dropdown negara — semua tu
+dah tak relevan lepas swap ke `PaymentSheet`, appearance `PaymentSheet`
+dikawal terus dari Dart via `PaymentSheetAppearance`, bukan native theme
+XML):
+
+```kotlin
+// android/app/src/main/kotlin/.../MainActivity.kt
+class MainActivity : FlutterFragmentActivity()
+```
+
+Native Stripe SDK guna Fragment untuk UI kad/3DS/PaymentSheet — app
+crash masa init kalau `MainActivity` kekal `FlutterActivity` biasa.
+
+iOS: tiada perubahan native tambahan (`IPHONEOS_DEPLOYMENT_TARGET` dah
+13.0, cukup untuk `flutter_stripe`).
+
+Nota sejarah (kekal dlm auto-memory `marc-flutter-stripe-android-quirks`
+untuk rujukan): fasa `CardFormField` dulu perlukan `Theme.MaterialComponents`
++ `forceDarkAllowed=false` + `colorSurface`/`colorOnSurface` eksplisit
+untuk elak popup dropdown negara render gelap, dan poskod native
+auto-hide ikut negara (US/Canada sahaja). Isu-isu ni khusus
+`CardFormField`, tak applicable lagi dengan `PaymentSheet`.
+
+## Dark mode — `PaymentSheetAppearance` ikut tema semasa
+
+App ni sekarang support dark mode penuh (`AppTheme.light`/`AppTheme.dark`
+di `lib/app/theme.dart`, toggle di Profile page → "Mod Gelap",
+`themeModeProvider` persisted via `shared_preferences`).
+`PaymentSheetAppearance` cuma terima SATU set warna (tiada slot dark
+berasingan dlm API) — `StripeCheckoutHandler.handle()` terima
+`BuildContext` supaya boleh baca `Theme.of(context).colorScheme` SEBELUM
+`await` pertama dan bina `PaymentSheetAppearance` yang padan mod semasa
+(bukan hardcode light).
 
 ## Seni bina — Strategy pattern (`payment.Gateway`)
 
@@ -32,7 +103,7 @@ type Gateway interface {
 `CreateResult{GatewayRef, ClientSecret, RedirectURL}` sengaja union type
 — HANYA SATU antara `ClientSecret`/`RedirectURL` diisi ikut model
 gateway:
-- **Stripe** = client-side confirm → `ClientSecret` diisi
+- **Stripe** = client-side confirm (`PaymentSheet`) → `ClientSecret` diisi
 - **ToyyibPay/SociaBuzz** (akan datang) = hosted-redirect page →
   `RedirectURL` diisi
 
@@ -42,7 +113,7 @@ andaian "mesti Stripe":
 ```dart
 // lib/features/donation/donation_gateway.dart
 abstract class DonationCheckoutHandler {
-  Future<DonationResult> handle(DonationCheckoutResponse response);
+  Future<DonationResult> handle(BuildContext context, DonationCheckoutResponse response);
 }
 ```
 
@@ -82,10 +153,12 @@ cmd/api/main.go                           -- registry: map[string]payment.Gatewa
 **Frontend (`marc_flutter`)**
 ```
 lib/features/donation/donation_models.dart     -- DonationCheckoutResponse, DonationResult
-lib/features/donation/donation_gateway.dart    -- DonationCheckoutHandler + StripeCheckoutHandler/RedirectCheckoutHandler
+lib/features/donation/donation_gateway.dart    -- DonationCheckoutHandler + StripeCheckoutHandler (PaymentSheet) / RedirectCheckoutHandler
 lib/features/donation/donation_providers.dart  -- handler registry, DonationRepository
-lib/features/donation/donation_page.dart       -- form -> checkout -> CardFormField -> confirm
-lib/app/stripe.dart                             -- init Stripe.publishableKey (no-op kalau kosong)
+lib/features/donation/donation_page.dart       -- form -> checkout -> handler.handle()
+lib/app/stripe.dart                             -- init Stripe.publishableKey + urlScheme (no-op kalau kosong)
+lib/app/theme.dart                              -- AppTheme.light/dark + AppSemanticColors
+lib/core/theme_mode_provider.dart               -- ThemeMode toggle, persisted
 ```
 
 Entry point: Profile page → "Donate" → `/donate`.
@@ -109,70 +182,17 @@ STRIPE_PUBLISHABLE_KEY=pk_test_...
 Kedua-dua kosong = fail graceful (503 backend / donation page disabled
 client — no-op, bukan crash), padanan pattern R2/OneSignal sedia ada.
 
-## Setup native Android — WAJIB, bukan optional
-
-`flutter_stripe` perlukan TIGA perubahan native Android, kalau tak app
-crash (atau UI clash tema) bila buka `donation_page.dart` / `CardFormField`:
-
-1. **`MainActivity` mesti `FlutterFragmentActivity`**, bukan
-   `FlutterActivity` biasa (native Stripe SDK guna Fragment untuk
-   kad/3DS):
-   ```kotlin
-   // android/app/src/main/kotlin/.../MainActivity.kt
-   class MainActivity : FlutterFragmentActivity()
-   ```
-2. **`NormalTheme` mesti descendant `Theme.MaterialComponents`**, bukan
-   platform `Theme.Light.NoTitleBar` — `CardFormField` guna
-   `MaterialCardView` yang requires tema Material:
-   ```xml
-   <!-- android/app/src/main/res/values{,-night,-v31,-night-v31}/styles.xml -->
-   <style name="NormalTheme" parent="@style/Theme.MaterialComponents.Light.NoActionBar">
-   ```
-   **Kesemua 4 variant** (`values`, `values-v31`, `values-night`,
-   `values-night-v31`) guna `.Light.NoActionBar` yang SAMA — termasuk
-   folder `-night`. Sengaja BUKAN `.Light` untuk night dielakkan: app
-   Flutter ni tiada `darkTheme` (`main.dart` cuma `theme: AppTheme.light`),
-   jadi UI Flutter kekal light tak kira system dark mode. Kalau
-   `NormalTheme` folder `-night` guna dark variant, native platform view
-   (`CardFormField` + dropdown negara/poskod dalamnya) jadi gelap
-   sedangkan UI Flutter sekeliling tetap light — nampak macam bug
-   (dropdown background gelap terpisah dari page).
-3. **`android:forceDarkAllowed="false"` pada `NormalTheme`** (kesemua 4
-   variant) — langkah 2 sahaja **TAK CUKUP**. Android "Force Dark"
-   (API 29+) re-warna native View (bukan kanvas Flutter) secara automatik
-   bila system dark mode ON, **tak kira apa parent tema View tu** —
-   kena disable eksplisit setiap tema, bukan cuma pilih parent Light:
-   ```xml
-   <style name="NormalTheme" parent="@style/Theme.MaterialComponents.Light.NoActionBar">
-       <item name="android:windowBackground">?android:colorBackground</item>
-       <item name="android:forceDarkAllowed">false</item>
-   </style>
-   ```
-
-Ketiga-tiga dah applied dlm codebase — catatan ni untuk rujukan kalau
-`MainActivity`/`styles.xml` di-regenerate (`flutter create .` dsb boleh
-overwrite balik ke default).
-
-**Default negara**: `CardFormField(countryCode: 'MY', ...)` di
-`donation_page.dart` — set Malaysia sebagai default drpd biar user
-pilih sendiri dari dropdown (kebanyakan donor MAIWP di Malaysia).
-
-iOS: tiada perubahan native diperlukan setakat ni (`IPHONEOS_DEPLOYMENT_
-TARGET` dah 13.0, cukup untuk `flutter_stripe`).
-
 ## Test cards (Stripe test mode)
 
-Quick test (happy path) — isi terus dalam `CardFormField`:
+Dalam `PaymentSheet`, pilih "Card" sebagai payment method, isi:
 
 ```
 Nombor kad : 4242 4242 4242 4242
 Tarikh luput : 12/34   (mana-mana tarikh depan)
 CVC        : 123        (mana-mana 3 digit)
-Poskod     : 12345      (mana-mana, enablePostalCode default true)
 ```
 
-Nombor kad lain untuk test scenario berbeza — expiry/CVC/poskod sama
-macam atas (mana-mana nilai sah), cuma nombor kad je tukar:
+Nombor kad lain untuk test scenario berbeza:
 
 | Nombor kad | Hasil |
 |---|---|
@@ -182,7 +202,11 @@ macam atas (mana-mana nilai sah), cuma nombor kad je tukar:
 | `4000 0000 0000 9995` | Ditolak — insufficient funds |
 | `4000 0000 0000 0002` | Ditolak — generic |
 
-Semua kad ni **cuma jalan dalam Stripe test mode** (`sk_test_`/`pk_test_`
+FPX test mode: Stripe sediakan bank simulasi test-mode automatik bila
+pilih FPX dalam `PaymentSheet` (test mode) — tak perlu akaun bank
+sebenar.
+
+Semua ni **cuma jalan dalam Stripe test mode** (`sk_test_`/`pk_test_`
 key) — tak boleh dipakai production/live key.
 
 ## Insiden git (2026-08-09) — pengajaran
@@ -199,8 +223,11 @@ environment. Real credential (test ATAU live) letak `.env` je.
 ## Yang belum (lihat `marc_go/TODO.md` Stage 12 untuk detail penuh)
 
 - [ ] **Verify end-to-end lawan Stripe sebenar** — test keys dah masuk
-  `.env`, belum run full flow (checkout -> CardFormField -> confirm ->
-  webhook update status) atas device sebenar
+  `.env`, belum run full flow (checkout -> PaymentSheet -> confirm ->
+  webhook update status) atas device sebenar, termasuk test FPX redirect
+  round-trip sebenar (bukan setakat kad)
+- [ ] Enable FPX di Stripe Dashboard (Settings → Payment methods) — kau
+  punya langkah, bukan code
 - [ ] Webhook belum register di Stripe Dashboard (`STRIPE_WEBHOOK_SECRET`
   masih kosong) — perlu `stripe listen --forward-to
   localhost:8080/webhooks/stripe` untuk test lokal, atau daftar endpoint
@@ -210,8 +237,5 @@ environment. Real credential (test ATAU live) letak `.env` je.
   Stripe tak kira amount
 - [ ] SociaBuzz — belum research API/webhook capability langsung
 - [ ] ToyyibPay (yuran ahli, gate akses feed) — belum start
-- [ ] Apple Pay / Google Pay — sengaja dilangkau buat masa ni (guna
-  `CardFormField` asas, bukan `PaymentSheet`, elak setup merchant ID
-  tambahan)
 - [ ] Widget/integration test untuk `donation_page.dart` — setakat ni
   cuma `flutter analyze` bersih, belum ada automated test

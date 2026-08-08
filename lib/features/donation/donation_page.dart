@@ -1,16 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 import 'donation_models.dart';
 import 'donation_providers.dart';
-
-enum _Step { amount, confirm }
 
 class DonationPage extends ConsumerStatefulWidget {
   const DonationPage({super.key});
@@ -25,8 +21,6 @@ class _DonationPageState extends ConsumerState<DonationPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
 
-  _Step _step = _Step.amount;
-  DonationCheckoutResponse? _checkout;
   bool _submitting = false;
 
   @override
@@ -60,8 +54,10 @@ class _DonationPageState extends ConsumerState<DonationPage> {
                 : _emailController.text.trim(),
           );
 
-      final handlers = ref.read(donationCheckoutHandlersProvider);
-      if (!handlers.containsKey(response.gateway)) {
+      final handler = ref.read(
+        donationCheckoutHandlersProvider,
+      )[response.gateway];
+      if (handler == null) {
         if (mounted) {
           MySnackBar.error(context, 'Cara pembayaran ini belum disokong.');
         }
@@ -69,17 +65,20 @@ class _DonationPageState extends ConsumerState<DonationPage> {
       }
 
       if (!mounted) return;
-      // Gateway client-side confirm (Stripe) perlu papar borang kad
-      // dulu (_Step.confirm) sebelum handler.handle() boleh dipanggil.
-      // Gateway hosted-redirect terus panggil handler (tiada borang
-      // tambahan diperlukan di app ni).
-      if (response.clientSecret != null) {
-        setState(() {
-          _checkout = response;
-          _step = _Step.confirm;
-        });
-      } else {
-        await _completeWithHandler(response);
+      // Stripe (PaymentSheet) papar sheet nativenya sendiri; gateway
+      // hosted-redirect (ToyyibPay/SociaBuzz, akan datang) buka browser
+      // luar — dua-dua tak perlukan borang tambahan dalam app ni,
+      // `handle()` uruskan semuanya.
+      final result = await handler.handle(context, response);
+      if (!mounted) return;
+      switch (result.outcome) {
+        case DonationOutcome.success:
+          MySnackBar.success(context, 'Terima kasih atas sumbangan anda!');
+          Navigator.of(context).pop();
+        case DonationOutcome.cancelled:
+          break;
+        case DonationOutcome.failure:
+          MySnackBar.error(context, result.message ?? 'Pembayaran gagal.');
       }
     } catch (e) {
       if (mounted) {
@@ -95,32 +94,6 @@ class _DonationPageState extends ConsumerState<DonationPage> {
     }
   }
 
-  Future<void> _confirmPayment() async {
-    final checkout = _checkout;
-    if (checkout == null) return;
-    setState(() => _submitting = true);
-    await _completeWithHandler(checkout);
-    if (mounted) setState(() => _submitting = false);
-  }
-
-  Future<void> _completeWithHandler(DonationCheckoutResponse response) async {
-    final handler = ref.read(
-      donationCheckoutHandlersProvider,
-    )[response.gateway]!;
-    final result = await handler.handle(response);
-
-    if (!mounted) return;
-    switch (result.outcome) {
-      case DonationOutcome.success:
-        MySnackBar.success(context, 'Terima kasih atas sumbangan anda!');
-        Navigator.of(context).pop();
-      case DonationOutcome.cancelled:
-        break;
-      case DonationOutcome.failure:
-        MySnackBar.error(context, result.message ?? 'Pembayaran gagal.');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isLoggedIn =
@@ -131,21 +104,15 @@ class _DonationPageState extends ConsumerState<DonationPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: _step == _Step.amount
-              ? _AmountForm(
-                  formKey: _formKey,
-                  amountController: _amountController,
-                  nameController: _nameController,
-                  emailController: _emailController,
-                  requireEmail: !isLoggedIn,
-                  submitting: _submitting,
-                  onSubmit: _startCheckout,
-                )
-              : _ConfirmStep(
-                  submitting: _submitting,
-                  onConfirm: _confirmPayment,
-                  onBack: () => setState(() => _step = _Step.amount),
-                ),
+          child: _AmountForm(
+            formKey: _formKey,
+            amountController: _amountController,
+            nameController: _nameController,
+            emailController: _emailController,
+            requireEmail: !isLoggedIn,
+            submitting: _submitting,
+            onSubmit: _startCheckout,
+          ),
         ),
       ),
     );
@@ -236,65 +203,6 @@ class _AmountForm extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ConfirmStep extends StatelessWidget {
-  const _ConfirmStep({
-    required this.submitting,
-    required this.onConfirm,
-    required this.onBack,
-  });
-
-  final bool submitting;
-  final VoidCallback onConfirm;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Maklumat kad', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 12),
-        // Padanan gaya TextFormField app ni (lihat theme.dart
-        // inputDecorationTheme): filled fieldFill, borderless, radius 12.
-        // CardFormField sebelum ni tiada backgroundColor eksplisit — jatuh
-        // balik ke default Material native (jarang match brand, kadang
-        // teks/bg jadi sama warna = field "hilang").
-        CardFormField(
-          countryCode: 'MY',
-          style: CardFormStyle(
-            backgroundColor: AppColors.fieldFill,
-            borderColor: AppColors.fieldFill,
-            borderWidth: 0,
-            borderRadius: 12,
-            textColor: AppColors.ink,
-            placeholderColor: AppColors.muted,
-            cursorColor: AppColors.accent,
-            textErrorColor: AppColors.error,
-            fontSize: 15,
-          ),
-        ),
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: submitting ? null : onConfirm,
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-          child: submitting
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator.adaptive(),
-                )
-              : const Text('Bayar'),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: submitting ? null : onBack,
-          child: const Text('Kembali'),
-        ),
-      ],
     );
   }
 }

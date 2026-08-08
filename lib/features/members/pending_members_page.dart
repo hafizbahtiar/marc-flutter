@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
@@ -196,17 +195,18 @@ class _PendingTileState extends State<_PendingTile> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.fieldFill,
+            backgroundColor: scheme.surfaceContainerHighest,
             child: Text(
               (widget.row.displayName?.isNotEmpty ?? false)
                   ? widget.row.displayName![0].toUpperCase()
                   : '?',
-              style: const TextStyle(color: AppColors.ink),
+              style: TextStyle(color: scheme.onSurface),
             ),
           ),
           const SizedBox(width: 12),
@@ -227,15 +227,12 @@ class _PendingTileState extends State<_PendingTile> {
             ),
           ),
           IconButton(
-            icon: const Icon(
-              Icons.check_circle_outline,
-              color: AppColors.accent,
-            ),
+            icon: Icon(Icons.check_circle_outline, color: scheme.primary),
             tooltip: 'Luluskan',
             onPressed: _busy ? null : () => _run(widget.onApprove),
           ),
           IconButton(
-            icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
+            icon: Icon(Icons.cancel_outlined, color: scheme.error),
             tooltip: 'Tolak',
             onPressed: _busy ? null : () => _run(widget.onReject),
           ),

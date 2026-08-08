@@ -176,7 +176,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                       ),
                     );
                   }
-              
+
                   final post = state.posts[index];
                   return PostCard(
                     post: post,
@@ -250,6 +250,7 @@ class _PendingStatusView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRejected = status == 'rejected';
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('MARC')),
       body: SafeArea(
@@ -262,7 +263,9 @@ class _PendingStatusView extends StatelessWidget {
                 Icon(
                   isRejected ? Icons.error_outline : Icons.hourglass_empty,
                   size: 48,
-                  color: isRejected ? AppColors.error : AppColors.warning,
+                  color: isRejected
+                      ? theme.colorScheme.error
+                      : theme.extension<AppSemanticColors>()!.warning,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -337,10 +340,12 @@ class _EmailNotVerifiedViewState extends ConsumerState<_EmailNotVerifiedView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.mark_email_unread_outlined,
                   size: 48,
-                  color: AppColors.warning,
+                  color: Theme.of(
+                    context,
+                  ).extension<AppSemanticColors>()!.warning,
                 ),
                 const SizedBox(height: 16),
                 Text(

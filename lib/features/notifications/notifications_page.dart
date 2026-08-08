@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:marc/app/theme.dart';
 import 'package:marc/features/notifications/notifications_providers.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/shared/relative_time.dart';
@@ -16,9 +15,9 @@ IconData _iconFor(AppNotification n) {
 }
 
 Color _colorFor(BuildContext context, AppNotification n) {
-  if (n.isLike || n.isMemberRejected) return AppColors.error;
-  if (n.isMemberApproved) return AppColors.accent;
-  return Theme.of(context).colorScheme.primary; // comment, member_pending
+  final scheme = Theme.of(context).colorScheme;
+  if (n.isLike || n.isMemberRejected) return scheme.error;
+  return scheme.primary; // comment, member_pending, member_approved
 }
 
 String _titleFor(AppNotification n) {
@@ -114,9 +113,11 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const SizedBox(height: 72),
-                          const Icon(
+                          Icon(
                             Icons.notifications_none,
-                            color: AppColors.muted,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(height: 12),
                           Text(

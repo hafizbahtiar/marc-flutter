@@ -9,6 +9,7 @@ import 'package:marc/app/stripe.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/jwt.dart';
+import 'package:marc/core/theme_mode_provider.dart';
 import 'package:marc/features/notifications/push_service.dart';
 
 Future<void> main() async {
@@ -80,6 +81,8 @@ class _MyAppState extends ConsumerState<MyApp> {
       title: 'Marc',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
     );
   }

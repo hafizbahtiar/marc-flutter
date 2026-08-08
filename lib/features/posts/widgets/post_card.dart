@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:marc/app/theme.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/widgets/image_carousel.dart';
 import 'package:marc/features/profile/profile_providers.dart';
@@ -151,7 +150,7 @@ class PostCard extends ConsumerWidget {
                 _ActionButton(
                   icon: post.likedByMe ? Icons.favorite : Icons.favorite_border,
                   color: post.likedByMe
-                      ? AppColors.error
+                      ? scheme.error
                       : scheme.onSurfaceVariant,
                   label: post.likeCount.toString(),
                   onTap: onToggleLike,

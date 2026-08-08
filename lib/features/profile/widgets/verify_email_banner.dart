@@ -49,33 +49,32 @@ class _VerifyEmailBannerState extends ConsumerState<VerifyEmailBanner> {
     final verified = profile.valueOrNull?.emailVerified ?? true;
     if (verified) return const SizedBox.shrink();
 
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
       decoration: BoxDecoration(
-        color: AppColors.warningBg,
+        color: semantic.warningBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.mark_email_unread_outlined,
-            color: AppColors.warning,
-          ),
+          Icon(Icons.mark_email_unread_outlined, color: semantic.warning),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Email anda belum disahkan.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.warning,
+                color: semantic.warning,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           TextButton(
             onPressed: _sending ? null : _requestVerification,
-            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+            style: TextButton.styleFrom(foregroundColor: semantic.warning),
             child: _sending
                 ? const SizedBox(
                     height: 14,

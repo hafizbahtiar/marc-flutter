@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:marc/app/theme.dart';
+import 'package:marc/core/theme_mode_provider.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/profile/widgets/verify_email_banner.dart';
@@ -94,7 +96,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       value: verified ? 'Disahkan' : 'Belum disahkan',
                       valueColor: verified
                           ? scheme.primary
-                          : const Color(0xFF8A5A00),
+                          : Theme.of(
+                              context,
+                            ).extension<AppSemanticColors>()!.warning,
                     ),
                   ],
                 ),
@@ -103,6 +107,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: 28),
             _InfoCard(
               children: [
+                SwitchListTile.adaptive(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  secondary: const Icon(Icons.dark_mode_outlined),
+                  title: const Text('Mod Gelap'),
+                  value: ref.watch(themeModeProvider) == ThemeMode.dark,
+                  onChanged: (isDark) =>
+                      ref.read(themeModeProvider.notifier).setDark(isDark),
+                ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                   leading: const Icon(Icons.favorite_outline),

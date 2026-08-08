@@ -50,7 +50,7 @@ Future<void> _showEditRoleSheet(
             ListTile(
               title: Text(role.name),
               trailing: role.key == row.roleKey
-                  ? const Icon(Icons.check, color: AppColors.accent)
+                  ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
                   : null,
               onTap: () => Navigator.pop(ctx, role),
             ),
@@ -68,7 +68,10 @@ Future<void> _showEditRoleSheet(
         .read(profileRepositoryProvider)
         .updateMemberRole(row.userId, selected.key);
     if (context.mounted) {
-      MySnackBar.success(context, 'Role ${row.displayName ?? row.memberId} dikemas kini.');
+      MySnackBar.success(
+        context,
+        'Role ${row.displayName ?? row.memberId} dikemas kini.',
+      );
     }
   } catch (e) {
     if (context.mounted) {
@@ -191,6 +194,7 @@ class _MemberTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     final isManagement = row.category == 'management';
     final canEdit = myRoleRank > row.roleRank;
     return ListTile(
@@ -199,12 +203,12 @@ class _MemberTile extends ConsumerWidget {
           ? () => _showEditRoleSheet(context, ref, row, myRoleRank)
           : null,
       leading: CircleAvatar(
-        backgroundColor: AppColors.fieldFill,
+        backgroundColor: scheme.surfaceContainerHighest,
         child: Text(
           (row.displayName?.isNotEmpty ?? false)
               ? row.displayName![0].toUpperCase()
               : '?',
-          style: const TextStyle(color: AppColors.ink),
+          style: TextStyle(color: scheme.onSurface),
         ),
       ),
       title: Text(row.displayName ?? '(Tiada nama)'),
@@ -213,9 +217,11 @@ class _MemberTile extends ConsumerWidget {
       trailing: isManagement
           ? Chip(
               label: Text(row.roleName),
-              backgroundColor: AppColors.accent.withValues(alpha: 0.12),
-              labelStyle: const TextStyle(
-                color: AppColors.accentDark,
+              backgroundColor: scheme.primary.withValues(alpha: 0.12),
+              labelStyle: TextStyle(
+                color: Theme.of(
+                  context,
+                ).extension<AppSemanticColors>()!.accentDark,
                 fontSize: 12,
               ),
               side: BorderSide.none,

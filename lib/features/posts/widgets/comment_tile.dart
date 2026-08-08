@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
@@ -180,7 +179,7 @@ class _CommentRow extends ConsumerWidget {
                                 : Icons.favorite_border,
                             size: 15,
                             color: comment.likedByMe
-                                ? AppColors.error
+                                ? scheme.error
                                 : scheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
@@ -189,7 +188,7 @@ class _CommentRow extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: comment.likedByMe
-                                  ? AppColors.error
+                                  ? scheme.error
                                   : scheme.onSurfaceVariant,
                             ),
                           ),

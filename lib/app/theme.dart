@@ -1,18 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Token warna mentah editorial. Untuk kebanyakan UI, utamakan
-/// `Theme.of(context).colorScheme` — token ini untuk kes khusus sahaja.
-class AppColors {
-  static const bg = Color(0xFFFAF9F6); // kertas / surface
-  static const ink = Color(0xFF1C1B19); // teks utama
-  static const accent = Color(0xFF3B7A57);
-  static const accentDark = Color(0xFF1F3D34);
-  static const error = Color(0xFFB3261E);
-  static const fieldFill = Color(0xFFEEECE6);
-  static const muted = Color(0xFF6B6B6B);
-  static const warning = Color(0xFF8A5A00);
-  static const warningBg = Color(0xFFFBEFD3);
+/// Token warna semantik tambahan yang tiada slot dalam `ColorScheme`
+/// standard Material (warning, warningBg, accentDark). Guna
+/// `Theme.of(context).extension<AppSemanticColors>()!` — JANGAN rujuk
+/// warna mentah terus, supaya ia bertukar automatik antara light/dark.
+@immutable
+class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
+  const AppSemanticColors({
+    required this.warning,
+    required this.warningBg,
+    required this.accentDark,
+  });
+
+  final Color warning;
+  final Color warningBg;
+  final Color accentDark;
+
+  static const light = AppSemanticColors(
+    warning: Color(0xFF8A5A00),
+    warningBg: Color(0xFFFBEFD3),
+    accentDark: Color(0xFF1F3D34),
+  );
+
+  static const dark = AppSemanticColors(
+    warning: Color(0xFFE3B255),
+    warningBg: Color(0xFF3A2E12),
+    accentDark: Color(0xFFB6E2C8),
+  );
+
+  @override
+  AppSemanticColors copyWith({
+    Color? warning,
+    Color? warningBg,
+    Color? accentDark,
+  }) {
+    return AppSemanticColors(
+      warning: warning ?? this.warning,
+      warningBg: warningBg ?? this.warningBg,
+      accentDark: accentDark ?? this.accentDark,
+    );
+  }
+
+  @override
+  AppSemanticColors lerp(ThemeExtension<AppSemanticColors>? other, double t) {
+    if (other is! AppSemanticColors) return this;
+    return AppSemanticColors(
+      warning: Color.lerp(warning, other.warning, t)!,
+      warningBg: Color.lerp(warningBg, other.warningBg, t)!,
+      accentDark: Color.lerp(accentDark, other.accentDark, t)!,
+    );
+  }
 }
 
 class AppTheme {
@@ -27,11 +65,11 @@ class AppTheme {
         onPrimary: Colors.white,
         secondary: const Color(0xFF55635B),
         onSecondary: Colors.white,
-        surface: AppColors.bg,
-        onSurface: AppColors.ink,
-        onSurfaceVariant: AppColors.muted,
-        surfaceContainerHighest: AppColors.fieldFill,
-        error: AppColors.error,
+        surface: const Color(0xFFFAF9F6),
+        onSurface: const Color(0xFF1C1B19),
+        onSurfaceVariant: const Color(0xFF6B6B6B),
+        surfaceContainerHighest: const Color(0xFFEEECE6),
+        error: const Color(0xFFB3261E),
         onError: Colors.white,
         outline: const Color(0xFFC9C6BF),
         outlineVariant: const Color(0xFFE4E1DA),
@@ -40,8 +78,33 @@ class AppTheme {
         inversePrimary: const Color(0xFF9FD3B4),
       );
 
-  static ThemeData get light {
-    final scheme = lightScheme;
+  static ColorScheme get darkScheme =>
+      ColorScheme.fromSeed(
+        seedColor: _seed,
+        brightness: Brightness.dark,
+      ).copyWith(
+        primary: const Color(0xFF7FC79E),
+        onPrimary: const Color(0xFF08331F),
+        secondary: const Color(0xFFAEB8B0),
+        onSecondary: const Color(0xFF1A211C),
+        surface: const Color(0xFF17181A),
+        onSurface: const Color(0xFFEBEAE6),
+        onSurfaceVariant: const Color(0xFFA8A69F),
+        surfaceContainerHighest: const Color(0xFF262825),
+        error: const Color(0xFFFFB4A9),
+        onError: const Color(0xFF690003),
+        outline: const Color(0xFF4A4B47),
+        outlineVariant: const Color(0xFF313330),
+        inverseSurface: const Color(0xFFEBEAE6),
+        onInverseSurface: const Color(0xFF1C1B19),
+        inversePrimary: const Color(0xFF2F6B4F),
+      );
+
+  static ThemeData get light => _build(lightScheme, AppSemanticColors.light);
+
+  static ThemeData get dark => _build(darkScheme, AppSemanticColors.dark);
+
+  static ThemeData _build(ColorScheme scheme, AppSemanticColors semantic) {
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
 
     final textTheme = GoogleFonts.interTextTheme(base.textTheme).copyWith(
@@ -76,6 +139,7 @@ class AppTheme {
     return base.copyWith(
       scaffoldBackgroundColor: scheme.surface,
       textTheme: textTheme,
+      extensions: [semantic],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,

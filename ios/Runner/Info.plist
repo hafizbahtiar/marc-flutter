@@ -24,6 +24,22 @@
 		<string>????</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<!-- Redirect balik ke app lepas payment method FPX (bank Malaysia)
+		     authenticate di luar app — Stripe.urlScheme 'marc'
+		     (lib/app/stripe.dart) mesti padan scheme sini. -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>marc.stripe.redirect</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>marc</string>
+				</array>
+			</dict>
+		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSPhotoLibraryUsageDescription</key>
