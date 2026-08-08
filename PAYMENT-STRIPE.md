@@ -137,6 +137,16 @@ anonymous.
   constraint `donations_traceable` (`user_id is not null or donor_email
   is not null`) di backend.
 
+## Resit emel
+
+Lepas webhook Stripe sahkan `payment_intent.succeeded`,
+`DonationHandler.sendReceiptEmail` (`marc_go/internal/http/handlers/donations.go`)
+hantar resit ke `donor_email` (guest) atau emel akaun (`GetUserByID`,
+kalau donor log masuk & tak isi emel). Best-effort — kegagalan hantar
+emel TAK gagalkan webhook. Dihantar TEPAT SEKALI per donation (bukan
+setiap retry Stripe) sebab bergantung pada `UpdateDonationStatusByGatewayRef`
+yang idempotent (row cuma "benar-benar beralih" ke `succeeded` sekali).
+
 ## File map
 
 **Backend (`marc_go`)**

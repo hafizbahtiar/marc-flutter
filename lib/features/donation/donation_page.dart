@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
@@ -22,6 +23,7 @@ class _DonationPageState extends ConsumerState<DonationPage> {
   final _emailController = TextEditingController();
 
   bool _submitting = false;
+  bool _prefilled = false;
 
   @override
   void dispose() {
@@ -96,8 +98,30 @@ class _DonationPageState extends ConsumerState<DonationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoggedIn =
-        ref.watch(myProfileProvider).valueOrNull?.email.isNotEmpty ?? false;
+    // `authNotifierProvider.isLoggedIn` sentiasa sedia sejurus (hydrated
+    // sebelum `runApp`, lihat main.dart) — TIADA loading window. Guna
+    // `myProfileProvider.valueOrNull` (async) untuk ni sebelum ni punca
+    // bug: provider tu `null` sejurus page dibuka (masih loading), jadi
+    // `requireEmail` sekejap jadi `true` (field emel muncul), pastu
+    // bertukar `false` bila profil siap load (field hilang balik) —
+    // nampak macam "emel dikosongkan" walhal cuma race loading-state.
+    final isLoggedIn = ref.watch(
+      authNotifierProvider.select((s) => s.isLoggedIn),
+    );
+
+    // Prefill nama/emel drpd profil SEKALI sahaja bila data sampai —
+    // bukan setiap rebuild (elak overwrite apa yang user dah taip/edit
+    // sendiri). Jawapan terus untuk "tak auto isi sendiri": sekarang ya.
+    final profile = ref.watch(myProfileProvider).valueOrNull;
+    if (!_prefilled && profile != null) {
+      _prefilled = true;
+      if (_nameController.text.isEmpty && (profile.displayName ?? '').isNotEmpty) {
+        _nameController.text = profile.displayName!;
+      }
+      if (_emailController.text.isEmpty && profile.email.isNotEmpty) {
+        _emailController.text = profile.email;
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Donate')),
@@ -168,25 +192,28 @@ class _AmountForm extends StatelessWidget {
             controller: nameController,
             decoration: const InputDecoration(labelText: 'Nama (optional)'),
           ),
-          // Ahli yang log masuk tak perlu isi emel — backend kaitkan
-          // user_id automatik (OptionalAuth) dan boleh trace balik ke
-          // emel akaun terus, tak perlu duplicate input di sini. Cuma
-          // guest (tak log masuk) yang wajib isi, sebab itu satu-satunya
-          // jejak yang backend ada untuk mereka.
-          if (requireEmail) ...[
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Emel'),
-              validator: (v) {
-                final value = (v ?? '').trim();
-                if (value.isEmpty) return 'Emel diperlukan';
-                if (!value.contains('@')) return 'Emel tidak sah';
-                return null;
-              },
+          // Ahli yang log masuk backend kaitkan user_id automatik
+          // (OptionalAuth) dan boleh trace balik ke emel akaun terus,
+          // jadi emel TAK wajib untuk mereka — tapi field ni tetap
+          // dipapar & pre-fill drpd profil (bukan disorok), sebab kalau
+          // disorok terus nampak macam borang "kosong"/pelik. Guest
+          // (tak log masuk) wajib isi, sebab itu satu-satunya jejak yang
+          // backend ada untuk mereka.
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              labelText: requireEmail ? 'Emel' : 'Emel (optional)',
             ),
-          ],
+            validator: (v) {
+              final value = (v ?? '').trim();
+              if (!requireEmail && value.isEmpty) return null;
+              if (value.isEmpty) return 'Emel diperlukan';
+              if (!value.contains('@')) return 'Emel tidak sah';
+              return null;
+            },
+          ),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: submitting ? null : onSubmit,
