@@ -23,6 +23,22 @@ class CreatePostPage extends ConsumerStatefulWidget {
 const _maxImagesPerPost = 4;
 const _maxImageSizeBytes = 5 * 1024 * 1024;
 
+/// Dimensi maksimum yang dinaikkan, dalam piksel (sisi panjang).
+///
+/// Kamera telefon keluarkan 3456x4608 ke atas. Kita TAK PERNAH papar pada
+/// saiz tu — jubin grid feed lebih kurang separuh lebar skrin, dan pemapar
+/// skrin penuh pun cuma perlukan piksel setinggi skrin darab faktor zum.
+/// Menyimpan asal cuma membakar storan R2 dan kuota r2.dev.
+///
+/// 2048 dipilih supaya zum 4x pada skrin ~1080px lebar masih ada piksel
+/// sebenar untuk dipaparkan, bukan hasil regangan.
+const _maxUploadDimension = 2048.0;
+
+/// Kualiti JPEG semasa re-encode. 95 sengaja tinggi — matlamatnya ialah
+/// mengecilkan DIMENSI, bukan menghancurkan kualiti. Turun ke ~85 mula
+/// nampak artifak pada gambar berbutir halus (teks, gradien).
+const _uploadQuality = 95;
+
 class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   final _contentController = TextEditingController();
   final _picker = ImagePicker();
@@ -87,11 +103,25 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
 
     // pickMultiImage(limit: 1) throws — kena guna pickImage() tunggal bila
     // baki slot cuma 1.
+    // maxWidth/maxHeight buat image_picker mengecilkan gambar SEBELUM ia
+    // sampai ke Dart — jadi kita tak pernah pegang bitmap penuh dalam
+    // memori, dan bait yang dinaikkan pun dah kecil. `imageQuality`
+    // sahaja TAK cukup: ia cuma kualiti re-encode JPEG, dimensi kekal.
     final picked = remaining == 1
         ? await _picker
-              .pickImage(source: ImageSource.gallery, imageQuality: 85)
+              .pickImage(
+                source: ImageSource.gallery,
+                maxWidth: _maxUploadDimension,
+                maxHeight: _maxUploadDimension,
+                imageQuality: _uploadQuality,
+              )
               .then((x) => x == null ? <XFile>[] : [x])
-        : await _picker.pickMultiImage(imageQuality: 85, limit: remaining);
+        : await _picker.pickMultiImage(
+            maxWidth: _maxUploadDimension,
+            maxHeight: _maxUploadDimension,
+            imageQuality: _uploadQuality,
+            limit: remaining,
+          );
     if (picked.isEmpty) return;
 
     final accepted = <XFile>[];

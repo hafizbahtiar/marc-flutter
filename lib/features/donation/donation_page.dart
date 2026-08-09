@@ -167,7 +167,7 @@ class _DeveloperStory extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
             children: [
               CircleAvatar(
@@ -204,11 +204,14 @@ class _DeveloperStory extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
+          // JANGAN dakwa "tiada iklan" di sini. Iklan dalam-feed dirancang
+          // (lihat TODO), dan janji yang jadi tak betul lepas satu keluaran
+          // lebih memudaratkan kepercayaan daripada tak berjanji langsung.
           Text(
             'Saya bekas pelajar Kompleks Darul Kifayah, MAIWP. MARC saya '
             'bina sendiri sebagai cara memberi balik kepada komuniti yang '
-            'pernah membesarkan saya -  percuma untuk semua ahli, tiada '
-            'iklan, tiada langganan.',
+            'pernah membesarkan saya - percuma untuk semua ahli, tiada '
+            'langganan.',
             style: textTheme.bodyMedium?.copyWith(height: 1.5),
           ),
           const SizedBox(height: 10),
