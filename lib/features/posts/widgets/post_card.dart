@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/widgets/content_action_sheet.dart';
-import 'package:marc/features/posts/widgets/image_carousel.dart';
+import 'package:marc/features/posts/widgets/post_image_grid.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/edited_badge.dart';
@@ -146,7 +146,7 @@ class PostCard extends ConsumerWidget {
             ),
             if (post.images.isNotEmpty) ...[
               const SizedBox(height: 10),
-              ImageCarousel(urls: post.images),
+              PostImageGrid(urls: post.images),
             ],
             const SizedBox(height: 6),
             Row(

@@ -1,16 +1,13 @@
 # Stripe Donation — Setup & Reference
 
-Status: **backend + Flutter UI done (PaymentSheet + FPX), belum diverify
-end-to-end lawan Stripe sebenar** (test keys dah ada dlm `.env`
-kedua-dua repo). Ni bahagian **Stripe sahaja** drpd payment module
-(Stage 12) — yuran ahli (ToyyibPay) dan donation <RM500 (SociaBuzz)
-**belum start**, lihat "Yang belum" di bawah dan `marc_go/TODO.md`
-Stage 12 untuk gambaran penuh.
+Status: **jalan hujung-ke-hujung dengan pembayaran sebenar** (kad;
+FPX belum diuji — lihat "Yang belum"). Ni bahagian **Stripe sahaja**
+drpd payment module — yuran ahli (ToyyibPay) dan donation <RM500
+(SociaBuzz) belum start.
 
 ## Kenapa dua akaun berasingan
 
-- **ToyyibPay** — akaun rasmi MAIWP (non-profit), untuk yuran ahli. Bukan
-  skop dokumen ni.
+- **ToyyibPay** — untuk yuran ahli (belum start). Bukan skop dokumen ni.
 - **Stripe** — akaun **peribadi** (pemaju app), untuk "Sokong MARC".
   Amount ≥RM500 guna Stripe; <RM500 akan guna SociaBuzz (belum wired).
   Currency **MYR sahaja** — elak isu penukaran mata wang.
@@ -21,7 +18,7 @@ Duit dari `/donate` masuk ke akaun peribadi pemaju untuk menampung kos
 hosting, domain dan penyelenggaraan. Ia **bukan** derma kepada MAIWP atau
 mana-mana badan amal, dan **tidak layak pelepasan cukai**.
 
-Ini kena kekal jelas di **tiga** tempat sekaligus — jangan ubah satu tanpa
+Ini kena kekal jelas di **empat** tempat sekaligus — jangan ubah satu tanpa
 yang lain, sebab resit yang nampak macam dokumen rasmi MAIWP untuk duit
 yang masuk akaun individu adalah salah nyata:
 
@@ -30,6 +27,9 @@ yang masuk akaun individu adalah salah nyata:
    (perenggan footer)
 3. `marc_go/internal/receipt/receipt.go` — pemalar `footerNote` + baris
    "Penerima"/"Tujuan" dalam jadual
+4. `marc_flutter/lib/features/profile/about_page.dart` + `faq_page.dart` —
+   penafian "bukan aplikasi rasmi MAIWP". Dilindungi `about_page_test.dart`
+   supaya dakwaan lama tak kembali senyap.
 
 Sebab tu juga tajuk PDF ialah "RESIT SOKONGAN", bukan "Resit Rasmi", dan
 header tak lagi bawa nama penuh MAIWP.
@@ -149,8 +149,13 @@ Keputusan produk: **semua donation kena ada jejak dalaman**, walau
 anonymous.
 
 - Ahli MARC yang log masuk → `middleware.OptionalAuth` kaitkan `user_id`
-  automatik (trace balik ke emel akaun terus). **Emel TAK ditanya** dlm
-  UI — `donation_page.dart` sorok field emel terus bila `isLoggedIn`.
+  automatik (trace balik ke emel akaun terus), jadi emel **tak wajib**.
+  Field tu tetap DIPAPAR dan di-prefill drpd profil — bukan disorok.
+  Menyorokkannya (reka bentuk asal) buat borang nampak kosong/pelik, dan
+  lebih teruk: `isLoggedIn` dulu diambil drpd `myProfileProvider` yang
+  async, jadi field muncul sekejap kemudian hilang semasa profil selesai
+  dimuat — nampak macam "emel dikosongkan". Sekarang ia baca
+  `authNotifierProvider` yang segerak.
 - Guest (tak log masuk) → **wajib isi emel**, endpoint tolak 400 kalau
   kosong. Dikuatkuasakan DUA lapis: validator borang Flutter + DB
   constraint `donations_traceable` (`user_id is not null or donor_email
@@ -168,7 +173,7 @@ yang idempotent (row cuma "benar-benar beralih" ke `succeeded` sekali).
 
 ### PDF resit (`marc_go/internal/receipt`)
 
-Resit rasmi satu muka surat, dilampirkan sebagai
+Resit satu muka surat, dilampirkan sebagai
 `Resit-MARC-<gateway_ref>.pdf`. Susun atur: jalur header berjenama
 (wordmark + no. rujukan) → blok penderma + tarikh + lencana status →
 panel jumlah (angka besar + **jumlah dieja dalam BM**, cth "Ringgit
@@ -221,7 +226,7 @@ internal/receipt/receipt.go   -- jana PDF resit (go-pdf/fpdf)
 internal/email/client.go      -- SendWithAttachments (base64, Resend)
 ```
 
-Entry point: Profile page → "Donate" → `/donate`.
+Entry point: Profile page → "Sokong MARC" → `/donate`.
 
 ## Setup — env vars
 
@@ -294,21 +299,23 @@ jumpa 400 webhook lagi lepas ni — **jangan terus syak secret/delete-
 recreate endpoint**, semak log server dulu (`donations.go` webhook
 400-path skrg log ralat SEBENAR drpd `VerifyWebhook`, bukan senyap).
 
-## Yang belum (lihat `marc_go/TODO.md` Stage 12 untuk detail penuh)
+## Yang belum
 
-- [x] ~~Verify end-to-end lawan Stripe sebenar~~ — **done 2026-08-09**,
-  donation sebenar (checkout → Stripe API confirm → webhook 200 → DB
-  `succeeded` → resit PDF+emel) diverify penuh lawan staging
-- [x] ~~Webhook belum register~~ — **done**, satu endpoint
-  (`we_1U2FwsFV4EgsAdJtmpB7SrcG`) enabled, `STRIPE_WEBHOOK_SECRET` set
-  di Railway staging + local `.env`
-- [ ] Enable FPX di Stripe Dashboard (Settings → Payment methods) — kau
-  punya langkah, bukan code; FPX redirect round-trip sendiri belum
-  ditest sebenar (setakat ni kad je diverify end-to-end)
-- [ ] Threshold RM500 (Stripe vs SociaBuzz) belum implement —
-  `DonationHandler.selectGateway` di backend sekarang SELALU pulang
-  Stripe tak kira amount
-- [ ] SociaBuzz — belum research API/webhook capability langsung
-- [ ] ToyyibPay (yuran ahli, gate akses feed) — belum start
-- [ ] Widget/integration test untuk `donation_page.dart` — setakat ni
-  cuma `flutter analyze` bersih, belum ada automated test
+- [ ] **FPX belum diuji sebenar.** Perlu diaktifkan di Stripe Dashboard
+      (Settings → Payment methods) — langkah kau, bukan kod. Pusingan
+      redirect bank sebenar belum dicuba; setakat ni kad sahaja yang
+      disahkan hujung-ke-hujung.
+- [ ] **Threshold RM500 belum wired.** `DonationHandler.selectGateway`
+      sentiasa pulang Stripe tak kira amount.
+- [ ] **SociaBuzz** — belum research langsung: ada API/webhook rasmi untuk
+      verify pembayaran, atau manual sahaja?
+- [ ] **ToyyibPay** (yuran ahli + gate feed) — belum start.
+- [ ] **Ujian automatik untuk `donation_page.dart`** — setakat ni bergantung
+      pada `flutter analyze` + ujian sebenar pada peranti.
+
+## Status disahkan
+
+- Donation sebenar hujung-ke-hujung (2026-08-09): checkout → Stripe confirm
+  → webhook 200 → DB `succeeded` → resit PDF + emel dihantar.
+- Webhook didaftar (`we_1U2FwsFV4EgsAdJtmpB7SrcG`), `STRIPE_WEBHOOK_SECRET`
+  diset di Railway staging + `.env` tempatan.
