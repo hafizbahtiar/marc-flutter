@@ -32,6 +32,21 @@ Backend: `../marc_go/TODO.md`.
       dan tulis semula dalam suara kau sendiri. Warden tak dinamakan —
       itu identiti orang lain, perlu kebenaran mereka.
 
+## DuitNow QR (siap 2026-08-09)
+
+QR peribadi Maybank dipapar pada halaman sokongan, dengan butang simpan ke
+galeri (`gal`). **Stripe tak menyokong DuitNow langsung** — Malaysia dapat
+FPX, GrabPay dan kad sahaja — dan gateway tempatan yang menyokongnya
+(Billplz) perlukan akaun syarikat, jadi QR peribadi satu-satunya laluan.
+
+Tukar ganti dinyatakan dalam UI: bayaran QR memintas backend, jadi tiada
+baris `donations`, tiada resit PDF, tiada emel. Dilindungi ujian.
+
+- [ ] Rekonsiliasi manual — tiada cara tahu siapa hantar berapa selain
+      penyata bank. Kalau volum meningkat, pertimbang ToyyibPay (sokong
+      DuitNow QR, terima akaun individu — sahkan dulu) sebagai
+      `payment.Gateway` kedua; `RedirectCheckoutHandler` dah sedia.
+
 ## Iklan dalam-feed (dirancang, belum start)
 
 Matlamat: unit iklan yang duduk dalam feed dan padan dengan `PostCard`,

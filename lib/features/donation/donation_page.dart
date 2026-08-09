@@ -6,6 +6,8 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
+import 'package:marc/features/donation/widgets/duitnow_qr_card.dart';
+
 import 'donation_models.dart';
 import 'donation_providers.dart';
 
@@ -256,6 +258,18 @@ class _AmountForm extends StatelessWidget {
         children: [
           const _DeveloperStory(),
           const SizedBox(height: 20),
+          // QR didahulukan: tiada yuran, dan bagi kebanyakan orang Malaysia
+          // ia cara paling biasa hantar duit. Kad/FPX di bawah untuk sesiapa
+          // yang perlukan resit.
+          const DuitNowQrCard(),
+          const SizedBox(height: 20),
+          Text(
+            'Atau bayar dengan kad / FPX',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
           TextFormField(
             controller: amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),

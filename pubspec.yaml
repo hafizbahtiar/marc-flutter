@@ -55,6 +55,7 @@ dependencies:
   flutter_stripe: ^13.1.0
   shared_preferences: ^2.5.5
   extended_image: ^10.1.0
+  gal: ^2.3.3
 
 dev_dependencies:
   flutter_test:
@@ -109,6 +110,7 @@ flutter:
   assets:
     - .env
     - assets/splash/logo.png
+    - assets/donation/maybank_hafiz.jpeg
 
   # To add assets to your application, add an assets section, like this:
   # assets:
