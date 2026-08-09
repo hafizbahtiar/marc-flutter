@@ -115,7 +115,8 @@ class _DonationPageState extends ConsumerState<DonationPage> {
     final profile = ref.watch(myProfileProvider).valueOrNull;
     if (!_prefilled && profile != null) {
       _prefilled = true;
-      if (_nameController.text.isEmpty && (profile.displayName ?? '').isNotEmpty) {
+      if (_nameController.text.isEmpty &&
+          (profile.displayName ?? '').isNotEmpty) {
         _nameController.text = profile.displayName!;
       }
       if (_emailController.text.isEmpty && profile.email.isNotEmpty) {
@@ -124,7 +125,7 @@ class _DonationPageState extends ConsumerState<DonationPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Donate')),
+      appBar: AppBar(title: const Text('Sokong MARC')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -138,6 +139,87 @@ class _DonationPageState extends ConsumerState<DonationPage> {
             onSubmit: _startCheckout,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Kisah ringkas pembangun + apa sebenarnya sumbangan ni pergi.
+///
+/// Sengaja dinyatakan terus yang duit ni pergi kepada PEMBANGUN, bukan
+/// kepada MAIWP — jangan sesekali biarkan orang tersalah anggap mereka
+/// menderma kepada organisasi. Ayat yang sama diulang dalam emel resit
+/// dan PDF (marc_go/internal/receipt).
+class _DeveloperStory extends StatelessWidget {
+  const _DeveloperStory();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: scheme.primary.withValues(alpha: 0.16),
+                child: Text(
+                  'H',
+                  style: TextStyle(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hafiz',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Pembangun MARC',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Saya bekas pelajar Kompleks Darul Kifayah, MAIWP. MARC saya '
+            'bina sendiri sebagai cara memberi balik kepada komuniti yang '
+            'pernah membesarkan saya -  percuma untuk semua ahli, tiada '
+            'iklan, tiada langganan.',
+            style: textTheme.bodyMedium?.copyWith(height: 1.5),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Sumbangan anda datang terus kepada saya untuk menampung kos '
+            'hosting, domain dan masa penyelenggaraan supaya MARC kekal '
+            'berjalan. Ia bukan sumbangan kepada MAIWP. Berapa pun '
+            'jumlahnya, saya hargai.',
+            style: textTheme.bodyMedium?.copyWith(height: 1.5),
+          ),
+        ],
       ),
     );
   }
@@ -169,10 +251,7 @@ class _AmountForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Sumbangan anda membantu kami terus membangunkan MARC.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          const _DeveloperStory(),
           const SizedBox(height: 20),
           TextFormField(
             controller: amountController,

@@ -6,6 +6,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/widgets/app_action_sheet.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 const _placeholderRow = MemberRow(
@@ -33,31 +34,29 @@ Future<void> _showEditRoleSheet(
   final assignable = roles.where((r) => r.rank < myRoleRank).toList();
 
   if (!context.mounted) return;
-  final selected = await showModalBottomSheet<RoleOption>(
-    context: context,
-    builder: (ctx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-            child: Text(
-              'Tukar role ${row.displayName ?? row.memberId}',
-              style: Theme.of(ctx).textTheme.titleMedium,
-            ),
-          ),
-          for (final role in assignable)
-            ListTile(
-              title: Text(role.name),
-              trailing: role.key == row.roleKey
-                  ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
-                  : null,
-              onTap: () => Navigator.pop(ctx, role),
-            ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    ),
+
+  // Backend dah tapis /roles kepada rank bawah caller, jadi senarai ni
+  // boleh jadi cuma role semasa ahli tu (cth supervisor edit ahli — satu
+  // pilihan sahaja, itu pun yang dia dah ada). Elak bottom sheet kosong
+  // yang buntu.
+  if (assignable.every((r) => r.key == row.roleKey)) {
+    MySnackBar.error(context, 'Tiada role lain yang boleh anda tetapkan.');
+    return;
+  }
+  // Sheet yang sama dengan tindakan post/comment — mod pemilih (isSelected
+  // papar tanda semak pada role semasa) dan bukan senarai tindakan.
+  final selected = await showAppActionSheet<RoleOption>(
+    context,
+    title: 'Tukar role',
+    message: row.displayName ?? row.memberId,
+    actions: [
+      for (final role in assignable)
+        AppSheetAction(
+          value: role,
+          label: role.name,
+          isSelected: role.key == row.roleKey,
+        ),
+    ],
   );
 
   if (selected == null || selected.key == row.roleKey) return;

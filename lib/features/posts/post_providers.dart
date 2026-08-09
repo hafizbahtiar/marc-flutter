@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:marc/core/api_client.dart';
+import 'package:marc/core/app_log.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/posts/post_models.dart';
 
@@ -272,25 +273,61 @@ class PostRepository {
 
   /// Minta presigned URL dari backend, upload gambar TERUS ke R2 (bukan
   /// melalui backend kita), pulangkan r2_key untuk attach ke post.
+  /// Upload satu gambar: presign (backend kita) → PUT terus ke R2.
+  ///
+  /// Dua peringkat, dua HOST berbeza, dua punca kegagalan yang berbeza
+  /// sepenuhnya — sebab tu setiap peringkat dilog berasingan. "Post biasa
+  /// jadi, post bergambar gagal" hampir sentiasa bermaksud peringkat R2
+  /// yang putus, bukan backend.
   Future<String> uploadImage(XFile file) async {
     final contentType = await _contentTypeFor(file);
     final dio = _ref.read(dioProvider);
 
-    final presign = await dio.post(
-      '/uploads/presign',
-      data: {'content_type': contentType},
-    );
+    appLog('upload', 'presign mula (content_type=$contentType)');
+    late final Response<dynamic> presign;
+    try {
+      presign = await dio.post(
+        '/uploads/presign',
+        data: {'content_type': contentType},
+      );
+    } on DioException catch (e) {
+      appLogDioError('upload', 'presign', e);
+      rethrow;
+    }
+
     final uploadUrl = presign.data['upload_url'] as String;
     final r2Key = presign.data['r2_key'] as String;
+    appLog(
+      'upload',
+      'presign OK (r2_key=$r2Key, host=${Uri.parse(uploadUrl).host})',
+    );
 
     final bytes = await file.readAsBytes();
-    // Dio baru (bukan yang ada auth interceptor) — presigned URL R2 bukan
-    // endpoint backend kita, tak perlu/patut Bearer token.
-    await Dio().put(
-      uploadUrl,
-      data: bytes,
-      options: Options(headers: {'Content-Type': contentType}),
-    );
+    appLog('upload', 'PUT R2 mula (${bytes.length} bait)');
+
+    try {
+      // Dio baru (bukan yang ada auth interceptor) — presigned URL R2 bukan
+      // endpoint backend kita, tak perlu/patut Bearer token. Timeout
+      // ditetapkan eksplisit: Dio() kosong TIADA timeout langsung, jadi
+      // upload yang tersekat akan tergantung selamanya dan bukan gagal
+      // dengan ralat yang boleh dilihat.
+      final res =
+          await Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 60),
+              receiveTimeout: const Duration(seconds: 30),
+            ),
+          ).put(
+            uploadUrl,
+            data: bytes,
+            options: Options(headers: {'Content-Type': contentType}),
+          );
+      appLog('upload', 'PUT R2 OK (status=${res.statusCode}, r2_key=$r2Key)');
+    } on DioException catch (e) {
+      appLogDioError('upload', 'PUT R2 (r2_key=$r2Key)', e);
+      rethrow;
+    }
 
     return r2Key;
   }

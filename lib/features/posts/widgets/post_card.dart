@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/features/posts/post_models.dart';
+import 'package:marc/features/posts/widgets/content_action_sheet.dart';
 import 'package:marc/features/posts/widgets/image_carousel.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
+import 'package:marc/shared/widgets/edited_badge.dart';
 
 class PostCard extends ConsumerWidget {
   const PostCard({
@@ -79,13 +81,8 @@ class PostCard extends ConsumerWidget {
                             ).textTheme.bodyMedium?.copyWith(fontSize: 13),
                           ),
                           if (post.isEdited) ...[
-                            const SizedBox(width: 4),
-                            Text(
-                              '· disunting',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.copyWith(fontSize: 13),
-                            ),
+                            const SizedBox(width: 6),
+                            const EditedBadge(),
                           ],
                         ],
                       ),
@@ -113,22 +110,29 @@ class PostCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                if (isOwner || canDelete)
-                  PopupMenuButton<String>(
+                // Dulu PopupMenuButton (menu kecil melekat di sudut kanan
+                // atas). Sekarang sheet yang sama dengan comment — sasaran
+                // sentuh lebih besar dan dua-dua tempat berkelakuan sama.
+                if (canDelete)
+                  IconButton(
                     icon: const Icon(Icons.more_vert, size: 20),
-                    onSelected: (value) {
-                      if (value == 'edit') onEdit?.call();
-                      if (value == 'delete') onDelete?.call();
+                    tooltip: 'Tindakan',
+                    onPressed: () async {
+                      final action = await showContentActionSheet(
+                        context,
+                        title: post.isAnnouncement ? 'Pengumuman' : 'Post',
+                        canEdit: isOwner,
+                        canDelete: canDelete,
+                      );
+                      switch (action) {
+                        case ContentAction.edit:
+                          onEdit?.call();
+                        case ContentAction.delete:
+                          onDelete?.call();
+                        case null:
+                          break;
+                      }
                     },
-                    itemBuilder: (context) => [
-                      if (isOwner)
-                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      if (canDelete)
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Padam'),
-                        ),
-                    ],
                   ),
               ],
             ),

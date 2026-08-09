@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:marc/core/app_log.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/widgets/app_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -44,25 +46,23 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     if (!mounted) return false;
 
     if (status.isPermanentlyDenied) {
-      final openSettings = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Kebenaran galeri diperlukan'),
-          content: const Text(
+      final openSettings = await showAppDialog<bool>(
+        context,
+        title: 'Kebenaran galeri diperlukan',
+        message:
             'MARC perlukan akses ke galeri untuk lampirkan gambar pada post. '
             'Sila benarkan akses dalam Tetapan.',
+        actions: (ctx) => [
+          AppDialogAction(
+            label: 'Batal',
+            onPressed: () => Navigator.pop(ctx, false),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Buka Tetapan'),
-            ),
-          ],
-        ),
+          AppDialogAction(
+            label: 'Buka Tetapan',
+            isPrimary: true,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
       );
       if (openSettings ?? false) await openAppSettings();
       return false;
@@ -125,13 +125,23 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     setState(() => _submitting = true);
     try {
       final repo = ref.read(postRepositoryProvider);
+      appLog(
+        'create_post',
+        'mula (aksara=${content.length}, gambar=${_images.length}, '
+            'dah_upload=${_uploadedKeys.length})',
+      );
       // Retry-safe: kalau submit gagal separuh jalan lepas sesetengah
       // gambar dah berjaya upload, jangan re-upload gambar yang dah
       // berjaya tu bila user cuba "Hantar" semula — elak orphan R2
       // object bertambah setiap kali retry.
       while (_uploadedKeys.length < _images.length) {
-        final key = await repo.uploadImage(_images[_uploadedKeys.length]);
+        final index = _uploadedKeys.length;
+        final key = await repo.uploadImage(_images[index]);
         _uploadedKeys.add(key);
+        appLog(
+          'create_post',
+          'gambar ${index + 1}/${_images.length} siap upload',
+        );
       }
 
       await repo.createPost(
@@ -140,18 +150,19 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
         r2Keys: _uploadedKeys,
       );
 
+      appLog('create_post', 'POST /posts berjaya');
       ref.invalidate(feedProvider);
       if (!mounted) return;
       MySnackBar.success(context, 'Post dihantar.');
       context.pop();
-    } catch (e) {
+    } on DioException catch (e) {
+      appLogDioError('create_post', 'hantar post', e);
       if (!mounted) return;
-      MySnackBar.error(
-        context,
-        e is DioException
-            ? extractErrorMessage(e)
-            : 'Gagal hantar post. Cuba lagi.',
-      );
+      MySnackBar.error(context, extractErrorMessage(e));
+    } catch (e, stack) {
+      appLog('create_post', 'ralat bukan-Dio: $e\n$stack');
+      if (!mounted) return;
+      MySnackBar.error(context, 'Gagal hantar post. Cuba lagi.');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

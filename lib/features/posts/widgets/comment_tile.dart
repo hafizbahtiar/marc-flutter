@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
+import 'package:marc/features/posts/widgets/content_action_sheet.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
+import 'package:marc/shared/widgets/edited_badge.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 /// Satu comment top-level + reply-reply di bawahnya (indent sekali sahaja
@@ -86,6 +88,66 @@ class _CommentRow extends ConsumerWidget {
   final Comment comment;
   final VoidCallback onReply;
 
+  Future<void> _showActions(BuildContext context, WidgetRef ref) async {
+    final myProfile = ref.read(myProfileProvider).valueOrNull;
+    final isOwner = myProfile?.memberId == comment.author.memberId;
+
+    final action = await showContentActionSheet(
+      context,
+      title: 'Comment ${comment.author.label}',
+      canEdit: isOwner,
+      canDelete: isOwner || (myProfile?.isManagement ?? false),
+    );
+    if (action == null || !context.mounted) return;
+
+    switch (action) {
+      case ContentAction.edit:
+        await _edit(context, ref);
+      case ContentAction.delete:
+        await _delete(context, ref);
+    }
+  }
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final newContent = await showEditTextDialog(
+      context,
+      title: 'Edit comment',
+      initialValue: comment.content,
+      maxLines: 3,
+    );
+    if (newContent == null) return;
+    try {
+      await ref
+          .read(postRepositoryProvider)
+          .editComment(postId, comment.id, newContent);
+    } catch (e) {
+      if (context.mounted) {
+        MySnackBar.error(
+          context,
+          e is DioException ? extractErrorMessage(e) : 'Gagal edit comment.',
+        );
+      }
+    }
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final ok = await showConfirmDialog(
+      context,
+      title: 'Padam comment',
+      message: 'Anda pasti mahu padam comment ini?',
+      confirmLabel: 'Padam',
+      isDestructive: true,
+    );
+    if (!ok) return;
+    try {
+      await ref.read(postRepositoryProvider).deleteComment(postId, comment.id);
+    } catch (_) {
+      if (context.mounted) {
+        MySnackBar.error(context, 'Gagal padam comment.');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
@@ -138,14 +200,8 @@ class _CommentRow extends ConsumerWidget {
                       ),
                     ),
                     if (comment.isEdited) ...[
-                      const SizedBox(width: 4),
-                      Text(
-                        '· disunting',
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 12,
-                        ),
-                      ),
+                      const SizedBox(width: 6),
+                      const EditedBadge(),
                     ],
                   ],
                 ),
@@ -207,74 +263,24 @@ class _CommentRow extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    if (isOwner) ...[
-                      const SizedBox(width: 16),
+                    // Edit/Padam dulu dua butang teks berasingan dalam
+                    // baris ni — padat, senang tersalah tekan, dan
+                    // 'Padam' merah sentiasa terpampang. Sekarang satu
+                    // titik masuk yang buka sheet tindakan.
+                    if (isOwner || canDelete) ...[
+                      const SizedBox(width: 12),
                       InkWell(
-                        onTap: () async {
-                          final newContent = await showEditTextDialog(
-                            context,
-                            title: 'Edit comment',
-                            initialValue: comment.content,
-                            maxLines: 3,
-                          );
-                          if (newContent == null) return;
-                          try {
-                            await ref
-                                .read(postRepositoryProvider)
-                                .editComment(postId, comment.id, newContent);
-                          } catch (e) {
-                            if (context.mounted) {
-                              MySnackBar.error(
-                                context,
-                                e is DioException
-                                    ? extractErrorMessage(e)
-                                    : 'Gagal edit comment.',
-                              );
-                            }
-                          }
-                        },
-                        child: Text(
-                          'Edit',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _showActions(context, ref),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
                           ),
-                        ),
-                      ),
-                    ],
-                    if (canDelete) ...[
-                      const SizedBox(width: 16),
-                      InkWell(
-                        onTap: () async {
-                          final ok = await showConfirmDialog(
-                            context,
-                            title: 'Padam comment',
-                            message: 'Anda pasti mahu padam comment ini?',
-                            confirmLabel: 'Padam',
-                            isDestructive: true,
-                          );
-                          if (ok) {
-                            try {
-                              await ref
-                                  .read(postRepositoryProvider)
-                                  .deleteComment(postId, comment.id);
-                            } catch (_) {
-                              if (context.mounted) {
-                                MySnackBar.error(
-                                  context,
-                                  'Gagal padam comment.',
-                                );
-                              }
-                            }
-                          }
-                        },
-                        child: Text(
-                          'Padam',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.error,
-                            fontWeight: FontWeight.w600,
+                          child: Icon(
+                            Icons.more_horiz,
+                            size: 16,
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                       ),

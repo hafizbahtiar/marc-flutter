@@ -11,9 +11,28 @@ Stage 12 untuk gambaran penuh.
 
 - **ToyyibPay** — akaun rasmi MAIWP (non-profit), untuk yuran ahli. Bukan
   skop dokumen ni.
-- **Stripe** — akaun **peribadi** (pemaju app), khas untuk "Donate to
-  us". Amount ≥RM500 guna Stripe; <RM500 akan guna SociaBuzz (belum
-  wired). Currency **MYR sahaja** — elak isu penukaran mata wang.
+- **Stripe** — akaun **peribadi** (pemaju app), untuk "Sokong MARC".
+  Amount ≥RM500 guna Stripe; <RM500 akan guna SociaBuzz (belum wired).
+  Currency **MYR sahaja** — elak isu penukaran mata wang.
+
+### Framing: sokongan kepada pemaju, BUKAN sumbangan kepada MAIWP
+
+Duit dari `/donate` masuk ke akaun peribadi pemaju untuk menampung kos
+hosting, domain dan penyelenggaraan. Ia **bukan** derma kepada MAIWP atau
+mana-mana badan amal, dan **tidak layak pelepasan cukai**.
+
+Ini kena kekal jelas di **tiga** tempat sekaligus — jangan ubah satu tanpa
+yang lain, sebab resit yang nampak macam dokumen rasmi MAIWP untuk duit
+yang masuk akaun individu adalah salah nyata:
+
+1. `marc_flutter/lib/features/donation/donation_page.dart` — `_DeveloperStory`
+2. `marc_go/internal/http/handlers/donations.go` — `donationReceiptHTML`
+   (perenggan footer)
+3. `marc_go/internal/receipt/receipt.go` — pemalar `footerNote` + baris
+   "Penerima"/"Tujuan" dalam jadual
+
+Sebab tu juga tajuk PDF ialah "RESIT SOKONGAN", bukan "Resit Rasmi", dan
+header tak lagi bawa nama penuh MAIWP.
 
 ## Cara bayar: `PaymentSheet` (bukan `CardFormField`)
 
@@ -146,6 +165,31 @@ kalau donor log masuk & tak isi emel). Best-effort — kegagalan hantar
 emel TAK gagalkan webhook. Dihantar TEPAT SEKALI per donation (bukan
 setiap retry Stripe) sebab bergantung pada `UpdateDonationStatusByGatewayRef`
 yang idempotent (row cuma "benar-benar beralih" ke `succeeded` sekali).
+
+### PDF resit (`marc_go/internal/receipt`)
+
+Resit rasmi satu muka surat, dilampirkan sebagai
+`Resit-MARC-<gateway_ref>.pdf`. Susun atur: jalur header berjenama
+(wordmark + no. rujukan) → blok penderma + tarikh + lencana status →
+panel jumlah (angka besar + **jumlah dieja dalam BM**, cth "Ringgit
+Malaysia Seribu Lima Ratus sahaja") → jadual butiran transaksi berselang
+warna → footer nota.
+
+Perkara yang senang terlepas kalau edit fail ni:
+
+- **Tarikh sentiasa MYT.** `malaysiaTZ` ialah `time.FixedZone` (bukan
+  `LoadLocation`) — imej container tak semestinya ada tzdata. Stripe
+  hantar masa dalam UTC; tanpa penukaran ni resit tunjuk jam salah.
+- **Font teras fpdf guna cp1252, bukan UTF-8.** Semua string dinamik
+  MESTI melalui `tr := pdf.UnicodeTranslatorFromDescriptor("")`, kalau
+  tidak nama berdiakritik jadi sampah.
+- **fpdf tak clip teks.** Nilai panjang (emel, nama) kena lalu `clip()`
+  atau ia melimpah menindih lajur sebelah.
+- Ejaan jumlah dilangkau untuk mata wang bukan MYR (ejaan BM tak sesuai
+  untuk USD/SGD).
+
+Ujian: `go test ./internal/receipt/` — cover jumlah dieja, pemisah
+ribuan, dan render sumbangan awanama (semua field kosong) tanpa panik.
 
 ## File map
 

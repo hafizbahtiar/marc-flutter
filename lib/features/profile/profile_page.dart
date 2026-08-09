@@ -118,7 +118,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                   leading: const Icon(Icons.favorite_outline),
-                  title: const Text('Donate'),
+                  title: const Text('Sokong MARC'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/donate'),
                 ),
