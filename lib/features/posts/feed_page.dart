@@ -270,8 +270,8 @@ class _PendingStatusView extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   isRejected
-                      ? 'Pendaftaran anda tidak diluluskan. Sila hubungi pihak pengurusan MAIWP.'
-                      : 'Pendaftaran anda sedang disemak oleh pihak pengurusan MAIWP.',
+                      ? 'Pendaftaran anda tidak diluluskan. Sila hubungi pihak pengurusan MARC.'
+                      : 'Pendaftaran anda sedang disemak oleh pihak pengurusan MARC.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),

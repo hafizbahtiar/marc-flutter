@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/api_client.dart';
+import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/audit/audit_models.dart';
 
 const _pageSize = 50;
@@ -71,6 +72,18 @@ class AuditLogState {
 class AuditLogNotifier extends FamilyAsyncNotifier<AuditLogState, AuditFilter> {
   @override
   Future<AuditLogState> build(AuditFilter arg) async {
+    // Reaktif pada status log masuk — provider ni BUKAN autoDispose, jadi
+    // tanpa `watch` di sini jejak yang dah dimuat kekal dalam memori
+    // selepas logout dan terus dihidangkan kepada sesiapa yang log masuk
+    // seterusnya pada peranti yang sama. Ini data paling sensitif dalam
+    // app (siapa ubah apa, ID ahli, kandungan post sebelum/selepas), jadi
+    // ia ikut guard sama yang dikuatkuasakan pada feed/notifications/
+    // comments selepas audit 2026-08-07.
+    final isLoggedIn = ref.watch(
+      authNotifierProvider.select((s) => s.isLoggedIn),
+    );
+    if (!isLoggedIn) return const AuditLogState(hasMore: false);
+
     final logs = await _fetch(beforeId: null);
     return AuditLogState(logs: logs, hasMore: logs.length == _pageSize);
   }

@@ -26,7 +26,9 @@ void appLogDioError(String scope, String stage, DioException e) {
   if (!kDebugMode) return;
   final response = e.response;
   final buffer = StringBuffer('$stage GAGAL — ${e.type.name}')
-    ..write('\n  url: ${e.requestOptions.method} ${e.requestOptions.uri}');
+    ..write(
+      '\n  url: ${e.requestOptions.method} ${_safeUri(e.requestOptions.uri)}',
+    );
   if (response != null) {
     buffer.write('\n  status: ${response.statusCode}');
     buffer.write('\n  body: ${_preview(response.data)}');
@@ -37,7 +39,23 @@ void appLogDioError(String scope, String stage, DioException e) {
   developer.log(buffer.toString(), name: 'marc.$scope', error: e);
 }
 
+/// Buang query string sebelum log.
+///
+/// URL presigned R2 bawa `X-Amz-Signature` dalam query — kredential
+/// jangka pendek, tapi tetap kredential, dan log peranti bukan tempatnya.
+/// Path dikekalkan sebab itulah yang berguna untuk nyahpepijat (kunci
+/// objek mana yang gagal); tandatangan tak pernah berguna.
+String _safeUri(Uri uri) {
+  if (uri.query.isEmpty) return uri.toString();
+  return '${uri.replace(query: '')}?<${uri.queryParameters.length} param disembunyikan>';
+}
+
 String _preview(Object? data) {
   final text = data.toString();
   return text.length <= 800 ? text : '${text.substring(0, 800)}…';
 }
+
+/// Diekspos untuk ujian sahaja — penapisan kredential berbaloi diuji,
+/// dan fungsi peribadi tak boleh dicapai dari luar pustaka.
+@visibleForTesting
+String debugSafeUriForTest(Uri uri) => _safeUri(uri);

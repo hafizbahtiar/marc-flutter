@@ -125,56 +125,90 @@ Flutter sahaja.
 
 ## Belum
 
-- [ ] **Donation page (Stripe, Payment Element)** — backend dah siap
-  (`marc_go/TODO.md` Stage 12), refactor 2026-08-09 guna interface
-  `payment.Gateway`: `POST /donations/checkout` (awam, boleh guest —
-  hantar `donor_email` wajib kalau tak log masuk, optional kalau log
-  masuk sebab dikaitkan `user_id` auto) pulang
-  `{gateway, client_secret, redirect_url}` — **bukan `client_secret`
-  je lagi**. Buat masa ni `gateway` selalu `"stripe"` +
-  `redirect_url` selalu kosong (SociaBuzz/ToyyibPay belum wired), tapi
-  client kena baca field `gateway` untuk tentukan flow, JANGAN andaikan
-  Stripe terus — bila SociaBuzz siap, response boleh jadi
-  `redirect_url` diisi sebaliknya. **Belum start di Flutter.** Kerja:
-  - [ ] Tambah `flutter_stripe` dependency, init `Stripe.publishableKey`
-    di `main.dart` (perlu `STRIPE_PUBLISHABLE_KEY` — boleh hardcode/env,
-    bukan secret, selamat di client)
-  - [ ] **Cerminkan Strategy pattern backend di Dart** (keputusan user
-    2026-08-09, "frontend dan backend guna interface"): abstract class
-    `DonationCheckoutHandler` (method `handle(DonationCheckoutResponse)
-    -> Future<DonationResult>`), implementation `StripeCheckoutHandler`
-    (guna `flutter_stripe` confirmPayment bila `client_secret` terisi)
-    + `RedirectCheckoutHandler` (guna `url_launcher` bila `redirect_url`
-    terisi — untuk ToyyibPay/SociaBuzz kemudian). `donation_page.dart`
-    cuma panggil `/donations/checkout`, lookup handler ikut
-    `response.gateway`, delegate — tak perlu tahu logik Stripe/ToyyibPay
-    spesifik.
-  - [ ] `donation_page.dart` baru: form amount + nama/emel (emel wajib
-    kalau user tak log masuk — cocokkan validation server), call
-    `/donations/checkout`, papar `CardFormField` (bukan `PaymentSheet`
-    — keputusan elak setup Apple Pay/Google Pay buat masa ni), confirm
-    guna `Stripe.instance.confirmPayment(clientSecret)`, skrin result
-  - [ ] Route `/donate` + letak entry point (Profile page buat masa ni;
-    lokasi "betul" — tab ke landing luar — belum putus, lihat TODO
-    backend)
-  - [ ] Test dengan Stripe test card (`4242 4242 4242 4242`) lepas
-    `STRIPE_SECRET_KEY` diisi backend `.env`
 - [ ] **Yuran ahli (ToyyibPay) + SociaBuzz (<RM500)** — belum start
   langsung, backend pun belum (lihat "belum putus" di `marc_go/TODO.md`
   Stage 12). Bila ToyyibPay siap: perlu skrin dues-status/gate baharu
   (pattern sama macam `_EmailNotVerifiedView`/`_PendingStatusView` di
   `feed_page.dart`).
-- [ ] **R2 API token permission** — perlu semak Cloudflare dashboard: token
-  ada "Object Read & Write" untuk bucket `marc-staging`? Account ID/bucket
-  name betul-betul padan dengan yang di `.env`? Upload gambar backend dah
-  betul code-wise (verified presign + checksum fix), tapi PUT sebenar ke R2
-  masih 403 — bukan sesuatu yang boleh saya diagnose lagi tanpa akses
-  dashboard. Confirm semula semasa kerja had saiz gambar — 403 sama
-  berlaku, bukan regresi baru
-- [ ] Isi `R2_PUBLIC_URL` dalam `.env` (marc_go) — kosong sekarang, jadi
-  gambar yang berjaya upload pun takkan ada URL untuk dipaparkan balik
-- [ ] Widget test: `post_card.dart`, `comment_tile.dart` nested rendering
+- [ ] Widget test: `post_card.dart` (nested rendering) —
+  `comment_tile.dart` dah ada (`test/features/posts/comment_tile_test.dart`)
 - [ ] Unit test: `PostRepository.uploadImage` (mock presign response)
-- [ ] Test app betul-betul di simulator/device (setakat ni verified guna
-  `flutter build web` + contract test API sahaja, belum run visual UI
-  sebenar)
+- [ ] Test app betul-betul di simulator/device — sebahagian besar dah
+  disahkan pada peranti sebenar (Infinix X6833B) semasa kerja
+  donation/upload, tapi belum ada pas UI visual menyeluruh
+
+### Audit Critical/High (2026-08-09) — 3/3 fixed
+
+Audit `lib/` semasa selepas kerja donation/action-sheet/audit-UI.
+**Critical: tiada.** `flutter analyze` bersih, tiada force-unwrap baharu,
+token dalam `flutter_secure_storage`, tiada `print()` terlepas.
+
+- **HIGH — `auditLogsProvider` tiada guard auth.** Provider bukan
+  `autoDispose` dan tak `watch` status log masuk, jadi jejak audit yang
+  dah dimuat KEKAL dalam memori selepas logout dan terus dihidangkan
+  kepada sesi seterusnya pada peranti sama. Kelas bug sama yang difix
+  untuk feed/notifications/comments dalam audit 2026-08-07 — provider
+  baharu terlepas pandang. Ini pula data paling sensitif dalam app.
+  Dibuktikan dengan ujian gagal dahulu, kemudian difix guna corak
+  `.select(isLoggedIn)` yang sama. (`audit_auth_guard_test.dart`)
+- **MEDIUM — kilasan "tiada akses" pada skrin management.** `AuditPage`
+  dan `PendingMembersPage` guna `valueOrNull?.isManagement ?? false`,
+  yang `false` semasa profil MASIH dimuat — jadi ahli pengurusan yang sah
+  nampak "Anda tiada akses" seketika. Fix: bezakan `isLoading` daripada
+  "bukan management".
+- **LOW — tandatangan presigned dilog.** `appLogDioError` log URI penuh;
+  untuk PUT R2 itu termasuk `X-Amz-Signature`. Debug-build sahaja dan
+  kredential luput dalam 5 minit, tapi log peranti bukan tempatnya. Fix:
+  query string ditapis, path dikekalkan. (`app_log_test.dart`)
+
+### Risiko terbuka — belum diputuskan (bukan bug, keputusan produk)
+
+- [ ] **Bucket R2 boleh dibaca awam.** `R2_PUBLIC_URL` guna Public
+  Development URL r2.dev, jadi SEBARANG objek boleh diambil oleh sesiapa
+  yang ada URL, tanpa auth. Kunci UUID tak diteka — itu kekaburan, bukan
+  kawalan akses. Untuk app ahli-sahaja yang simpan gambar ahli, pilihannya
+  presigned GET. Cloudflare juga kata r2.dev bukan untuk produksi
+  (dikadar-hadkan).
+- [x] **Emel ahli disembunyikan daripada bukan-management (2026-08-09).**
+  Sejak keterlihatan ahli diluaskan, setiap ahli boleh menyalin direktori
+  emel penuh. Sekarang `GET /members` hantar `email` hanya kepada
+  management — plus baris caller SENDIRI, supaya profil sendiri kekal
+  lengkap.
+  - Backend: `memberResponse.Email` jadi `*string`; `null` = disembunyikan
+    (dibezakan drpd "tiada emel"). Ditapis dalam Go, bukan SQL, sebab
+    baris sendiri masih perlukan nilainya.
+  - Flutter: `MemberRow.email` jadi `String?`; senarai ahli jatuh ke satu
+    baris bila disembunyikan (bukan baris kosong), `pending_members_page`
+    guard null.
+  - Ujian: backend lawan Postgres sebenar (ahli nampak emel sendiri
+    sahaja; management nampak semua) + parsing null di Flutter.
+- [x] **Dakwaan "aplikasi rasmi MAIWP" dibuang (2026-08-09).** Disahkan oleh
+  user: MARC dibangunkan secara SUKARELA sebagai projek peribadi, bukan
+  aplikasi rasmi. Dilaraskan di 5 tempat supaya konsisten dengan framing
+  sumbangan:
+  - `about_page.dart` — "aplikasi komuniti" + kotak penafian menonjol;
+    `© MAIWP` → `© Hafiz Bahtiar`
+  - `faq_page.dart` — soalan baharu "Adakah MARC aplikasi rasmi MAIWP?"
+    (jawapan: bukan); kelulusan pendaftaran oleh "pengurusan MARC"
+  - `feed_page.dart` — skrin gate pending/rejected
+  - `marc_go` emel penolakan + komen `verified.go`/`stripe.go`
+  Dilindungi ujian (`about_page_test.dart`) supaya dakwaan lama tak
+  kembali senyap semasa kemas kini teks.
+
+## Selesai dalam sesi 2026-08-09 (dulu dlm "Belum")
+
+- **Donation page (Stripe)** ✅ — `DonationCheckoutHandler` (Strategy
+  pattern padan backend), `StripeCheckoutHandler` guna **PaymentSheet**
+  (bukan `CardFormField` macam dirancang asal — ditukar supaya FPX/online
+  banking Malaysia disokong), `RedirectCheckoutHandler` sedia untuk
+  SociaBuzz/ToyyibPay. Route `/donate` + entry point Profil. Disahkan
+  hujung-ke-hujung dengan pembayaran sebenar: webhook 200, DB `succeeded`,
+  emel resit + PDF dihantar. Lihat `PAYMENT-STRIPE.md`.
+- **R2 API token permission** ✅ — didiagnosis sebagai token baca-sahaja
+  (bukan bug kod: `ListObjectsV2` OK, `PutObject` SDK 403). Token
+  dikemas kini kepada Object Read & Write; disahkan oleh
+  `TestR2LivePermissions` dalam `marc_go`.
+- **`R2_PUBLIC_URL`** ✅ — diisi (r2.dev dev URL), diset dlm `.env` +
+  Railway, disahkan hujung-ke-hujung (upload → baca balik, bait sepadan).
+- **Widget test `comment_tile.dart`** ✅ — 8 ujian (regresi crash dialog
+  edit, sheet tindakan, tag Disunting).

@@ -23,8 +23,18 @@ class PendingMembersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isManagement =
-        ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false;
+    // Lihat komen sama dalam audit_page.dart — jangan tuduh pengguna
+    // tiada akses sedangkan profil dia belum siap dimuat.
+    final profileAsync = ref.watch(myProfileProvider);
+    if (profileAsync.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Ahli Pending')),
+        body: const SafeArea(
+          child: Center(child: CircularProgressIndicator.adaptive()),
+        ),
+      );
+    }
+    final isManagement = profileAsync.valueOrNull?.isManagement ?? false;
     if (!isManagement) {
       return Scaffold(
         appBar: AppBar(title: const Text('Ahli Pending')),
@@ -219,10 +229,14 @@ class _PendingTileState extends State<_PendingTile> {
                   widget.row.memberId,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                Text(
-                  widget.row.email,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                // Skrin ni management-sahaja, jadi emel sepatutnya sentiasa
+                // ada — tapi jangan crash/papar "null" kalau backend
+                // sembunyikannya.
+                if (widget.row.email != null)
+                  Text(
+                    widget.row.email!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
               ],
             ),
           ),

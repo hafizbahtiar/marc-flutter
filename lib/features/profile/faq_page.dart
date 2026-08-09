@@ -11,7 +11,7 @@ const _faqs = [
   _Faq(
     'Bagaimana cara mendaftar sebagai ahli MARC?',
     'Daftar guna emel anda dalam skrin pendaftaran. Pendaftaran anda '
-        'perlu diluluskan oleh pihak pengurusan MAIWP sebelum anda boleh '
+        'perlu diluluskan oleh pihak pengurusan MARC sebelum anda boleh '
         'mengakses ciri penuh app.',
   ),
   _Faq(
@@ -45,9 +45,16 @@ const _faqs = [
         'boleh tukar role akaun sendiri.',
   ),
   _Faq(
+    'Adakah MARC aplikasi rasmi MAIWP?',
+    'Bukan. MARC dibangunkan secara sukarela sebagai projek peribadi, dan '
+        'tidak diurus, ditaja atau disahkan oleh MAIWP. Untuk urusan rasmi '
+        'MAIWP, sila guna saluran rasmi mereka di luar app ini.',
+  ),
+  _Faq(
     'Saya ada masalah lain, macam mana nak hubungi pihak pengurusan?',
-    'Sila hubungi pihak pengurusan MAIWP secara terus melalui saluran '
-        'rasmi MAIWP di luar app ini.',
+    'Hubungi pihak pengurusan MARC (Supervisor ke atas) yang menguruskan '
+        'app ini. Untuk urusan rasmi MAIWP, guna saluran rasmi MAIWP di '
+        'luar app ini.',
   ),
 ];
 

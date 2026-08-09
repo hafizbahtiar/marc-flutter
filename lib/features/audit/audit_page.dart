@@ -39,9 +39,21 @@ class _AuditPageState extends ConsumerState<AuditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isManagement =
-        ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false;
-    if (!isManagement) {
+    // Bezakan "masih memuat profil" daripada "bukan management". Guna
+    // `valueOrNull` sahaja akan pulang null semasa muat, jadi ahli
+    // pengurusan yang SAH nampak kilasan "tiada akses" sebelum skrin
+    // muncul — corak bug sama yang pernah kosongkan medan emel pada
+    // borang donation.
+    final profile = ref.watch(myProfileProvider);
+    if (profile.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Jejak Audit')),
+        body: const SafeArea(
+          child: Center(child: CircularProgressIndicator.adaptive()),
+        ),
+      );
+    }
+    if (!(profile.valueOrNull?.isManagement ?? false)) {
       return Scaffold(
         appBar: AppBar(title: const Text('Jejak Audit')),
         body: const SafeArea(

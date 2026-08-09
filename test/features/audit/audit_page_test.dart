@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/api_client.dart';
+import 'package:marc/core/auth_state.dart';
+import 'package:marc/core/token_storage.dart';
 import 'package:marc/features/audit/audit_page.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
@@ -73,9 +75,18 @@ Map<String, dynamic> _log(int id, {String action = 'update'}) => {
   'created_at': DateTime.now().toIso8601String(),
 };
 
+/// Sesi log masuk — `auditLogsProvider` sengaja pulang kosong tanpa ni
+/// (guard auth; lihat audit_auth_guard_test.dart).
+class _LoggedInAuth extends AuthNotifier {
+  _LoggedInAuth() : super(TokenStorage()) {
+    state = const AuthState(isLoggedIn: true, accessToken: 'a');
+  }
+}
+
 Widget _app(Dio dio, {required bool management}) => ProviderScope(
   overrides: [
     dioProvider.overrideWithValue(dio),
+    authNotifierProvider.overrideWith((ref) => _LoggedInAuth()),
     myProfileProvider.overrideWith(
       (ref) async => _profile(management: management),
     ),

@@ -124,7 +124,11 @@ class MemberRow {
   final String userId;
   final String memberId;
   final String? displayName;
-  final String email;
+
+  /// `null` = backend sembunyikan (emel ahli lain cuma didedahkan kepada
+  /// management). BUKAN bermakna ahli tu tiada emel — bezakan dua-dua,
+  /// jangan papar ruang kosong.
+  final String? email;
   final String roleKey;
   final String roleName;
   final int roleRank;
@@ -136,7 +140,7 @@ class MemberRow {
       userId: json['user_id'] as String,
       memberId: json['member_id'] as String,
       displayName: json['display_name'] as String?,
-      email: (json['email'] as String?) ?? '',
+      email: json['email'] as String?,
       roleKey: (json['role_key'] as String?) ?? 'ahli',
       roleName: (json['role_name'] as String?) ?? 'Ahli',
       roleRank: (json['role_rank'] as num?)?.toInt() ?? 0,

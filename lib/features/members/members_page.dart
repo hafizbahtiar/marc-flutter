@@ -211,8 +211,12 @@ class _MemberTile extends ConsumerWidget {
         ),
       ),
       title: Text(row.displayName ?? '(Tiada nama)'),
-      subtitle: Text('${row.memberId}\n${row.email}'),
-      isThreeLine: true,
+      // Emel cuma ada untuk management (dan baris sendiri) — jangan
+      // tinggalkan baris kedua kosong bila ia disembunyikan.
+      subtitle: Text(
+        row.email == null ? row.memberId : '${row.memberId}\n${row.email}',
+      ),
+      isThreeLine: row.email != null,
       trailing: isManagement
           ? Chip(
               label: Text(row.roleName),
