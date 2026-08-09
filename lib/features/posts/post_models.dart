@@ -1,13 +1,22 @@
 class Author {
-  const Author({required this.memberId, required this.displayName});
+  const Author({
+    required this.memberId,
+    required this.displayName,
+    this.avatarUrl,
+  });
 
   final String memberId;
   final String? displayName;
+
+  /// null = tiada gambar profil. Backend hantar medan ni pada SETIAP
+  /// post/comment supaya feed tak perlu lookup berasingan per penulis.
+  final String? avatarUrl;
 
   factory Author.fromJson(Map<String, dynamic> json) {
     return Author(
       memberId: json['member_id'] as String,
       displayName: json['display_name'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/widgets/member_avatar.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 const _placeholderPendingRow = MemberRow(
@@ -210,14 +211,9 @@ class _PendingTileState extends State<_PendingTile> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: scheme.surfaceContainerHighest,
-            child: Text(
-              (widget.row.displayName?.isNotEmpty ?? false)
-                  ? widget.row.displayName![0].toUpperCase()
-                  : '?',
-              style: TextStyle(color: scheme.onSurface),
-            ),
+          MemberAvatar(
+            label: widget.row.displayName ?? widget.row.memberId,
+            avatarUrl: widget.row.avatarUrl,
           ),
           const SizedBox(width: 12),
           Expanded(

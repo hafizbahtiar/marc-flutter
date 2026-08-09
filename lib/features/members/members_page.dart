@@ -8,6 +8,7 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/app_action_sheet.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/widgets/member_avatar.dart';
 
 const _placeholderRow = MemberRow(
   userId: '00000000-0000-0000-0000-000000000000',
@@ -201,14 +202,9 @@ class _MemberTile extends ConsumerWidget {
       onTap: canEdit
           ? () => _showEditRoleSheet(context, ref, row, myRoleRank)
           : null,
-      leading: CircleAvatar(
-        backgroundColor: scheme.surfaceContainerHighest,
-        child: Text(
-          (row.displayName?.isNotEmpty ?? false)
-              ? row.displayName![0].toUpperCase()
-              : '?',
-          style: TextStyle(color: scheme.onSurface),
-        ),
+      leading: MemberAvatar(
+        label: row.displayName ?? row.memberId,
+        avatarUrl: row.avatarUrl,
       ),
       title: Text(row.displayName ?? '(Tiada nama)'),
       // Emel cuma ada untuk management (dan baris sendiri) — jangan

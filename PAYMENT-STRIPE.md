@@ -64,8 +64,138 @@ authenticate kat laman bank:
 - **iOS** (`Info.plist`): `CFBundleURLTypes` dengan
   `CFBundleURLSchemes: [marc]`.
 
-**Stripe Dashboard**: FPX kena di-enable manual di Settings → Payment
-methods — bukan sesuatu code boleh buat, langkah kau.
+### FPX TIDAK tersedia untuk akaun ni (disahkan 2026-08-09)
+
+FPX **bukan tetapan yang terlepas** — ia tak ditawarkan langsung pada akaun
+ini, sebab tu ia tiada dalam senarai Payment methods di Dashboard.
+
+Bukti muktamad ialah medan `available` dalam konfigurasi kaedah pembayaran,
+BUKAN `display_preference`:
+
+```bash
+KEY=$(grep '^STRIPE_SECRET_KEY=' .env | cut -d= -f2-)
+curl -s -u "$KEY:" https://api.stripe.com/v1/payment_method_configurations \
+  | python3 -c "
+import json,sys
+for c in json.load(sys.stdin)['data']:
+    for k in ['fpx','card','grabpay']:
+        v=c.get(k)
+        if v: print(k, v)
+"
+```
+
+Keadaan semasa:
+
+```
+fpx     -> available: false, preference: off
+grabpay -> available: true,  preference: on
+card    -> available: true,  preference: on
+```
+
+**Jangan tertipu dengan `preference: off` sahaja.** Itu yang menyesatkan
+pada mulanya — nampak macam toggle yang belum dihidupkan, sedangkan
+`available: false` bermakna tiada toggle pun wujud.
+
+**Sebab**: dokumentasi FPX Stripe menyatakan Stripe memerlukan **Business
+Registration Number (BRN)** untuk memproses caj FPX *dan* menerima payout,
+atas sebab pematuhan kawal selia. Akaun ni:
+
+```
+business_type           : individual
+company.tax_id_provided : None
+capabilities            : card_payments, grabpay_payments, link_payments,
+                          transfers  (semua inactive) — tiada fpx_payments
+charges_enabled         : False
+```
+
+Tiada BRN → tiada keupayaan `fpx_payments` → `available: false`.
+
+**Untuk mengaktifkannya**: daftar SSM (pemilikan tunggal/Enterprise sudah
+memadai, tak perlu Sdn Bhd), hantar BRN kepada Stripe, dan lengkapkan
+pengaktifan akaun. Ini langkah pentadbiran dunia sebenar — bukan tetapan
+Dashboard atau perubahan kod.
+
+Nota: mencipta PaymentIntent dengan `payment_method_types[]=fpx` secara
+eksplisit MASIH berjaya walaupun `available: false` — pengesahan
+(confirmation) yang akan gagal, bukan penciptaan. Jangan guna kejayaan
+`create` sebagai bukti FPX berfungsi.
+
+Nota kedua: akaun ni sebenarnya **Sandbox** (`company.name` =
+"hafizbahtiar sandbox"), dan semua keupayaan `inactive` — jadi mod live pun
+belum boleh menerima kad.
+
+### Laluan untuk mengaktifkan FPX: SSM → BRN → aktifkan semula Stripe
+
+Urutan ni bukan kerja kod. Setiap langkah menyekat yang seterusnya.
+
+**1. Daftar SSM.** Pemilikan tunggal (Perniagaan/Enterprise) sudah memadai
+— tak perlu Sdn Bhd. Daftar melalui SSM BizChannel atau kaunter SSM.
+Hasilnya nombor pendaftaran perniagaan (**BRN**).
+
+**2. Kemas kini akaun Stripe.** Akaun semasa ialah **Sandbox**
+(`company.name` = "hafizbahtiar sandbox") dengan `business_type:
+individual`. Untuk FPX kau perlukan akaun SEBENAR dengan butiran
+perniagaan:
+
+- Tukar/lengkapkan `business_type` kepada perniagaan berdaftar
+- Hantar **BRN**
+- Hantar **MY TIN** (nombor pengenalan cukai)
+- Hantar **SST** kalau berdaftar SST
+- Lengkapkan pengesahan identiti + akaun bank untuk payout
+
+Nota: untuk pengesahan akaun UMUM, Stripe menerima MyKad/passport sebagai
+ganti BRN. Tetapi **FPX secara khusus memerlukan BRN** — dokumentasi FPX
+menyatakan ia diperlukan untuk memproses caj DAN menerima payout. Jadi
+MyKad sahaja tak cukup untuk membuka FPX.
+
+**3. Tunggu pengaktifan.** Semak dengan API, bukan dengan mata:
+
+```bash
+KEY=$(grep '^STRIPE_SECRET_KEY=' .env | cut -d= -f2-)
+curl -s -u "$KEY:" https://api.stripe.com/v1/account | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('charges_enabled:', d['charges_enabled'])
+print('capabilities   :', d['capabilities'])
+"
+```
+
+Tunggu sehingga `charges_enabled: true` dan `fpx_payments` muncul dalam
+capabilities.
+
+**4. Hidupkan FPX**, kemudian sahkan `available: true` (bukan sekadar
+`preference: on`) guna arahan dalam bahagian di atas.
+
+**5. Kunci baharu.** Akaun sebenar ada kunci API sendiri — kemas kini
+`STRIPE_SECRET_KEY` + `STRIPE_PUBLISHABLE_KEY` dalam `.env` dan Railway,
+dan daftar semula webhook (rahsia penandatanganan baharu).
+
+**6. Uji pusingan redirect FPX sebenar** — belum pernah dibuat; setakat ni
+kad sahaja disahkan hujung-ke-hujung.
+
+#### Kesan sampingan yang mudah terlepas pandang
+
+- **Framing sumbangan berubah.** Sekarang resit + halaman sokongan kata
+  duit pergi "secara peribadi kepada pembangun". Selepas berdaftar SSM,
+  ia masuk ke akaun PERNIAGAAN — teks tu kena disemak semula (empat tempat
+  yang disenaraikan di atas), dan layanan cukai mungkin berbeza.
+- **e-Invois LHDN.** Perniagaan berdaftar Malaysia tertakluk kepada mandat
+  e-Invois mengikut ambang hasil dan tarikh berperingkat. Semak sama ada
+  ia terpakai sebelum menerima bayaran sebenar.
+- **DuitNow QR peribadi kekal berfungsi** dan tiada yuran — pendaftaran
+  SSM tak memaksa kau membuangnya.
+
+## DuitNow — Stripe TAK menyokongnya
+
+Disahkan terhadap jadual sokongan kaedah pembayaran Stripe: Malaysia dapat
+**FPX, GrabPay dan kad sahaja**. "DuitNow" tak wujud langsung dalam dokumen
+itu — bukan tetapan yang terlepas.
+
+Gateway tempatan yang menyokong DuitNow QR (Billplz, ToyyibPay) perlukan
+akaun merchant; Billplz perlukan syarikat berdaftar. Jadi app ni papar
+**QR DuitNow peribadi** sebagai laluan tanpa yuran
+(`lib/features/donation/widgets/duitnow_qr_card.dart`), dengan amaran jelas
+bahawa bayaran QR memintas backend — tiada baris `donations`, tiada resit.
 
 ## Native Android — `MainActivity` mesti `FlutterFragmentActivity`
 
@@ -301,10 +431,14 @@ recreate endpoint**, semak log server dulu (`donations.go` webhook
 
 ## Yang belum
 
-- [ ] **FPX belum diuji sebenar.** Perlu diaktifkan di Stripe Dashboard
-      (Settings → Payment methods) — langkah kau, bukan kod. Pusingan
-      redirect bank sebenar belum dicuba; setakat ni kad sahaja yang
-      disahkan hujung-ke-hujung.
+- [ ] **FPX tak tersedia** (`available: false`) — perlukan BRN/SSM. Lihat
+      "FPX TIDAK tersedia" di atas. Bukan kerja kod; sehingga akaun
+      didaftarkan, laluan Malaysia ialah DuitNow QR + kad (+ GrabPay yang
+      dah aktif).
+- [ ] **Akaun Stripe belum diaktifkan untuk mod live**: `details_submitted:
+      true` tapi `charges_enabled: false` dan `card_payments: inactive`,
+      tanpa `currently_due` atau `disabled_reason` — Stripe masih memproses,
+      bukan sesuatu yang tertunggak di pihak kau. Mod test tak terjejas.
 - [ ] **Threshold RM500 belum wired.** `DonationHandler.selectGateway`
       sentiasa pulang Stripe tak kira amount.
 - [ ] **SociaBuzz** — belum research langsung: ada API/webhook rasmi untuk

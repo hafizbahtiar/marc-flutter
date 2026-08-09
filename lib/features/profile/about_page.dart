@@ -90,6 +90,15 @@ class AboutPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
+                const SizedBox(height: 12),
+                Text(
+                  'Dibina secara sukarela atas permintaan En. Ezri, yang '
+                  'mencetuskan idea app ini.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 // Penafian ni WAJIB kekal. MARC dibangunkan secara sukarela
                 // dan BUKAN aplikasi rasmi MAIWP — tanpa baris ni, app yang

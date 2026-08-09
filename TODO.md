@@ -27,10 +27,42 @@ Backend: `../marc_go/TODO.md`.
       pada 4096 melalui `image.DecodeConfig` atas header 64KB — presigned
       URL membenarkan client menaikkan apa-apa terus ke R2, jadi semakan
       client sahaja tak memadai.
-- [ ] **Kisah pembangun pada halaman sokongan** (`_DeveloperStory` dalam
-      `donation_page.dart`) ditulis daripada satu fakta yang kau beri. Baca
-      dan tulis semula dalam suara kau sendiri. Warden tak dinamakan —
-      itu identiti orang lain, perlu kebenaran mereka.
+- [ ] **Kisah pembangun** (`_DeveloperStory` dlm `donation_page.dart` +
+      perenggan dlm `about_page.dart`) ditulis daripada fakta yang kau beri.
+      Baca dan tulis semula dalam suara kau sendiri.
+- [ ] **Kebenaran En. Ezri.** Nama beliau kini dikreditkan dalam DUA skrin
+      yang akan tersiar di Play Store. Sahkan beliau setuju dinamakan secara
+      awam sebelum terbit — sekali app disiarkan, ia tak boleh ditarik balik
+      daripada peranti yang dah pasang.
+
+## Gambar profil — Flutter ✅
+
+- `MemberAvatar` (`shared/widgets/`) — SATU widget untuk setiap avatar.
+  Gambar via `AppNetworkImage` (cache + nyahkod dihadkan pada saiz papar
+  sebenar), fallback huruf pertama, label semantik, boleh diketuk secara
+  pilihan. `radius` memandu lukisan DAN lebar nyahkod.
+- Enam tapak `CircleAvatar` buatan sendiri diganti: post_card,
+  comment_tile, members_page, pending_members_page, profile_page,
+  donation_page. (audit_page kekal `CircleAvatar` — itu lencana IKON
+  tindakan, bukan avatar ahli.)
+- `avatarUrl` ditambah pada `Profile`, `MemberRow`, `Author`.
+- `AvatarService` — pilih (dikecilkan 512px/kualiti 95 waktu pilih, jadi
+  bitmap penuh tak pernah masuk memori) → PUT R2 presigned → `PATCH /me`.
+- `AvatarCropPage` — potong 1:1 guna editor `extended_image` (dah jadi
+  kebergantungan). Tanpa potong, gambar landskap jadi muka terkerat dalam
+  bulatan.
+- Header profil: ketuk avatar → sheet (pilih/buang), lencana kamera
+  sebagai affordance, spinner semasa sibuk, `membersProvider` di-invalidate
+  supaya senarai ahli tak kekal papar avatar lama.
+
+Ujian: fallback + tiada muat turun bila tiada URL, nama kosong tak ranap,
+guna `AppNetworkImage` bila ada URL, radius memandu saiz, ketuk hanya bila
+`onTap` diberi, label semantik; parsing `avatar_url` merentas ketiga-tiga
+model termasuk kes medan tiada langsung.
+
+- [ ] Ujian widget untuk aliran tukar avatar hujung-ke-hujung (pilih →
+      potong → naik) — perlukan mock image_picker + Dio.
+- [ ] Uji pada peranti sebenar: potong, naik, dan avatar muncul dlm feed.
 
 ## DuitNow QR (siap 2026-08-09)
 

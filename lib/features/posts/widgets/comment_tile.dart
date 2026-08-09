@@ -11,6 +11,7 @@ import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/edited_badge.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/widgets/member_avatar.dart';
 
 /// Satu comment top-level + reply-reply di bawahnya (indent sekali sahaja
 /// — backend dah cap depth 2, jadi `replies` sentiasa leaf, tak recurse).
@@ -160,19 +161,10 @@ class _CommentRow extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
+          MemberAvatar(
+            label: comment.author.label,
+            avatarUrl: comment.author.avatarUrl,
             radius: 14,
-            backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Text(
-              comment.author.label.isNotEmpty
-                  ? comment.author.label[0].toUpperCase()
-                  : '?',
-              style: TextStyle(
-                color: scheme.primary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
           const SizedBox(width: 10),
           Expanded(

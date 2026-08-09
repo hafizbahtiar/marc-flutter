@@ -56,4 +56,15 @@ void main() {
     final qr = tester.getSize(find.byType(Image));
     expect(qr.width, lessThanOrEqualTo(260));
   });
+
+  // FPX `available: false` pada akaun Stripe kita (perlukan BRN/SSM), jadi
+  // PaymentSheet tak pernah paparkannya. Menyenaraikannya dalam UI —
+  // sebagai pilihan sedia ada MAHUPUN "akan datang" — ialah janji yang
+  // bergantung pada pendaftaran perniagaan yang belum wujud.
+  testWidgets('tiada dakwaan FPX dalam UI', (tester) async {
+    await tester.pumpWidget(_host());
+    await tester.pump();
+
+    expect(find.textContaining('FPX'), findsNothing);
+  });
 }

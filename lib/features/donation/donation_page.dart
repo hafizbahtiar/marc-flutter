@@ -7,6 +7,7 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 import 'package:marc/features/donation/widgets/duitnow_qr_card.dart';
+import 'package:marc/shared/widgets/member_avatar.dart';
 
 import 'donation_models.dart';
 import 'donation_providers.dart';
@@ -172,17 +173,7 @@ class _DeveloperStory extends StatelessWidget {
         children: <Widget>[
           Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: scheme.primary.withValues(alpha: 0.16),
-                child: Text(
-                  'H',
-                  style: TextStyle(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              const MemberAvatar(label: 'Hafiz'),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -211,8 +202,8 @@ class _DeveloperStory extends StatelessWidget {
           // lebih memudaratkan kepercayaan daripada tak berjanji langsung.
           Text(
             'Saya bekas pelajar Kompleks Darul Kifayah, MAIWP. MARC saya '
-            'bina sendiri sebagai cara memberi balik kepada komuniti yang '
-            'pernah membesarkan saya - percuma untuk semua ahli, tiada '
+            'bina secara sukarela atas permintaan En. Ezri, yang '
+            'mencetuskan idea app ni - percuma untuk semua ahli, tiada '
             'langganan.',
             style: textTheme.bodyMedium?.copyWith(height: 1.5),
           ),
@@ -259,12 +250,18 @@ class _AmountForm extends StatelessWidget {
           const _DeveloperStory(),
           const SizedBox(height: 20),
           // QR didahulukan: tiada yuran, dan bagi kebanyakan orang Malaysia
-          // ia cara paling biasa hantar duit. Kad/FPX di bawah untuk sesiapa
+          // ia cara paling biasa hantar duit. Kad di bawah untuk sesiapa
           // yang perlukan resit.
+          //
+          // JANGAN sebut FPX di sini. Ia `available: false` pada akaun
+          // Stripe kita (perlukan BRN/SSM — lihat PAYMENT-STRIPE.md), jadi
+          // PaymentSheet tak pernah paparkannya. Menyenaraikannya sebagai
+          // pilihan yang wujud, atau sebagai "akan datang", ialah janji yang
+          // bergantung pada pendaftaran perniagaan yang belum dibuat.
           const DuitNowQrCard(),
           const SizedBox(height: 20),
           Text(
-            'Atau bayar dengan kad / FPX',
+            'Atau bayar dengan kad',
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),

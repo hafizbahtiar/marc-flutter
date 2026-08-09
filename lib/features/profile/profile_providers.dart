@@ -14,6 +14,7 @@ class Profile {
     required this.roleName,
     required this.roleRank,
     required this.category,
+    this.avatarUrl,
   });
 
   final String memberId;
@@ -27,7 +28,28 @@ class Profile {
   final int roleRank;
   final String category;
 
+  /// null = tiada gambar profil.
+  final String? avatarUrl;
+
   bool get isManagement => category == 'management';
+
+  Profile copyWith({Object? avatarUrl = _sentinel}) {
+    return Profile(
+      memberId: memberId,
+      email: email,
+      emailVerified: emailVerified,
+      status: status,
+      displayName: displayName,
+      phone: phone,
+      roleKey: roleKey,
+      roleName: roleName,
+      roleRank: roleRank,
+      category: category,
+      avatarUrl: avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
+    );
+  }
+
+  static const _sentinel = Object();
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
@@ -41,6 +63,7 @@ class Profile {
       roleName: (json['role_name'] as String?) ?? 'Ahli',
       roleRank: (json['role_rank'] as num?)?.toInt() ?? 0,
       category: (json['category'] as String?) ?? 'ahli',
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 }
@@ -119,6 +142,7 @@ class MemberRow {
     required this.roleRank,
     required this.category,
     required this.status,
+    this.avatarUrl,
   });
 
   final String userId;
@@ -135,6 +159,9 @@ class MemberRow {
   final String category;
   final String status;
 
+  /// null = tiada gambar profil.
+  final String? avatarUrl;
+
   factory MemberRow.fromJson(Map<String, dynamic> json) {
     return MemberRow(
       userId: json['user_id'] as String,
@@ -146,6 +173,7 @@ class MemberRow {
       roleRank: (json['role_rank'] as num?)?.toInt() ?? 0,
       category: (json['category'] as String?) ?? 'ahli',
       status: (json['status'] as String?) ?? 'pending',
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 }

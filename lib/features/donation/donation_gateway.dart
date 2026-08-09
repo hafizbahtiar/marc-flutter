@@ -26,9 +26,11 @@ abstract class DonationCheckoutHandler {
 
 /// Gateway client-side confirm (Stripe `PaymentSheet`) — satu sheet
 /// native Stripe yang auto-papar SEMUA payment method aktif di dashboard
-/// (kad, FPX bank Malaysia, dll), termasuk uruskan round-trip redirect
-/// FPX (`Stripe.urlScheme`, lihat `app/stripe.dart`) sendiri. Gantikan
-/// `CardFormField` manual (kad sahaja, tiada FPX) — appearance dikawal
+/// (kad, GrabPay, FPX kalau akaun layak), termasuk uruskan round-trip
+/// redirect (`Stripe.urlScheme`, lihat `app/stripe.dart`) sendiri.
+/// `returnURL` di bawah WAJIB: tanpanya PaymentSheet tapis SEMUA kaedah
+/// berasaskan redirect (GrabPay, FPX) secara senyap. Gantikan
+/// `CardFormField` manual (kad sahaja) — appearance dikawal
 /// terus dari Dart (`PaymentSheetAppearance`), tak perlu native theme
 /// hack macam `CardFormField` punya dropdown negara dulu.
 class StripeCheckoutHandler extends DonationCheckoutHandler {

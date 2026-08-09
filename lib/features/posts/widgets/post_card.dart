@@ -6,6 +6,7 @@ import 'package:marc/features/posts/widgets/post_image_grid.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/edited_badge.dart';
+import 'package:marc/shared/widgets/member_avatar.dart';
 
 class PostCard extends ConsumerWidget {
   const PostCard({
@@ -46,18 +47,10 @@ class PostCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
+                MemberAvatar(
+                  label: post.author.label,
+                  avatarUrl: post.author.avatarUrl,
                   radius: 18,
-                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                  child: Text(
-                    post.author.label.isNotEmpty
-                        ? post.author.label[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(

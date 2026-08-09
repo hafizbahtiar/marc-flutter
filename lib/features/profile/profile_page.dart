@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/widgets/app_action_sheet.dart';
+import 'package:marc/features/profile/widgets/avatar_crop_page.dart';
+import 'package:marc/features/profile/avatar_service.dart';
+import 'package:marc/core/error_utils.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -8,6 +14,7 @@ import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/profile/widgets/verify_email_banner.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/widgets/member_avatar.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -18,6 +25,84 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _signingOut = false;
+  bool _avatarBusy = false;
+
+  /// Tukar/buang gambar profil.
+  ///
+  /// Selepas berjaya, `myProfileProvider` di-refresh dan DITUNGGU sebelum
+  /// penunjuk sibuk dimatikan — jadi avatar baharu dah ada sebelum
+  /// spinner hilang, bukan muncul selepas satu kelipan avatar lama.
+  Future<void> _changeAvatar() async {
+    if (_avatarBusy) return;
+    final profile = ref.read(myProfileProvider).valueOrNull;
+    if (profile == null) return;
+
+    final action = await showAppActionSheet<_AvatarAction>(
+      context,
+      title: 'Gambar profil',
+      actions: [
+        const AppSheetAction(
+          value: _AvatarAction.pick,
+          label: 'Pilih dari galeri',
+          icon: Icons.photo_library_outlined,
+        ),
+        if (profile.avatarUrl != null)
+          const AppSheetAction(
+            value: _AvatarAction.remove,
+            label: 'Buang gambar',
+            icon: Icons.delete_outline,
+            isDestructive: true,
+          ),
+      ],
+    );
+    if (action == null || !mounted) return;
+
+    setState(() => _avatarBusy = true);
+    try {
+      final service = ref.read(avatarServiceProvider);
+
+      if (action == _AvatarAction.remove) {
+        await service.remove();
+        await _refreshAvatar();
+        if (mounted) MySnackBar.success(context, 'Gambar profil dibuang.');
+        return;
+      }
+
+      final picked = await service.pick();
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+
+      final cropped = await AvatarCropPage.open(context, bytes);
+      if (cropped == null) return;
+
+      await service.upload(cropped);
+      await _refreshAvatar();
+      if (mounted) MySnackBar.success(context, 'Gambar profil dikemas kini.');
+    } catch (e) {
+      if (mounted) {
+        MySnackBar.error(
+          context,
+          e is DioException
+              ? extractErrorMessage(e)
+              : 'Gagal kemas kini gambar profil.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _avatarBusy = false);
+    }
+  }
+
+  /// Tunggu profil segar SEBELUM pemanggil matikan penunjuk sibuk.
+  /// `invalidate` sahaja pulang serta-merta, jadi spinner akan hilang
+  /// sementara avatar lama masih terpapar.
+  Future<void> _refreshAvatar() async {
+    ref.invalidate(myProfileProvider);
+    await ref.read(myProfileProvider.future);
+    // Senarai ahli papar avatar sama — tanpa ni ia kekal lama sehingga
+    // logout/restart (provider bukan autoDispose).
+    ref.invalidate(membersProvider);
+  }
 
   Future<void> _handleLogout() async {
     final ok = await showConfirmDialog(
@@ -73,6 +158,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   name: p?.displayName ?? (loading ? 'Nama Ahli' : null),
                   roleName: p?.roleName ?? (loading ? 'Ahli' : null),
                   isManagement: p?.isManagement ?? false,
+                  avatarUrl: p?.avatarUrl,
+                  onTapAvatar: p == null ? null : _changeAvatar,
+                  avatarBusy: _avatarBusy,
                 ),
               ),
               const SizedBox(height: 28),
@@ -214,30 +302,62 @@ class _Header extends StatelessWidget {
     required this.name,
     required this.roleName,
     required this.isManagement,
+    required this.avatarUrl,
+    this.onTapAvatar,
+    this.avatarBusy = false,
   });
 
   final String? name;
   final String? roleName;
   final bool isManagement;
+  final String? avatarUrl;
+  final VoidCallback? onTapAvatar;
+  final bool avatarBusy;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final initial = (name?.isNotEmpty ?? false) ? name![0].toUpperCase() : '?';
 
     return Row(
       children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: scheme.primary.withValues(alpha: 0.12),
-          child: Text(
-            initial,
-            style: TextStyle(
-              color: scheme.primary,
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            MemberAvatar(
+              label: name ?? '?',
+              avatarUrl: avatarUrl,
+              radius: 30,
+              onTap: avatarBusy ? null : onTapAvatar,
             ),
-          ),
+            if (avatarBusy)
+              const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+              )
+            else if (onTapAvatar != null)
+              // Affordance: tanpa lencana ni tiada apa yang menunjukkan
+              // avatar boleh diketuk.
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: scheme.surface, width: 2),
+                    ),
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 12,
+                      color: scheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -344,3 +464,5 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+
+enum _AvatarAction { pick, remove }
