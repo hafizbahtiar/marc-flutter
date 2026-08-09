@@ -79,6 +79,42 @@ baris `donations`, tiada resit PDF, tiada emel. Dilindungi ujian.
       DuitNow QR, terima akaun individu — sahkan dulu) sebagai
       `payment.Gateway` kedua; `RedirectCheckoutHandler` dah sedia.
 
+## Penggubah post (refactor gaya Twitter) ✅
+
+- Avatar penulis di sebelah medan teks — mengarang terasa macam melihat
+  pratonton post sendiri, dan ia guna `MemberAvatar` yang sama dgn feed.
+- Pratonton gambar guna susun atur SAMA dengan feed. `ImageGridLayout`
+  diekstrak daripada `PostImageGrid` supaya kedua-duanya berkongsi
+  peraturan 1/2/3/4 — sebelum ni penggubah papar jalur mendatar yang tak
+  menyerupai hasil langsung.
+- Pengumuman jadi **pil** (padanan pemilih khalayak Twitter), bukan
+  `SwitchListTile` di atas penggubah.
+- Butang Hantar **mati** bila tiada teks dan tiada gambar. Dulu ia
+  menerima ketukan lalu membalas dgn snackbar ralat.
+- Medan teks: autofocus, `maxLines: null` (tumbuh dgn kandungan), saiz
+  `titleMedium`, hint yang lebih lembut.
+- Kiraan gambar hanya muncul selepas gambar pertama; jadi merah pada had.
+- Butang Hantar bentuk pil dgn `minimumSize` eksplisit — `filledButtonTheme`
+  global set lebar TAK TERHINGGA, yang meletup dalam Row.
+- **Tiada garisan pemisah, tiada isian medan.** `inputDecorationTheme`
+  global set `filled: true` dgn `surfaceContainerHighest`, jadi
+  `border: InputBorder.none` SAHAJA masih tinggalkan kotak kelabu —
+  `filled: false` mesti eksplisit. Garisan atas bar penggubah pun dibuang;
+  penggubah kini satu permukaan berterusan.
+- **Galeri dan kamera berasingan** (macam Twitter), bukan satu ikon media.
+  Tiada semakan permission_handler untuk kamera: image_picker melancarkan
+  app kamera sistem melalui intent yang uruskan kebenarannya sendiri —
+  mengisytiharkan CAMERA dalam manifest SEBALIKNYA akan memaksa permintaan
+  runtime yang kita tak perlukan. iOS perlukan
+  `NSCameraUsageDescription` (ditambah) atau app ranap bila kamera dibuka.
+
+**Pepijat susun atur ditemui oleh ujian**: `Expanded` cuma mengekang paksi
+utama, jadi jubin grid bersaiz ikut kandungan pada paksi silang — widget
+tanpa saiz intrinsik runtuh jadi TINGGI SIFAR, dan gambar besar melimpah
+keluar sel. Difix dgn `CrossAxisAlignment.stretch` pada semua Row/Column
+dalam grid. Ini wujud dalam `PostImageGrid` sejak awal; ia cuma tak
+kelihatan sebab gambar rangkaian kebetulan mengisi ruang.
+
 ## Iklan dalam-feed (dirancang, belum start)
 
 Matlamat: unit iklan yang duduk dalam feed dan padan dengan `PostCard`,

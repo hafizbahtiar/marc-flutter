@@ -42,7 +42,9 @@
 		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
-		<key>NSPhotoLibraryUsageDescription</key>
+		<key>NSCameraUsageDescription</key>
+	<string>MARC perlukan akses kamera untuk ambil gambar bagi post anda.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
 		<string>MARC perlukan akses ke galeri untuk lampirkan gambar pada post.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
