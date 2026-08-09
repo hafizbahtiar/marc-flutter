@@ -5,6 +5,7 @@ import 'package:marc/app/nav_shell.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/auth/login_page.dart';
 import 'package:marc/features/auth/register_page.dart';
+import 'package:marc/features/audit/audit_page.dart';
 import 'package:marc/features/donation/donation_page.dart';
 import 'package:marc/features/members/members_page.dart';
 import 'package:marc/features/members/pending_members_page.dart';
@@ -62,6 +63,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/faq', builder: (_, _) => const FaqPage()),
       GoRoute(path: '/donate', builder: (_, _) => const DonationPage()),
       GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
+      GoRoute(path: '/audit-logs', builder: (_, _) => const AuditPage()),
       GoRoute(
         path: '/members/pending',
         builder: (_, _) => const PendingMembersPage(),

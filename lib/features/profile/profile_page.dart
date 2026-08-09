@@ -122,6 +122,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/donate'),
                 ),
+                // Management sahaja — backend 403 juga, ni cuma elak
+                // tunjuk pintu yang terkunci.
+                if (p?.isManagement ?? false)
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                    leading: const Icon(Icons.history),
+                    title: const Text('Jejak Audit'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/audit-logs'),
+                  ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                   leading: const Icon(Icons.help_outline),

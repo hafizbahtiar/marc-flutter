@@ -7,11 +7,7 @@ import 'package:marc/shared/widgets/app_action_sheet.dart';
 enum _Action { edit, delete }
 
 const _actions = [
-  AppSheetAction(
-    value: _Action.edit,
-    label: 'Edit',
-    icon: Icons.edit_outlined,
-  ),
+  AppSheetAction(value: _Action.edit, label: 'Edit', icon: Icons.edit_outlined),
   AppSheetAction(
     value: _Action.delete,
     label: 'Padam',
@@ -72,8 +68,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         TargetPlatform.android,
-        (context) =>
-            showAppActionSheet<_Action>(context, actions: _actions),
+        (context) => showAppActionSheet<_Action>(context, actions: _actions),
       ),
     );
     await tester.tap(find.text('buka'));
@@ -90,10 +85,7 @@ void main() {
     _Action? dipilih = _Action.edit;
     await tester.pumpWidget(
       _host(TargetPlatform.android, (context) async {
-        dipilih = await showAppActionSheet<_Action>(
-          context,
-          actions: _actions,
-        );
+        dipilih = await showAppActionSheet<_Action>(context, actions: _actions);
       }),
     );
     await tester.tap(find.text('buka'));
@@ -153,8 +145,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         TargetPlatform.android,
-        (context) =>
-            showAppActionSheet<_Action>(context, actions: _actions),
+        (context) => showAppActionSheet<_Action>(context, actions: _actions),
         mode: ThemeMode.dark,
       ),
     );

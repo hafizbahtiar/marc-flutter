@@ -56,8 +56,12 @@ void main() {
       expect(find.widgetWithText(ElevatedButton, 'Padam'), findsOneWidget);
 
       // Sebaris = pusat menegak sama, dan lebar sama rata.
-      final batal = tester.getRect(find.widgetWithText(OutlinedButton, 'Batal'));
-      final padam = tester.getRect(find.widgetWithText(ElevatedButton, 'Padam'));
+      final batal = tester.getRect(
+        find.widgetWithText(OutlinedButton, 'Batal'),
+      );
+      final padam = tester.getRect(
+        find.widgetWithText(ElevatedButton, 'Padam'),
+      );
       expect(batal.center.dy, moreOrLessEquals(padam.center.dy, epsilon: 0.5));
       expect(batal.width, moreOrLessEquals(padam.width, epsilon: 0.5));
       expect(batal.right, lessThanOrEqualTo(padam.left));

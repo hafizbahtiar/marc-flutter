@@ -186,27 +186,33 @@ void main() {
 
   group('tag Disunting', () {
     testWidgets('tak muncul bila comment belum diedit', (tester) async {
-      await tester.pumpWidget(_wrap(
-        CommentThread(
-          postId: 'p1',
-          comment: _comment(),
-          replies: const [],
-          onReply: (_) {},
+      await tester.pumpWidget(
+        _wrap(
+          CommentThread(
+            postId: 'p1',
+            comment: _comment(),
+            replies: const [],
+            onReply: (_) {},
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
       expect(find.byType(EditedBadge), findsNothing);
     });
 
     testWidgets('muncul bila edited_at ada', (tester) async {
-      await tester.pumpWidget(_wrap(
-        CommentThread(
-          postId: 'p1',
-          comment: _comment(editedAt: DateTime.now()),
-          replies: [_comment(id: 'r1', parent: 'c1', editedAt: DateTime.now())],
-          onReply: (_) {},
+      await tester.pumpWidget(
+        _wrap(
+          CommentThread(
+            postId: 'p1',
+            comment: _comment(editedAt: DateTime.now()),
+            replies: [
+              _comment(id: 'r1', parent: 'c1', editedAt: DateTime.now()),
+            ],
+            onReply: (_) {},
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
       // Satu untuk comment induk, satu untuk reply.
       expect(find.byType(EditedBadge), findsNWidgets(2));
