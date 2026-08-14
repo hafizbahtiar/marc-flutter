@@ -14,7 +14,15 @@
     <application
         android:label="MARC"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false">
+        <!-- allowBackup="false": Android Auto Backup lain masa upload
+             FlutterSecureStorage.xml ke cloud tapi bukan kunci Keystore
+             yang bungkus dia — restore pada peranti baru/lepas Keystore
+             invalid bawa blob yang tak boleh dinyahsulit langsung
+             (PlatformException bila baca). Tiada data lain app ni yang
+             perlu Auto Backup. -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -145,8 +145,19 @@ class RedirectCheckoutHandler extends DonationCheckoutHandler {
       return const DonationResult.failure('Pautan pembayaran tidak sah.');
     }
 
+    // `Uri.tryParse` (bukan `Uri.parse`) — elak `FormatException` tak
+    // ditangkap kalau backend/gateway pulangkan URL cacat. Skim
+    // dihadkan `https` sahaja — `redirectUrl` ini akan lebih terdedah
+    // kepada pengaruh gateway luar (ToyyibPay) berbanding Stripe
+    // sekarang, jadi jangan benarkan skim lain (`javascript:`, custom
+    // scheme, dsb.) dilancarkan terus.
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https') {
+      return const DonationResult.failure('Pautan pembayaran tidak sah.');
+    }
+
     final opened = await launchUrl(
-      Uri.parse(url),
+      uri,
       mode: LaunchMode.externalApplication,
     );
     if (!opened) {

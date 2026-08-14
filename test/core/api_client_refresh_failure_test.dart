@@ -26,6 +26,9 @@ class _FakeTokenStorage implements TokenStorage {
 
   @override
   Future<void> clear() async => _store.clear();
+
+  @override
+  Future<void> deleteAll() async => _store.clear();
 }
 
 void main() {

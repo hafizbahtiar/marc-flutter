@@ -50,6 +50,7 @@ class _MyCertificatesPageState extends ConsumerState<MyCertificatesPage> {
       final uri = Uri.tryParse(result.url!);
       final opened =
           uri != null &&
+          uri.scheme == 'https' &&
           await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!mounted) return;
       if (!opened) {

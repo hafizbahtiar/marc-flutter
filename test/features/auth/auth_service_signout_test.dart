@@ -25,6 +25,9 @@ class _FakeTokenStorage implements TokenStorage {
 
   @override
   Future<void> clear() async => _store.clear();
+
+  @override
+  Future<void> deleteAll() async => _store.clear();
 }
 
 class _RecordingPushService implements PushService {
@@ -44,6 +47,11 @@ class _RecordingPushService implements PushService {
 }
 
 void main() {
+  // signOut() sekarang panggil clearMemoryImageCache() (extended_image) —
+  // itu baca PaintingBinding.instance, yang perlu binding flutter_test
+  // diinit dulu (bukan idle dalam test 'unit' murni macam sebelum ni).
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test(
     'signOut: tangkap access token SEBELUM clear() dan hantar ke '
     'unlinkDevice (bukan bergantung pada token tersimpan/state semasa)',

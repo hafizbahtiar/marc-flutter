@@ -90,8 +90,10 @@ String notificationTitle(AppNotification n) {
 /// aktiviti.
 String? notificationDestination(AppNotification n) {
   if (n.certificateId != null) return '/my-certificates';
-  if (n.activityId != null) return '/activities/${n.activityId}';
-  if (n.postId != null) return '/posts/${n.postId}';
+  if (n.activityId != null) {
+    return '/activities/${Uri.encodeComponent(n.activityId!)}';
+  }
+  if (n.postId != null) return '/posts/${Uri.encodeComponent(n.postId!)}';
   return null;
 }
 

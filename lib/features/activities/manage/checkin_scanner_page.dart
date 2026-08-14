@@ -104,6 +104,13 @@ class _ScannerBodyState extends ConsumerState<_ScannerBody> {
 
     if (!mounted) return;
 
+    if (result.kind == ScanResultKind.network) {
+      // Permintaan gagal — nyahlantun tidak patut menyekat percubaan
+      // semula bagi kod yang SAMA dalam tetingkap ini. Lihat dokumentasi
+      // `ScanDebouncer.evict`.
+      _debouncer.evict(code);
+    }
+
     setState(() {
       _inFlight--;
       // Hasil LAMA yang mendarat lewat tidak menindih hasil imbasan yang

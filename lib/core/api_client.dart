@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/auth_state.dart';
@@ -123,7 +124,15 @@ class _AuthInterceptor extends Interceptor {
 
   Future<_RefreshOutcome> _tryRefresh() async {
     final storage = _ref.read(tokenStorageProvider);
-    final refreshToken = await storage.readRefreshToken();
+    final String? refreshToken;
+    try {
+      refreshToken = await storage.readRefreshToken();
+    } on PlatformException {
+      // Secure storage tak boleh dibaca (cth: Keystore invalid lepas
+      // restore backup Android) — anggap macam tiada sesi tersimpan,
+      // bukan biar exception ni terlepas tak tertangkap.
+      return _RefreshOutcome.rejected;
+    }
     if (refreshToken == null) {
       // Tiada refresh token langsung tersimpan — sesi memang tak sah,
       // bukan sekadar gagal sambung.
@@ -149,6 +158,11 @@ class _AuthInterceptor extends Interceptor {
       return e.response?.statusCode == 401
           ? _RefreshOutcome.rejected
           : _RefreshOutcome.networkFailure;
+    } on PlatformException {
+      // setTokens gagal simpan token baru (storage rosak) — anggap
+      // gagal sambung, elak exception tak tertangkap merosakkan request
+      // asal yang sedang di-retry.
+      return _RefreshOutcome.networkFailure;
     }
   }
 }

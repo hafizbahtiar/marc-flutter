@@ -49,6 +49,16 @@ class ScanDebouncer {
   /// daripada skrin yang membacanya.
   void clear() => _recent.clear();
 
+  /// Membuang SATU kod daripada penjejakan nyahlantun serta-merta.
+  ///
+  /// Dipanggil apabila permintaan check-in bagi kod itu GAGAL (mis. wifi
+  /// tempat majlis terputus). `shouldSkip` menyetel cap masa semasa
+  /// PERMINTAAN dihantar, bukan selepas ia berjaya — tanpa pembuangan ini,
+  /// mempersembahkan semula QR yang sama dalam tetingkap nyahlantun akan
+  /// disekat diam-diam, dan di pintu itu kelihatan seperti pengimbas beku
+  /// walhal kod itu cuma perlu dicuba semula.
+  void evict(String code) => _recent.remove(code);
+
   int get trackedCount => _recent.length;
 }
 
@@ -77,6 +87,18 @@ enum ScanResultKind {
 /// dan boleh diuji tanpa kamera, tanpa peranti, tanpa `WidgetTester`. Kalau
 /// ia hidup dalam `setState` skrin, satu-satunya cara mengesahkan bahawa
 /// "sudah hadir" kekal hijau ialah dengan berdiri di pintu dengan telefon.
+/// Sepanduk kejayaan di pintu perlu kekal SEBARIS dan boleh dibaca.
+///
+/// Nama ahli boleh membawa baris baharu terbenam atau panjang sewenang-
+/// wenangnya (medan profil tidak dihadkan sisi pelayan) — tanpa ini, satu
+/// nama boleh memesongkan seluruh sepanduk atau memaksa teks lain keluar
+/// dari skrin. Ini SEMATA-MATA kebersihan paparan, bukan sekatan
+/// keselamatan.
+String _sanitizeName(String name) {
+  final flat = name.replaceAll('\n', ' ');
+  return flat.length > 40 ? '${flat.substring(0, 40)}…' : flat;
+}
+
 class ScanResult {
   const ScanResult(this.kind, this.message);
 
@@ -98,7 +120,9 @@ class ScanResult {
     // dalam activity_attendance.go) — kehadiran itu tetap SUDAH direkod,
     // jadi skrin mesti mengesahkannya dengan label generik dan bukan
     // kelihatan seperti gagal.
-    final nama = (rawName == null || rawName.isEmpty) ? 'Ahli' : rawName;
+    final nama = _sanitizeName(
+      (rawName == null || rawName.isEmpty) ? 'Ahli' : rawName,
+    );
     final created = (data['created'] as bool?) ?? false;
     return created
         ? ScanResult(ScanResultKind.marked, '✓ $nama hadir')
