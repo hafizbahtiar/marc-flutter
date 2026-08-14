@@ -6,26 +6,93 @@ import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
-IconData _iconFor(AppNotification n) {
-  if (n.isLike) return Icons.favorite;
-  if (n.isComment) return Icons.mode_comment_outlined;
-  if (n.isMemberPending) return Icons.person_add_alt_outlined;
-  if (n.isMemberApproved) return Icons.check_circle_outline;
-  return Icons.cancel_outlined; // isMemberRejected
+/// Teks sandaran untuk jenis notifikasi yang klien ini belum kenal.
+///
+/// Dahulu rantaian `if` di sini JATUH ke ayat `member_rejected`, jadi setiap
+/// notifikasi aktiviti dibaca ahli sebagai "Pendaftaran anda tidak
+/// diluluskan." Pemetaan kini menyeluruh: jenis baharu daripada server
+/// mendarat di `default` — `assert` menjeritkannya semasa pembangunan/ujian,
+/// dan pengguna nampak ayat neutral, bukan ayat orang lain.
+const unknownNotificationTitle = 'Anda ada notifikasi baharu.';
+
+IconData notificationIcon(AppNotification n) {
+  switch (n.type) {
+    case 'post_like':
+      return Icons.favorite;
+    case 'post_comment':
+      return Icons.mode_comment_outlined;
+    case 'member_pending':
+      return Icons.person_add_alt_outlined;
+    case 'member_approved':
+      return Icons.check_circle_outline;
+    case 'member_rejected':
+      return Icons.cancel_outlined;
+    case 'activity_published':
+      return Icons.event_available_outlined;
+    case 'activity_cancelled':
+      return Icons.event_busy_outlined;
+    case 'certificate_ready':
+      return Icons.workspace_premium_outlined;
+    default:
+      assert(false, 'jenis notifikasi tidak dikenali: ${n.type}');
+      return Icons.notifications_none;
+  }
 }
 
-Color _colorFor(BuildContext context, AppNotification n) {
+Color notificationColor(BuildContext context, AppNotification n) {
   final scheme = Theme.of(context).colorScheme;
-  if (n.isLike || n.isMemberRejected) return scheme.error;
-  return scheme.primary; // comment, member_pending, member_approved
+  switch (n.type) {
+    case 'post_like':
+    case 'member_rejected':
+    case 'activity_cancelled':
+      return scheme.error;
+    case 'post_comment':
+    case 'member_pending':
+    case 'member_approved':
+    case 'activity_published':
+    case 'certificate_ready':
+      return scheme.primary;
+    default:
+      assert(false, 'jenis notifikasi tidak dikenali: ${n.type}');
+      return scheme.primary;
+  }
 }
 
-String _titleFor(AppNotification n) {
-  if (n.isLike) return 'Seseorang menyukai post anda';
-  if (n.isComment) return 'Seseorang comment pada post anda';
-  if (n.isMemberPending) return 'Ahli baru menunggu kelulusan anda';
-  if (n.isMemberApproved) return 'Pendaftaran anda telah diluluskan.';
-  return 'Pendaftaran anda tidak diluluskan.'; // isMemberRejected
+String notificationTitle(AppNotification n) {
+  switch (n.type) {
+    case 'post_like':
+      return 'Seseorang menyukai post anda';
+    case 'post_comment':
+      return 'Seseorang comment pada post anda';
+    case 'member_pending':
+      return 'Ahli baru menunggu kelulusan anda';
+    case 'member_approved':
+      return 'Pendaftaran anda telah diluluskan.';
+    case 'member_rejected':
+      return 'Pendaftaran anda tidak diluluskan.';
+    case 'activity_published':
+      return 'Aktiviti baharu telah dibuka untuk pendaftaran.';
+    case 'activity_cancelled':
+      return 'Satu aktiviti anda telah dibatalkan.';
+    case 'certificate_ready':
+      return 'Sijil anda sudah sedia dimuat turun.';
+    default:
+      assert(false, 'jenis notifikasi tidak dikenali: ${n.type}');
+      return unknownNotificationTitle;
+  }
+}
+
+/// Ke mana ketukan pada notifikasi ini patut pergi — `null` bermakna tiada
+/// destinasi (ketukan hanya menanda dibaca).
+///
+/// `certificate_ready` membawa KEDUA-DUA `certificate_id` dan `activity_id`,
+/// jadi sijil diperiksa dahulu: penerimanya mahu failnya, bukan halaman
+/// aktiviti.
+String? notificationDestination(AppNotification n) {
+  if (n.certificateId != null) return '/my-certificates';
+  if (n.activityId != null) return '/activities/${n.activityId}';
+  if (n.postId != null) return '/posts/${n.postId}';
+  return null;
 }
 
 class NotificationsPage extends ConsumerStatefulWidget {
@@ -151,9 +218,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
 
                   final n = state.items[i];
                   return ListTile(
-                    leading: Icon(_iconFor(n), color: _colorFor(context, n)),
+                    leading: Icon(notificationIcon(n), color: notificationColor(context, n)),
                     title: Text(
-                      _titleFor(n),
+                      notificationTitle(n),
                       style: TextStyle(
                         fontWeight: n.read
                             ? FontWeight.normal
@@ -183,8 +250,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                           }
                         }
                       }
-                      if (n.postId != null && context.mounted) {
-                        context.push('/posts/${n.postId}');
+                      final destination = notificationDestination(n);
+                      if (destination != null && context.mounted) {
+                        context.push(destination);
                       }
                     },
                   );

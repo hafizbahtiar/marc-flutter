@@ -115,6 +115,129 @@ keluar sel. Difix dgn `CrossAxisAlignment.stretch` pada semua Row/Column
 dalam grid. Ini wujud dalam `PostImageGrid` sejak awal; ia cuma tak
 kelihatan sebab gambar rangkaian kebetulan mengisi ruang.
 
+## Modul Aktiviti — dibina, TAPI belum pernah dijalankan pada peranti
+
+Feature folder `lib/features/activities/`:
+
+| Fail | Skrin / peranan |
+|---|---|
+| `activities_page.dart` | senarai aktiviti (tab Akan Datang / Lepas) |
+| `activity_detail_page.dart` | butiran + daftar / batal pendaftaran |
+| `my_activities_page.dart` | pendaftaran sendiri + QR check-in |
+| `my_certificates_page.dart` | senarai sijil + muat turun PDF |
+| `checkin_qr.dart` | widget QR |
+| `activity_models.dart` / `activity_format.dart` / `activity_providers.dart` | model, pemformatan tarikh, Riverpod |
+| `manage/activity_form_page.dart` + `activity_draft.dart` | CRUD aktiviti + editor sesi |
+| `manage/registrations_page.dart` | senarai pendaftar + tanda hadir |
+| `manage/checkin_scanner_page.dart` + `scan_result.dart` | pengimbas QR |
+| `manage/issue_certificates_page.dart` | terbit sijil |
+| `manage/management_gate.dart` / `manage_providers.dart` | pengawal + Riverpod pengurusan |
+
+### ⚠️ Tiada satu pun skrin ini pernah dijalankan pada peranti
+
+204 ujian lulus, `flutter analyze` bersih, `flutter build apk --debug`
+lulus. **Tiada satu pun daripada itu melihat piksel.** Yang khususnya
+TIDAK disahkan:
+
+- **Kamera tidak pernah dijalankan.** Tiada imbasan QR sebenar berlaku,
+  gesaan kebenaran kamera tak pernah dilihat, susun atur pratonton
+  `checkin_scanner_page` tak pernah dipaparkan.
+- **QR belum pernah diimbas oleh pengimbas sebenar** — sama ada QR ahli
+  dalam `checkin_qr.dart` mahupun QR pada PDF sijil. Saiz, kontras dan
+  kuiet zon semuanya andaian.
+- **Susun atur setiap skrin** dalam modul ni tak disahkan oleh mata
+  manusia. Ujian widget mengesahkan kelakuan, bukan rupa.
+
+- [ ] Larian menyeluruh pada peranti sebenar (Infinix X6833B ialah peranti
+      yang sudah digunakan untuk aliran lain): cipta aktiviti → terbit →
+      daftar → papar QR → imbas dengan telefon kedua → tanda hadir →
+      terbit sijil → muat turun PDF → imbas QR pada PDF.
+- [ ] Semak susun atur pada skrin kecil dan mod gelap. Latar QR sengaja
+      dikunci putih di tiga tempat (QR gelap tak dapat diimbas), ada ujian
+      mod gelap — tapi tetap belum pernah dilihat.
+
+### Kebergantungan yang dipin, dan sebabnya
+
+Siling projek ini ialah **compileSdk 35** — `permission_handler` dipin ke
+12.0.3 kerana 13.x menarik transitive yang perlukan compileSdk 37. Sebab
+penuh ada dalam komen `pubspec.yaml:52` (dan `:61-62`, `:67-72` untuk dua
+pakej di bawah). Kedua-dua pakej modul aktiviti disemak terhadap siling itu:
+
+- **`qr_flutter: ^4.1.0`** — disahkan **tiada folder `android/` atau
+  `ios/`**: Dart tulen (`CustomPainter`), jadi mustahil ia menyentuh siling
+  compileSdk 35. Laluan QR juga disahkan bebas-rangkaian.
+- **`mobile_scanner: ^7.4.0`** — SATU-SATUNYA pakej dalam modul ni yang
+  membawa kod Android/iOS asli, jadi satu-satunya risiko sebenar terhadap
+  siling compileSdk 35. Versi TERKINI, bukan yang diturunkan: ini risiko
+  terbesar dalam pelan (jangkaan: perlu turun versi) dan ia **lulus binaan
+  pada percubaan pertama**, 74.7s, tanpa menyentuh `build.gradle.kts`.
+  Kebenaran `CAMERA` disahkan wujud dalam manifest **TERGABUNG** (bukan
+  diandaikan), dan `NSCameraUsageDescription` dalam `Info.plist`
+  dikembangkan supaya menyebut kamera untuk gambar post DAN pengimbas.
+  Kalau `mobile_scanner` perlu dinaik taraf kemudian, ulang semakan
+  manifest tergabung — bukan hanya `flutter pub get`.
+
+### Muat turun sijil melalui `url_launcher`, bukan storan tempatan
+
+`GET /me/certificates/:id/file` memulangkan `{"url": "..."}` — URL R2
+bertandatangan, bukan bait. `my_certificates_page` membukanya dengan
+`launchUrl(..., LaunchMode.externalApplication)`. **Tiada apa-apa ditulis
+ke storan peranti**: tiada kebenaran storan, tiada pengurusan fail, tiada
+pembersihan. Tukar ganti: tanpa rangkaian, tiada sijil — dan pengguna
+keluar daripada app ke pelayar/pemapar PDF sistem.
+
+- [ ] Kalau "simpan sijil ke telefon" diminta, ia ciri BAHARU (muat turun
+      + `share_plus`/`gal`), bukan pembetulan.
+
+### Jurang yang diketahui dalam modul ni
+
+- [ ] **Yuran aktiviti tiada UI langsung** — dan itu betul buat masa ni,
+      sebab backend pun tiada gateway untuk aktiviti berbayar (lihat
+      `../marc_go/TODO.md`, bahagian Modul Aktiviti). `feeCents` sengaja
+      DIKECUALIKAN daripada `ActivityDraft` supaya ia tak pernah masuk ke
+      dalam diff `PATCH` dan tak boleh ditulis ganti kepada 0 secara tidak
+      sengaja. Bila payment mendarat, medan itu perlu ditambah pada draf
+      DAN pada laluan pendaftaran.
+- [ ] Senarai My Activities guna `ListView(children:)` bukan `.builder`,
+      jadi setiap QR dibina walaupun di luar skrin — dan `QrImageView`
+      jalankan `QrValidator.validate` (pengekodan Reed-Solomon, bukan
+      bitmap dicache) setiap build. 30 pendaftaran = 30 pengekodan setiap
+      rebuild. Belum diukur pada peranti, tapi ini calon pertama kalau
+      skrin itu tersekat-sekat.
+- [ ] QR duduk DALAM `InkWell` kad — sentuhan pada QR menavigasi keluar
+      daripada kod yang sedang ditunjukkan kepada pengimbas.
+- [ ] Tiada cache atas-cakera untuk senarai aktiviti/pendaftaran, jadi
+      jaminan "boleh papar QR tanpa isyarat" **gagal pada cold start**.
+- [ ] Setiap imbasan mencetuskan refetch senarai pendaftar penuh pada
+      skrin di bawah: 40 orang = 40 GET tambahan yang bersaing dengan POST
+      kehadiran pada wifi dewan.
+- [ ] Toast KEGAGALAN imbasan tidak menamakan ahli, dan kegagalan lewat
+      boleh menimpa kejayaan yang lebih baharu — operator akan mengaitkan
+      merah itu dengan orang yang berdiri di depannya. Terbatas kerana
+      imbas semula idempoten. Cadangan: jadikan toast mengenal diri
+      (nama + sesi), bukan melengahkannya.
+- [ ] Sesi yang hilang → backend 404 "sesi tidak dijumpai" dipetakan ke
+      `unknownCode` dengan ikon `qr_code_2`, yang menuding operator ke
+      telefon ahli sedangkan masalahnya pada aktiviti.
+- [ ] Butang "Batal pendaftaran" masih aktif walaupun aktiviti
+      `completed`/`cancelled`.
+- [ ] Enam rentetan Melayu dalam laluan pendaftaran tiada liputan ujian
+      widget (ujian memin enum `RegistrationBlocker` sahaja).
+- [ ] **Status backend BAHARU akan dicorongkan senyap ke "belum dibuka".**
+      `registrationBlocker` dalam `activity_models.dart` berakhir dengan
+      catch-all `if (status != 'published') return
+      RegistrationBlocker.notPublished`. Enum `RegistrationBlocker`
+      melindungi **pemetaan** (switch tanpa `default`, jadi nilai enum
+      baharu gagal KOMPIL) — ia tidak melindungi **klasifikasi**. Status
+      pelayan yang tidak dikenali jatuh ke dalam catch-all itu tanpa
+      sebarang amaran binaan.
+      Ini bukan teori: `../marc_go/TODO.md` mencadangkan tepat perubahan
+      yang akan mencetuskannya — sapuan yang akhirnya mengalihkan aktiviti
+      ke `completed`, dan apa-apa status peralihan baharu yang datang
+      bersamanya. Ubat: petakan status secara eksplisit dan jadikan yang
+      tidak dikenali kes yang boleh dilihat, bukan lalai kepada
+      "belum dibuka".
+
 ## Iklan dalam-feed (dirancang, belum start)
 
 Matlamat: unit iklan yang duduk dalam feed dan padan dengan `PostCard`,

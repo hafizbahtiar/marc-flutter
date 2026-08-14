@@ -30,6 +30,11 @@ class NavShell extends StatelessWidget {
             label: 'Utama',
           ),
           NavigationDestination(
+            icon: Icon(Icons.event_outlined),
+            selectedIcon: Icon(Icons.event),
+            label: 'Aktiviti',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'Profil',

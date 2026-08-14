@@ -131,6 +131,8 @@ class AppNotification {
     required this.type,
     required this.postId,
     required this.commentId,
+    required this.activityId,
+    required this.certificateId,
     required this.read,
     required this.createdAt,
   });
@@ -140,6 +142,14 @@ class AppNotification {
   final String type;
   final String? postId;
   final String? commentId;
+
+  /// Deep-link aktiviti — diisi oleh notifikasi `activity_published` /
+  /// `activity_cancelled` (migrasi 20260810100700). Tanpa medan ini
+  /// notifikasi aktiviti tidak boleh diketuk.
+  final String? activityId;
+
+  /// Deep-link sijil — diisi oleh notifikasi `certificate_ready`.
+  final String? certificateId;
   final bool read;
   final DateTime createdAt;
 
@@ -148,6 +158,9 @@ class AppNotification {
   bool get isMemberPending => type == 'member_pending';
   bool get isMemberApproved => type == 'member_approved';
   bool get isMemberRejected => type == 'member_rejected';
+  bool get isActivityPublished => type == 'activity_published';
+  bool get isActivityCancelled => type == 'activity_cancelled';
+  bool get isCertificateReady => type == 'certificate_ready';
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
@@ -156,6 +169,8 @@ class AppNotification {
       type: json['type'] as String,
       postId: json['post_id'] as String?,
       commentId: json['comment_id'] as String?,
+      activityId: json['activity_id'] as String?,
+      certificateId: json['certificate_id'] as String?,
       read: json['read'] as bool,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
@@ -168,6 +183,8 @@ class AppNotification {
       type: type,
       postId: postId,
       commentId: commentId,
+      activityId: activityId,
+      certificateId: certificateId,
       read: read ?? this.read,
       createdAt: createdAt,
     );

@@ -57,6 +57,25 @@ dependencies:
   extended_image: ^10.1.0
   gal: ^2.3.3
   image: ^4.9.1
+  # Rendering QR tulen Dart (CustomPainter) — tiada kod Android/iOS, jadi
+  # ia tidak menyentuh siling compileSdk 35 macam permission_handler di
+  # atas. Disahkan: `flutter build apk --debug` lulus pada 4.1.0.
+  qr_flutter: ^4.1.0
+  # Pengimbas QR check-in (skrin pengurusan). Ini SATU-SATUNYA pakej dalam
+  # modul aktiviti yang membawa kod Android/iOS asli, jadi ia risiko
+  # sebenar terhadap siling compileSdk 35 projek ini (lihat komen
+  # permission_handler di atas).
+  #
+  # Disahkan: 7.4.0 membina pada compileSdk 35 — `flutter build apk --debug`
+  # lulus tanpa ralat AGP/compileSdk (hanya amaran KGP yang sama seperti
+  # package_info_plus dan stripe_android sudah beri hari ini). Tiada versi
+  # lebih lama perlu dicuba.
+  #
+  # Kalau naik taraf kemudian gagal dengan ralat compileSdk/AGP: kekal di
+  # sini. Check-in manual pada skrin Senarai Peserta berfungsi sepenuhnya
+  # tanpa pengimbas, jadi menaikkan compileSdk seluruh projek untuk pakej
+  # ini bukan pertukaran yang berbaloi.
+  mobile_scanner: ^7.4.0
 
 dev_dependencies:
   flutter_test:

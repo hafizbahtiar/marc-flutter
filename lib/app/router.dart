@@ -5,6 +5,14 @@ import 'package:marc/app/nav_shell.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/auth/login_page.dart';
 import 'package:marc/features/auth/register_page.dart';
+import 'package:marc/features/activities/activities_page.dart';
+import 'package:marc/features/activities/activity_detail_page.dart';
+import 'package:marc/features/activities/my_activities_page.dart';
+import 'package:marc/features/activities/my_certificates_page.dart';
+import 'package:marc/features/activities/manage/activity_form_page.dart';
+import 'package:marc/features/activities/manage/issue_certificates_page.dart';
+import 'package:marc/features/activities/manage/checkin_scanner_page.dart';
+import 'package:marc/features/activities/manage/registrations_page.dart';
 import 'package:marc/features/audit/audit_page.dart';
 import 'package:marc/features/donation/donation_page.dart';
 import 'package:marc/features/members/members_page.dart';
@@ -78,12 +86,72 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) =>
             PostDetailPage(postId: state.pathParameters['id']!),
       ),
+      // Laluan sendiri, BUKAN '/activities/...': '/activities/:id'
+      // menangkap apa-apa segmen tunggal, jadi '/activities/saya' akan
+      // dihantar ke halaman detail sebagai id "saya".
+      GoRoute(
+        path: '/my-activities',
+        builder: (_, _) => const MyActivitiesPage(),
+      ),
+      GoRoute(
+        path: '/my-certificates',
+        builder: (_, _) => const MyCertificatesPage(),
+      ),
+      // Skrin PENGURUSAN. '/activities/new' MESTI didahulukan daripada
+      // '/activities/:id' — go_router memadan mengikut urutan, jadi
+      // pertukaran susunan akan menghantar "new" ke halaman detail
+      // sebagai id.
+      GoRoute(
+        path: '/activities/new',
+        builder: (_, _) => const ActivityFormPage(),
+      ),
+      GoRoute(
+        path: '/activities/:id/edit',
+        builder: (_, state) =>
+            ActivityFormPage(activityId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/activities/:id/registrations',
+        builder: (_, state) =>
+            RegistrationsPage(activityId: state.pathParameters['id']!),
+      ),
+      // Sesi dipilih pada skrin Senarai Peserta dan dikunci pada route —
+      // pengimbas tidak mempunyai pemilih sesi sendiri, kerana satu
+      // ketukan tersilap di sana menanda barisan penuh pada sesi salah.
+      GoRoute(
+        path: '/activities/:id/sessions/:sid/scan',
+        builder: (_, state) => CheckinScannerPage(
+          activityId: state.pathParameters['id']!,
+          sessionId: state.pathParameters['sid']!,
+        ),
+      ),
+      GoRoute(
+        path: '/activities/:id/certificates',
+        builder: (_, state) =>
+            IssueCertificatesPage(activityId: state.pathParameters['id']!),
+      ),
+      // Detail aktiviti di LUAR shell (sama macam /posts/:id) supaya ia
+      // ditolak penuh skrin dengan butang kembali, bukan terkurung dalam
+      // tab dengan bottom nav yang masih kelihatan.
+      GoRoute(
+        path: '/activities/:id',
+        builder: (_, state) =>
+            ActivityDetailPage(activityId: state.pathParameters['id']!),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => NavShell(shell: shell),
         branches: [
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/feed', builder: (_, _) => const FeedPage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/activities',
+                builder: (_, _) => const ActivitiesPage(),
+              ),
             ],
           ),
           StatefulShellBranch(

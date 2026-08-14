@@ -43,7 +43,12 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>
-	<string>MARC perlukan akses kamera untuk ambil gambar bagi post anda.</string>
+	<!-- iOS memaparkan SATU rangkap ini untuk setiap penggunaan kamera dalam
+	     app, jadi ia mesti menyebut kedua-dua sebab. Menyebut gambar post
+	     sahaja bermakna pengurus yang membuka pengimbas QR nampak sebab
+	     yang tidak berkaitan dengan apa yang dia sedang buat — itu tepat
+	     bila orang menekan "Jangan benarkan". -->
+	<string>MARC perlukan akses kamera untuk ambil gambar bagi post anda, dan untuk mengimbas QR kehadiran peserta aktiviti.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 		<string>MARC perlukan akses ke galeri untuk lampirkan gambar pada post.</string>
 		<key>UIApplicationSceneManifest</key>

@@ -205,6 +205,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.event_available_outlined),
+                  title: const Text('Aktiviti Saya'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/my-activities'),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.workspace_premium_outlined),
+                  title: const Text('Sijil Saya'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/my-certificates'),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                   leading: const Icon(Icons.favorite_outline),
                   title: const Text('Sokong MARC'),
                   trailing: const Icon(Icons.chevron_right),
