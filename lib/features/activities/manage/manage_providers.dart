@@ -35,6 +35,15 @@ final isManagerOrAboveProvider = Provider<bool>((ref) {
   final profile = ref.watch(myProfileProvider).valueOrNull;
   if (profile == null) return false;
 
+  // `/roles` (rolesProvider) SENGAJA tolak mana-mana role dengan rank
+  // >= rank caller sendiri (backend `ListRoles`, skop utk pemilih
+  // "tukar role" — hanya boleh assign ke bawah) — jadi carian dinamik di
+  // bawah GAGAL tepat utk kes caller SENDIRI 'manager' (rank == rank,
+  // ditapis keluar drpd senarai dia sendiri). Bug sebenar dijumpai Opus
+  // verify 2026-08-15: manager tulen nampak provider ni `false`.
+  // Jalan pintas kes tepat-sama sebelum cuba dinamik.
+  if (profile.roleKey == 'manager') return true;
+
   final roles = ref.watch(rolesProvider).valueOrNull;
   if (roles == null) return false;
 

@@ -229,6 +229,42 @@ final rolesProvider = FutureProvider<List<RoleOption>>((ref) async {
       .toList();
 });
 
+/// Siling "superadmin sahaja" — dikira secara DINAMIK drpd `rolesProvider`
+/// (bukan nombor rank digodam keras), padanan `isManagerOrAboveProvider`
+/// (`manage_providers.dart`). Kemudahan UI SAHAJA — backend kuatkuasakan
+/// sekatan sebenar sendiri (cth `authz.IsAtLeastRole(..., "superadmin")`
+/// pada GET /admin/payments dan skrin domain disekat).
+///
+/// Diletak di sini (bukan feature-scoped macam `payment_providers.dart`
+/// asalnya) — beberapa ciri "root system" (donation admin, domain emel
+/// disekat) semua perlukan siling yang SAMA, jadi ia kekal satu tempat.
+final isSuperAdminProvider = Provider<bool>((ref) {
+  final profile = ref.watch(myProfileProvider).valueOrNull;
+  if (profile == null) return false;
+
+  // `/roles` (rolesProvider) SENGAJA tolak mana-mana role dengan rank
+  // >= rank caller sendiri (backend `ListRoles`, skop utk pemilih "tukar
+  // role"). superadmin ialah rank TERTINGGI, jadi ia TAK PERNAH muncul
+  // dalam senarai SESIAPA (termasuk superadmin sendiri) — carian dinamik
+  // di bawah sentiasa gagal jumpa (Opus verify 2026-08-15). Jalan pintas
+  // kes ni sebelum cuba dinamik.
+  if (profile.roleKey == 'superadmin') return true;
+
+  final roles = ref.watch(rolesProvider).valueOrNull;
+  if (roles == null) return false;
+
+  int? superAdminRank;
+  for (final r in roles) {
+    if (r.key == 'superadmin') {
+      superAdminRank = r.rank;
+      break;
+    }
+  }
+  if (superAdminRank == null) return false;
+
+  return profile.roleRank >= superAdminRank;
+});
+
 /// Senarai ahli. Backend tentukan siapa nampak apa: management → semua;
 /// ahli biasa → diri sendiri sahaja.
 final membersProvider = FutureProvider<List<MemberRow>>((ref) async {

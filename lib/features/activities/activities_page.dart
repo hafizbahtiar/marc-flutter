@@ -156,7 +156,8 @@ class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
           data: (state) {
             if (state.activities.isEmpty) {
               return RefreshIndicator.adaptive(
-                onRefresh: () => ref.read(activitiesProvider.notifier).refresh(),
+                onRefresh: () =>
+                    ref.read(activitiesProvider.notifier).refresh(),
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
@@ -188,7 +189,9 @@ class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
                   if (index >= state.activities.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Center(child: CircularProgressIndicator.adaptive()),
+                      child: Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      ),
                     );
                   }
                   final activity = state.activities[index];
@@ -206,6 +209,14 @@ class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
   }
 }
 
+/// Toggle Akan Datang/Lepas dengan pil animasi meluncur di belakang.
+///
+/// GANTIKAN `SegmentedButton` Material — widget tu tiada penunjuk
+/// meluncur terbina-dalam, setiap segmen tukar warna SENDIRI-SENDIRI
+/// bila dipilih, jadi peralihan nampak "terpisah/flip" dan bukan
+/// "meluncur" macam segmented control iOS asli. Susun atur di sini
+/// (Stack: pil animasi di belakang, teks di depan) beri peluncuran
+/// sebenar tanpa pakej luar.
 class _UpcomingTabs extends StatelessWidget {
   const _UpcomingTabs({required this.upcoming, required this.onChanged});
 
@@ -214,16 +225,88 @@ class _UpcomingTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: SegmentedButton<bool>(
-        segments: const [
-          ButtonSegment(value: true, label: Text('Akan Datang')),
-          ButtonSegment(value: false, label: Text('Lepas')),
-        ],
-        selected: {upcoming},
-        showSelectedIcon: false,
-        onSelectionChanged: (s) => onChanged(s.first),
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: upcoming
+                  ? Alignment.centerLeft
+                  : Alignment.centerRight,
+              child: FractionallySizedBox(
+                widthFactor: 0.5,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _SegmentTap(
+                    label: 'Akan Datang',
+                    selected: upcoming,
+                    onTap: () => onChanged(true),
+                  ),
+                ),
+                Expanded(
+                  child: _SegmentTap(
+                    label: 'Lepas',
+                    selected: !upcoming,
+                    onTap: () => onChanged(false),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SegmentTap extends StatelessWidget {
+  const _SegmentTap({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Center(
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          style: TextStyle(
+            color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+          child: Text(label),
+        ),
       ),
     );
   }
@@ -330,10 +413,7 @@ class _ActivityCard extends StatelessWidget {
                     _Tag(label: activity.categoryName),
                   _SlotsBadge(activity: activity),
                   if (activity.isCancelled)
-                    _Tag(
-                      label: 'Dibatalkan',
-                      color: theme.colorScheme.error,
-                    ),
+                    _Tag(label: 'Dibatalkan', color: theme.colorScheme.error),
                 ],
               ),
             ],
@@ -417,9 +497,7 @@ class _SlotsBadge extends StatelessWidget {
     }
     return _Tag(
       label: '$left slot tinggal',
-      color: left <= 3
-          ? theme.extension<AppSemanticColors>()!.warning
-          : null,
+      color: left <= 3 ? theme.extension<AppSemanticColors>()!.warning : null,
     );
   }
 }

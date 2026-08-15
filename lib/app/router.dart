@@ -10,6 +10,7 @@ import 'package:marc/features/activities/activity_detail_page.dart';
 import 'package:marc/features/activities/my_activities_page.dart';
 import 'package:marc/features/activities/my_certificates_page.dart';
 import 'package:marc/features/activities/manage/activity_categories_page.dart';
+import 'package:marc/features/admin/blocked_email_domains_page.dart';
 import 'package:marc/features/activities/manage/activity_form_page.dart';
 import 'package:marc/features/activities/manage/issue_certificates_page.dart';
 import 'package:marc/features/activities/manage/checkin_scanner_page.dart';
@@ -19,6 +20,8 @@ import 'package:marc/features/donation/donation_page.dart';
 import 'package:marc/features/members/members_page.dart';
 import 'package:marc/features/members/pending_members_page.dart';
 import 'package:marc/features/notifications/notifications_page.dart';
+import 'package:marc/features/payments/admin_payments_page.dart';
+import 'package:marc/features/payments/payment_history_page.dart';
 import 'package:marc/features/posts/create_post_page.dart';
 import 'package:marc/features/posts/feed_page.dart';
 import 'package:marc/features/posts/post_detail_page.dart';
@@ -73,6 +76,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/donate', builder: (_, _) => const DonationPage()),
       GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
       GoRoute(path: '/audit-logs', builder: (_, _) => const AuditPage()),
+      GoRoute(
+        path: '/admin/blocked-email-domains',
+        builder: (_, _) => const BlockedEmailDomainsPage(),
+      ),
+      GoRoute(
+        path: '/payments/history',
+        builder: (_, _) => const PaymentHistoryPage(),
+      ),
+      GoRoute(
+        path: '/admin/payments',
+        builder: (_, _) => const AdminPaymentsPage(),
+      ),
       GoRoute(
         path: '/members/pending',
         builder: (_, _) => const PendingMembersPage(),

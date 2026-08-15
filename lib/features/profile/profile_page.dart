@@ -193,6 +193,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ],
             const SizedBox(height: 28),
+            _GroupLabel('Tetapan'),
             _InfoCard(
               children: [
                 SwitchListTile.adaptive(
@@ -203,6 +204,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   onChanged: (isDark) =>
                       ref.read(themeModeProvider.notifier).setDark(isDark),
                 ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _GroupLabel('Aktiviti'),
+            _InfoCard(
+              children: [
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                   leading: const Icon(Icons.event_available_outlined),
@@ -217,6 +224,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/my-certificates'),
                 ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _GroupLabel('Kewangan'),
+            _InfoCard(
+              children: [
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                   leading: const Icon(Icons.favorite_outline),
@@ -224,9 +237,31 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/donate'),
                 ),
-                // Management sahaja — backend 403 juga, ni cuma elak
-                // tunjuk pintu yang terkunci.
-                if (p?.isManagement ?? false)
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.receipt_long_outlined),
+                  title: const Text('Sejarah Bayaran Saya'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/payments/history'),
+                ),
+              ],
+            ),
+            // Management sahaja — backend 403 juga, ni cuma elak tunjuk
+            // pintu yang terkunci. Kumpulan BERASINGAN (bukan disisip
+            // dalam Kewangan/mana-mana) — semua tindakan di sini alat
+            // pengurusan, bukan sesuatu ahli biasa pernah nampak pun.
+            if (p?.isManagement ?? false) ...[
+              const SizedBox(height: 20),
+              _GroupLabel('Pengurusan'),
+              _InfoCard(
+                children: [
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                    leading: const Icon(Icons.pending_actions_outlined),
+                    title: const Text('Ahli Pending'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/members/pending'),
+                  ),
                   ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                     leading: const Icon(Icons.history),
@@ -234,6 +269,41 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/audit-logs'),
                   ),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                    leading: const Icon(Icons.payments_outlined),
+                    title: const Text('Semua Bayaran'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/admin/payments'),
+                  ),
+                ],
+              ),
+            ],
+            // Kumpulan BERASINGAN drpd "Pengurusan" (bukan disisip sekali)
+            // — sengaja: tindakan di atas boleh dibuat mana-mana
+            // management (supervisor/manager/admin), tapi konfigurasi
+            // "root system" macam ni cuma superadmin (keputusan produk
+            // 2026-08-15). Pengasingan visual tunjuk beza siling tu,
+            // bukan sekadar backend yang tolak diam-diam.
+            if (ref.watch(isSuperAdminProvider)) ...[
+              const SizedBox(height: 20),
+              _GroupLabel('Sistem'),
+              _InfoCard(
+                children: [
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                    leading: const Icon(Icons.block_outlined),
+                    title: const Text('Domain Emel Disekat'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/admin/blocked-email-domains'),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 20),
+            _GroupLabel('Bantuan'),
+            _InfoCard(
+              children: [
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
                   leading: const Icon(Icons.help_outline),
@@ -410,6 +480,32 @@ class _Header extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Label kumpulan kecil di atas setiap `_InfoCard` tindakan (bukan
+/// `_InfoCard` maklumat profil di bahagian atas skrin, yang kekal tanpa
+/// label) — ditambah supaya senarai 9 tindakan yang dulu satu kad rata
+/// (Aktiviti Saya, Sijil Saya, Sokong MARC, Sejarah Bayaran Saya, Jejak
+/// Audit, Semua Bayaran, Soalan Lazim, Tentang + suis Mod Gelap) senang
+/// diimbas, bukan satu senarai panjang tanpa struktur.
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

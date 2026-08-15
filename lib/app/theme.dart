@@ -56,7 +56,19 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
 class AppTheme {
   static const _seed = Color(0xFF2F6B4F);
 
-  static ColorScheme get lightScheme =>
+  // `static final` (BUKAN `static get`) — SENGAJA. Skema/tema ni tak
+  // pernah berubah secara dinamik (seed warna tetap), tapi setiap
+  // `AppTheme.light`/`.dark` DULU dikira semula dari kosong pada setiap
+  // panggilan (~15 panggilan GoogleFonts.* + ColorScheme.fromSeed penuh
+  // setiap satu). `MaterialApp.router` (main.dart) perlukan KEDUA-DUA
+  // `theme:` DAN `darkTheme:` pada SETIAP rebuild `MyApp`, dan `MyApp`
+  // rebuild TEPAT bila `themeModeProvider` berubah — jadi suis tema
+  // (satu-satunya sebab MyApp rebuild) mencetuskan KERJA PALING BERAT di
+  // fail ni dua kali, serentak dengan animasi peralihan tema cuba mula,
+  // punca sebenar "slow/clunky/stutter" yang dilaporkan. `late final`
+  // kira sekali sahaja (lazy, pada akses pertama), kemudian cache
+  // selama-lamanya.
+  static final ColorScheme lightScheme =
       ColorScheme.fromSeed(
         seedColor: _seed,
         brightness: Brightness.light,
@@ -78,7 +90,7 @@ class AppTheme {
         inversePrimary: const Color(0xFF9FD3B4),
       );
 
-  static ColorScheme get darkScheme =>
+  static final ColorScheme darkScheme =
       ColorScheme.fromSeed(
         seedColor: _seed,
         brightness: Brightness.dark,
@@ -100,9 +112,9 @@ class AppTheme {
         inversePrimary: const Color(0xFF2F6B4F),
       );
 
-  static ThemeData get light => _build(lightScheme, AppSemanticColors.light);
+  static final ThemeData light = _build(lightScheme, AppSemanticColors.light);
 
-  static ThemeData get dark => _build(darkScheme, AppSemanticColors.dark);
+  static final ThemeData dark = _build(darkScheme, AppSemanticColors.dark);
 
   static ThemeData _build(ColorScheme scheme, AppSemanticColors semantic) {
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
