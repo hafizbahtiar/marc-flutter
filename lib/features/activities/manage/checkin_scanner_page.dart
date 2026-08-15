@@ -7,7 +7,7 @@ import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
-import 'package:marc/features/activities/manage/scan_result.dart';
+import 'package:marc/features/activities/scan_result.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -247,56 +247,60 @@ class _ResultBanner extends StatelessWidget {
     final scheme = theme.colorScheme;
     final r = result;
 
-    final (Color background, Color foreground, IconData icon, String text) =
-        switch (r?.kind) {
-          null => (
-            scheme.surfaceContainerHighest,
-            scheme.onSurfaceVariant,
-            Icons.qr_code_scanner,
-            'Halakan kamera ke QR peserta.',
-          ),
-          // Dua keadaan hijau, perkataan berbeza.
-          ScanResultKind.marked => (
-            const Color(0xFF1B5E20),
-            Colors.white,
-            Icons.check_circle,
-            r!.message,
-          ),
-          ScanResultKind.alreadyMarked => (
-            const Color(0xFF2E7D32),
-            Colors.white,
-            Icons.done_all,
-            r!.message,
-          ),
-          // Empat keadaan merah, ikon dan teks berbeza supaya pengurus
-          // tahu tindakan mana yang tinggal: cari nama dalam senarai,
-          // pinda kehadiran, minta QR yang betul, atau cuba lagi.
-          ScanResultKind.notRegistered => (
-            scheme.errorContainer,
-            scheme.onErrorContainer,
-            Icons.person_off,
-            r!.message,
-          ),
-          ScanResultKind.outsideWindow => (
-            scheme.errorContainer,
-            scheme.onErrorContainer,
-            Icons.schedule,
-            '${r!.message} Guna Senarai Peserta untuk pindaan '
-                '(sebab akan direkod).',
-          ),
-          ScanResultKind.unknownCode => (
-            scheme.errorContainer,
-            scheme.onErrorContainer,
-            Icons.qr_code_2,
-            r!.message,
-          ),
-          ScanResultKind.network => (
-            scheme.errorContainer,
-            scheme.onErrorContainer,
-            Icons.wifi_off,
-            r!.message,
-          ),
-        };
+    final (
+      Color background,
+      Color foreground,
+      IconData icon,
+      String text,
+    ) = switch (r?.kind) {
+      null => (
+        scheme.surfaceContainerHighest,
+        scheme.onSurfaceVariant,
+        Icons.qr_code_scanner,
+        'Halakan kamera ke QR peserta.',
+      ),
+      // Dua keadaan hijau, perkataan berbeza.
+      ScanResultKind.marked => (
+        const Color(0xFF1B5E20),
+        Colors.white,
+        Icons.check_circle,
+        r!.message,
+      ),
+      ScanResultKind.alreadyMarked => (
+        const Color(0xFF2E7D32),
+        Colors.white,
+        Icons.done_all,
+        r!.message,
+      ),
+      // Empat keadaan merah, ikon dan teks berbeza supaya pengurus
+      // tahu tindakan mana yang tinggal: cari nama dalam senarai,
+      // pinda kehadiran, minta QR yang betul, atau cuba lagi.
+      ScanResultKind.notRegistered => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+        Icons.person_off,
+        r!.message,
+      ),
+      ScanResultKind.outsideWindow => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+        Icons.schedule,
+        '${r!.message} Guna Senarai Peserta untuk pindaan '
+            '(sebab akan direkod).',
+      ),
+      ScanResultKind.unknownCode => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+        Icons.qr_code_2,
+        r!.message,
+      ),
+      ScanResultKind.network => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+        Icons.wifi_off,
+        r!.message,
+      ),
+    };
 
     return Container(
       width: double.infinity,
@@ -342,8 +346,7 @@ class _CameraError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final denied =
-        error.errorCode == MobileScannerErrorCode.permissionDenied;
+    final denied = error.errorCode == MobileScannerErrorCode.permissionDenied;
 
     return ColoredBox(
       color: Colors.black,

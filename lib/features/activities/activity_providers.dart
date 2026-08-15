@@ -4,6 +4,7 @@ import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/activities/activity_models.dart';
+import 'package:marc/features/activities/scan_result.dart';
 import 'package:marc/features/registration_payment/registration_payment_providers.dart'
     show PhoneRequiredException;
 
@@ -419,6 +420,40 @@ class ActivityRepository {
         throw PhoneRequiredException();
       }
       rethrow;
+    }
+  }
+
+  /// Tanda kehadiran SENDIRI (`method: 'self_scan'`) — TIADA
+  /// registration_id/checkin_token dihantar, identiti datang drpd token
+  /// JWT ahli sendiri di sisi pelayan. Ini SATU-SATUNYA tindakan
+  /// kehadiran yang boleh dipanggil ahli biasa (padanan gate backend
+  /// `activity_attendance.go` Mark — semua kaedah LAIN kekal pengurusan
+  /// sahaja). [sessionId] datang drpd kandungan QR venue yang diimbas
+  /// (lihat `self_checkin_scanner_page.dart`), BUKAN pilihan ahli —
+  /// mengimbas QR salah sesi akan ditolak backend (409 pendaftaran
+  /// bukan utk aktiviti/sesi tu), bukan senyap tanda sesi salah.
+  Future<ScanResult> selfCheckIn({
+    required String activityId,
+    required String sessionId,
+  }) async {
+    try {
+      final res = await _ref
+          .read(dioProvider)
+          .post(
+            '/activities/$activityId/sessions/$sessionId/attendance',
+            data: {'method': 'self_scan'},
+          );
+      final data = res.data;
+      return ScanResult.fromResponse(
+        data is Map ? Map<String, dynamic>.from(data) : const {},
+      );
+    } on DioException catch (e) {
+      return ScanResult.fromError(e);
+    } catch (_) {
+      return const ScanResult(
+        ScanResultKind.network,
+        'Gagal tanda kehadiran. Cuba lagi.',
+      );
     }
   }
 

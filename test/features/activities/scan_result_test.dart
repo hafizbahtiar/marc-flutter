@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc/features/activities/manage/scan_result.dart';
+import 'package:marc/features/activities/scan_result.dart';
 
 DioException ralat(int status, String mesej) => DioException(
   requestOptions: RequestOptions(path: '/x'),

@@ -149,7 +149,9 @@ class _IssueBodyState extends ConsumerState<_IssueBody> {
                 ),
                 _Stat(
                   label: 'Sesi minimum untuk layak',
-                  value: sessionCount == 0 ? '-' : '$needed daripada $sessionCount',
+                  value: sessionCount == 0
+                      ? '-'
+                      : '$needed daripada $sessionCount',
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -252,9 +254,7 @@ class _ResultCard extends StatelessWidget {
         _Note(
           icon: result.partial ? Icons.hourglass_bottom : Icons.check_circle,
           color: result.partial ? semantic.warning : theme.colorScheme.primary,
-          text: result.partial
-              ? result.message!
-              : 'Sijil siap diterbitkan.',
+          text: result.partial ? result.message! : 'Sijil siap diterbitkan.',
         ),
         // Kiraan hanya dipapar bila ia benar-benar dibaca daripada respons.
         // Panggilan yang tamat masa tidak membawa kiraan; "0 diterbitkan"

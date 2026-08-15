@@ -14,21 +14,14 @@ import 'package:marc/features/activities/activity_models.dart';
 /// kedudukan dalam senarai semasa dihantar, jadi nombor urutan mustahil
 /// berulang atau berlubang.
 class SessionDraft {
-  SessionDraft({
-    this.title = '',
-    required this.startsAt,
-    required this.endsAt,
-  });
+  SessionDraft({this.title = '', required this.startsAt, required this.endsAt});
 
   String title;
   DateTime startsAt;
   DateTime endsAt;
 
-  factory SessionDraft.fromSession(ActivitySession s) => SessionDraft(
-    title: s.title,
-    startsAt: s.startsAt,
-    endsAt: s.endsAt,
-  );
+  factory SessionDraft.fromSession(ActivitySession s) =>
+      SessionDraft(title: s.title, startsAt: s.startsAt, endsAt: s.endsAt);
 
   bool get isValid => endsAt.isAfter(startsAt);
 
@@ -174,9 +167,7 @@ Map<String, dynamic> buildSessionsBody(List<SessionDraft> sessions) => {
 List<Map<String, dynamic>> buildSessionsList(List<SessionDraft> sessions) {
   final ordered = [...sessions]
     ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
-  return [
-    for (var i = 0; i < ordered.length; i++) ordered[i].toJson(i + 1),
-  ];
+  return [for (var i = 0; i < ordered.length; i++) ordered[i].toJson(i + 1)];
 }
 
 /// Badan `PATCH /activities/:id` — HANYA medan yang benar-benar berubah.
@@ -216,10 +207,7 @@ Map<String, dynamic> buildActivityPatch(
     final opens = after.registrationOpensAt;
     body['registration_opens_at'] = opens == null ? null : _iso(opens);
   }
-  if (!_sameInstant(
-    before.registrationClosesAt,
-    after.registrationClosesAt,
-  )) {
+  if (!_sameInstant(before.registrationClosesAt, after.registrationClosesAt)) {
     // Lajur NOT NULL — null di sini ditolak 400 oleh backend, jadi ia
     // tidak pernah dihantar. validateDraft sudah menghalang draf tanpa
     // tarikh tutup daripada sampai ke sini.

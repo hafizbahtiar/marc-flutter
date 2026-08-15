@@ -107,6 +107,17 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
     if (mounted) setState(_resetOverrides);
   }
 
+  /// QR venue utk daftar hadir SENDIRI ahli (`self_scan`) — beza drpd
+  /// `_openScanner` (pengurusan imbas QR PERIBADI ahli lain). Tiada
+  /// perlu `setState(_resetOverrides)` selepas kembali: skrin ni cuma
+  /// PAPAR QR, tak sentuh kehadiran secara langsung sendiri (ahli yang
+  /// imbas nanti, di skrin lain).
+  void _openSessionQr(String sessionId) {
+    context.push(
+      '/activities/${widget.activityId}/sessions/$sessionId/checkin-qr',
+    );
+  }
+
   Future<void> _setAttendance(
     ActivityRegistrant person,
     bool present,
@@ -266,6 +277,13 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
       ),
       appBar: AppBar(
         title: const Text('Senarai Peserta'),
+        actions: [
+          IconButton(
+            tooltip: 'Papar QR daftar hadir (ahli imbas sendiri)',
+            icon: const Icon(Icons.qr_code_2_outlined),
+            onPressed: selected == null ? null : () => _openSessionQr(selected),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(76),
           child: _SessionPicker(
@@ -315,9 +333,7 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
 
             return RefreshIndicator.adaptive(
               onRefresh: () async {
-                ref.invalidate(
-                  activityRegistrantsProvider(widget.activityId),
-                );
+                ref.invalidate(activityRegistrantsProvider(widget.activityId));
                 await ref.read(
                   activityRegistrantsProvider(widget.activityId).future,
                 );

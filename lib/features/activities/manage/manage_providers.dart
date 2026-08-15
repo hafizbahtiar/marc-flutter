@@ -15,7 +15,7 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/activity_draft.dart';
-import 'package:marc/features/activities/manage/scan_result.dart';
+import 'package:marc/features/activities/scan_result.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
 /// Semakan role untuk MENYEMBUNYIKAN pintu, bukan untuk menguncinya.

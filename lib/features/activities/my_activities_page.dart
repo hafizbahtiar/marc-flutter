@@ -37,7 +37,16 @@ class MyActivitiesPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Aktiviti Saya')),
+      appBar: AppBar(
+        title: const Text('Aktiviti Saya'),
+        actions: [
+          IconButton(
+            tooltip: 'Daftar hadir sendiri (imbas QR venue)',
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () => context.push('/checkin'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: registrations.when(
           loading: () => Skeletonizer(
@@ -92,7 +101,8 @@ class MyActivitiesPage extends ConsumerWidget {
                       _RegistrationCard(
                         registration: r,
                         showQr: r.canCheckInAt(DateTime.now()),
-                        onTap: () => context.push('/activities/${r.activityId}'),
+                        onTap: () =>
+                            context.push('/activities/${r.activityId}'),
                       ),
                   ],
                   if (groups.past.isNotEmpty) ...[
@@ -104,7 +114,8 @@ class MyActivitiesPage extends ConsumerWidget {
                         // direkodkan — QR di sini hanya akan ditolak
                         // pengimbas dan mengelirukan.
                         showQr: false,
-                        onTap: () => context.push('/activities/${r.activityId}'),
+                        onTap: () =>
+                            context.push('/activities/${r.activityId}'),
                       ),
                   ],
                 ],
@@ -167,10 +178,7 @@ class _ErrorState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: onRetry,
-              child: const Text('Cuba lagi'),
-            ),
+            OutlinedButton(onPressed: onRetry, child: const Text('Cuba lagi')),
           ],
         ),
       ),
@@ -312,10 +320,7 @@ class _RegistrationCardState extends ConsumerState<_RegistrationCard> {
                 children: [
                   if (r.categoryName.isNotEmpty) _Tag(label: r.categoryName),
                   if (r.isCancelled)
-                    _Tag(
-                      label: 'Dibatalkan',
-                      color: theme.colorScheme.error,
-                    ),
+                    _Tag(label: 'Dibatalkan', color: theme.colorScheme.error),
                   // `not_required` (aktiviti percuma) sengaja tiada tag —
                   // kes biasa yang tak berbaloi bunyi bising visual.
                   if (r.feePaid)
@@ -384,10 +389,7 @@ class _Tag extends StatelessWidget {
             Icon(icon, size: 13, color: fg),
             const SizedBox(width: 4),
           ],
-          Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(color: fg),
-          ),
+          Text(label, style: theme.textTheme.labelMedium?.copyWith(color: fg)),
         ],
       ),
     );

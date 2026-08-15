@@ -267,8 +267,7 @@ class _PendingStatusView extends ConsumerStatefulWidget {
   final String? registrationPaymentStatus;
 
   @override
-  ConsumerState<_PendingStatusView> createState() =>
-      _PendingStatusViewState();
+  ConsumerState<_PendingStatusView> createState() => _PendingStatusViewState();
 }
 
 class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
@@ -390,7 +389,8 @@ class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
                 // sebab bayar lagi, tinggal tunggu kelulusan pengurusan.
                 // Kekal untuk 'failed'/'pending'/null (belum cuba) supaya
                 // ahli boleh cuba/cuba semula.
-                if (isPending && widget.registrationPaymentStatus != 'succeeded') ...[
+                if (isPending &&
+                    widget.registrationPaymentStatus != 'succeeded') ...[
                   FilledButton(
                     onPressed: _submitting ? null : _payRegistrationFee,
                     child: _submitting

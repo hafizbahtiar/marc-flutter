@@ -39,7 +39,9 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
       // Bukan repair penuh (idealnya skrin ni sendiri nampak status
       // bayaran), tapi minimum yang perlu supaya kewajipan bayar tak
       // "senyap" tepat pada saat ia tercipta.
-      final activity = ref.read(activityDetailProvider(widget.activityId)).valueOrNull;
+      final activity = ref
+          .read(activityDetailProvider(widget.activityId))
+          .valueOrNull;
       if (activity != null && activity.feeCents > 0) {
         MySnackBar.success(
           context,
@@ -248,10 +250,7 @@ class _DetailBody extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 13,
-                    child: Text(
-                      '${s.seq}',
-                      style: theme.textTheme.labelMedium,
-                    ),
+                    child: Text('${s.seq}', style: theme.textTheme.labelMedium),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -300,10 +299,7 @@ class _Banner extends StatelessWidget {
           Icon(icon, size: 20, color: color),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
           ),
         ],
       ),

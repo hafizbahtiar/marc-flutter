@@ -15,6 +15,8 @@ import 'package:marc/features/activities/manage/activity_form_page.dart';
 import 'package:marc/features/activities/manage/issue_certificates_page.dart';
 import 'package:marc/features/activities/manage/checkin_scanner_page.dart';
 import 'package:marc/features/activities/manage/registrations_page.dart';
+import 'package:marc/features/activities/manage/session_checkin_qr_page.dart';
+import 'package:marc/features/activities/self_checkin_scanner_page.dart';
 import 'package:marc/features/audit/audit_page.dart';
 import 'package:marc/features/donation/donation_page.dart';
 import 'package:marc/features/members/members_page.dart';
@@ -142,6 +144,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           activityId: state.pathParameters['id']!,
           sessionId: state.pathParameters['sid']!,
         ),
+      ),
+      GoRoute(
+        path: '/activities/:id/sessions/:sid/checkin-qr',
+        builder: (_, state) => SessionCheckinQrPage(
+          activityId: state.pathParameters['id']!,
+          sessionId: state.pathParameters['sid']!,
+        ),
+      ),
+      // Tiada parameter — sesi/aktiviti datang drpd kandungan QR yang
+      // diimbas, bukan route (lihat komen SelfCheckinScannerPage).
+      GoRoute(
+        path: '/checkin',
+        builder: (_, _) => const SelfCheckinScannerPage(),
       ),
       GoRoute(
         path: '/activities/:id/certificates',

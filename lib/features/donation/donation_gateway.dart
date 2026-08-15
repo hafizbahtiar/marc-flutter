@@ -156,10 +156,7 @@ class RedirectCheckoutHandler extends DonationCheckoutHandler {
       return const DonationResult.failure('Pautan pembayaran tidak sah.');
     }
 
-    final opened = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened) {
       return const DonationResult.failure('Gagal buka laman pembayaran.');
     }

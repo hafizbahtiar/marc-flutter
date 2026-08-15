@@ -151,9 +151,7 @@ class ScanResult {
         // sesi yang sudah diganti.
         return ScanResult(
           ScanResultKind.unknownCode,
-          data is Map && data['error'] is String
-              ? mesej
-              : 'QR tidak dikenali',
+          data is Map && data['error'] is String ? mesej : 'QR tidak dikenali',
         );
       case 422:
         return ScanResult(ScanResultKind.outsideWindow, mesej);

@@ -33,6 +33,8 @@ IconData notificationIcon(AppNotification n) {
       return Icons.event_available_outlined;
     case 'activity_cancelled':
       return Icons.event_busy_outlined;
+    case 'activity_reminder':
+      return Icons.alarm_outlined;
     case 'certificate_ready':
       return Icons.workspace_premium_outlined;
     default:
@@ -52,6 +54,7 @@ Color notificationColor(BuildContext context, AppNotification n) {
     case 'member_pending':
     case 'member_approved':
     case 'activity_published':
+    case 'activity_reminder':
     case 'certificate_ready':
       return scheme.primary;
     default:
@@ -76,6 +79,8 @@ String notificationTitle(AppNotification n) {
       return 'Aktiviti baharu telah dibuka untuk pendaftaran.';
     case 'activity_cancelled':
       return 'Satu aktiviti anda telah dibatalkan.';
+    case 'activity_reminder':
+      return 'Peringatan: aktiviti anda bermula tidak lama lagi.';
     case 'certificate_ready':
       return 'Sijil anda sudah sedia dimuat turun.';
     default:
