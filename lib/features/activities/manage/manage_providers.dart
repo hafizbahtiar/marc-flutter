@@ -25,6 +25,50 @@ final isManagementProvider = Provider<bool>((ref) {
   return profile.valueOrNull?.isManagement ?? false;
 });
 
+/// Siling "manager ke atas sahaja" — lebih ketat drpd [isManagementProvider]
+/// (yang termasuk supervisor). Dikira secara DINAMIK drpd `rolesProvider`
+/// (bukan nombor rank digodam keras di klien) supaya siling ini terus betul
+/// kalau rank role diubah di backend suatu hari nanti. Sama macam provider
+/// di atas — kemudahan UI sahaja, backend menyemak `authz.IsAtLeastRole`
+/// sendiri (lihat CRUD kategori aktiviti).
+final isManagerOrAboveProvider = Provider<bool>((ref) {
+  final profile = ref.watch(myProfileProvider).valueOrNull;
+  if (profile == null) return false;
+
+  final roles = ref.watch(rolesProvider).valueOrNull;
+  if (roles == null) return false;
+
+  int? managerRank;
+  for (final r in roles) {
+    if (r.key == 'manager') {
+      managerRank = r.rank;
+      break;
+    }
+  }
+  if (managerRank == null) return false;
+
+  return profile.roleRank >= managerRank;
+});
+
+/// SEMUA kategori aktiviti (termasuk tidak aktif) — utk skrin CRUD
+/// pengurusan. `activityCategoriesProvider` (activity_providers.dart) kekal
+/// aktif-sahaja utk borang cipta aktiviti; provider ini sengaja fail senyap
+/// (list kosong) kalau bukan manager ke atas, elak panggilan 403 yang
+/// pengguna tak boleh buat apa-apa dengannya.
+final allActivityCategoriesProvider = FutureProvider<List<ActivityCategory>>((
+  ref,
+) async {
+  if (!ref.watch(isManagerOrAboveProvider)) return const [];
+
+  final res = await ref
+      .watch(dioProvider)
+      .get('/activity-categories', queryParameters: {'all': 'true'});
+  final data = res.data as Map<String, dynamic>;
+  return (data['categories'] as List)
+      .map((c) => ActivityCategory.fromJson(c as Map<String, dynamic>))
+      .toList();
+});
+
 /// Satu baris `GET /activities/:id/registrations`.
 ///
 /// Medan mengikut `ListRegistrationsByActivityRow` dalam
@@ -105,9 +149,7 @@ final activityRegistrantsProvider =
       final rows = (data['registrations'] as List)
           .map((r) => ActivityRegistrant.fromJson(r as Map<String, dynamic>))
           .toList();
-      rows.sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
+      rows.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       return rows;
     });
 
@@ -229,12 +271,7 @@ class IssueCertificatesResult {
   const IssueCertificatesResult.done({
     required int issued,
     required int filesReady,
-  }) : this._(
-         ok: true,
-         partial: false,
-         issued: issued,
-         filesReady: filesReady,
-       );
+  }) : this._(ok: true, partial: false, issued: issued, filesReady: filesReady);
 
   /// 202 — baris dicipta, sebahagian fail belum siap. BERJAYA, bukan ralat.
   const IssueCertificatesResult.partial({
@@ -284,6 +321,17 @@ class IssueCertificatesResult {
   /// bukan delta panggilan semasa (lihat `countFilesReady` di backend).
   final int filesReady;
   final String? message;
+}
+
+/// Mutasi yang memulangkan kategori aktiviti (cipta/kemas kini).
+class CategoryResult {
+  const CategoryResult.ok(ActivityCategory this.category) : message = null;
+  const CategoryResult.failed(String this.message) : category = null;
+
+  final ActivityCategory? category;
+  final String? message;
+
+  bool get isOk => message == null;
 }
 
 final activityManageRepositoryProvider = Provider<ActivityManageRepository>(
@@ -606,6 +654,59 @@ class ActivityManageRepository {
       return IssueCertificatesResult.failed(extractErrorMessage(e));
     } catch (_) {
       return const IssueCertificatesResult.failed('Gagal terbitkan sijil.');
+    }
+  }
+
+  void _invalidateCategories() {
+    _ref.invalidate(allActivityCategoriesProvider);
+    _ref.invalidate(activityCategoriesProvider);
+  }
+
+  /// `POST /activity-categories` — manager ke atas sahaja (backend
+  /// kuatkuasakan `authz.IsAtLeastRole`).
+  Future<CategoryResult> createCategory({
+    required String key,
+    required String name,
+    int sortOrder = 0,
+  }) async {
+    try {
+      final res = await _dio.post(
+        '/activity-categories',
+        data: {'key': key, 'name': name, 'sort_order': sortOrder},
+      );
+      _invalidateCategories();
+      return CategoryResult.ok(
+        ActivityCategory.fromJson(res.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return CategoryResult.failed(extractErrorMessage(e));
+    } catch (_) {
+      return const CategoryResult.failed('Gagal cipta kategori.');
+    }
+  }
+
+  /// `PATCH /activity-categories/:id` — hanya medan bukan-null dihantar.
+  /// `key` sengaja TIDAK boleh diubah (padanan backend) jadi tiada
+  /// parameter untuknya di sini.
+  Future<CategoryResult> updateCategory(
+    String categoryId, {
+    String? name,
+    int? sortOrder,
+    bool? isActive,
+  }) async {
+    try {
+      final res = await _dio.patch(
+        '/activity-categories/$categoryId',
+        data: {'name': ?name, 'sort_order': ?sortOrder, 'is_active': ?isActive},
+      );
+      _invalidateCategories();
+      return CategoryResult.ok(
+        ActivityCategory.fromJson(res.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return CategoryResult.failed(extractErrorMessage(e));
+    } catch (_) {
+      return const CategoryResult.failed('Gagal kemas kini kategori.');
     }
   }
 }

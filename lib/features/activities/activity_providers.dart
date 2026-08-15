@@ -4,6 +4,8 @@ import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/activities/activity_models.dart';
+import 'package:marc/features/registration_payment/registration_payment_providers.dart'
+    show PhoneRequiredException;
 
 /// Penapis senarai aktiviti. `categoryId` null = semua kategori.
 class ActivityFilter {
@@ -276,7 +278,8 @@ class CertificateLinkResult {
 /// sijil itu WUJUD dan sah — cuma failnya belum ada. Mesej ralat generik
 /// di sini akan menyuruh ahli melaporkan pepijat untuk keadaan yang
 /// selesai sendiri dalam beberapa saat.
-const certificatePendingMessage = 'Sijil sedang disediakan. Cuba lagi sebentar.';
+const certificatePendingMessage =
+    'Sijil sedang disediakan. Cuba lagi sebentar.';
 
 final certificateRepositoryProvider = Provider<CertificateRepository>(
   (ref) => CertificateRepository(ref),
@@ -396,11 +399,36 @@ class ActivityRepository {
     }
   }
 
+  /// Mulakan pembayaran yuran AKTIVITI (bukan yuran pendaftaran ahli —
+  /// itu `RegistrationPaymentRepository.checkout`) untuk pendaftaran yang
+  /// SUDAH wujud. [phone] pilihan, sama pola dengan
+  /// `RegistrationPaymentRepository.checkout`: hanya perlu bila
+  /// percubaan pertama melempar [PhoneRequiredException]. Pulangkan
+  /// `redirect_url` sahaja.
+  Future<String> checkoutPayment(String activityId, {String? phone}) async {
+    final dio = _ref.read(dioProvider);
+    try {
+      final res = await dio.post(
+        '/activities/$activityId/registration/checkout',
+        data: phone != null ? {'phone': phone} : null,
+      );
+      return res.data['redirect_url'] as String;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map && data['code'] == 'phone_required') {
+        throw PhoneRequiredException();
+      }
+      rethrow;
+    }
+  }
+
   /// Tarik versi terkini dari server dan tindih ke dalam senarai — best
   /// effort, tak boleh gagalkan mutasi yang dah pun berjaya.
   Future<void> _syncToList(String activityId) async {
     try {
-      final updated = await _ref.read(activityDetailProvider(activityId).future);
+      final updated = await _ref.read(
+        activityDetailProvider(activityId).future,
+      );
       _ref.read(activitiesProvider.notifier).patch(updated);
     } catch (_) {
       // Senarai cuma tak sync sehingga refresh seterusnya.

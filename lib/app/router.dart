@@ -9,6 +9,7 @@ import 'package:marc/features/activities/activities_page.dart';
 import 'package:marc/features/activities/activity_detail_page.dart';
 import 'package:marc/features/activities/my_activities_page.dart';
 import 'package:marc/features/activities/my_certificates_page.dart';
+import 'package:marc/features/activities/manage/activity_categories_page.dart';
 import 'package:marc/features/activities/manage/activity_form_page.dart';
 import 'package:marc/features/activities/manage/issue_certificates_page.dart';
 import 'package:marc/features/activities/manage/checkin_scanner_page.dart';
@@ -76,10 +77,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/members/pending',
         builder: (_, _) => const PendingMembersPage(),
       ),
-      GoRoute(
-        path: '/notifications',
-        builder: (_, _) => const NotificationsPage(),
-      ),
       GoRoute(path: '/posts/new', builder: (_, _) => const CreatePostPage()),
       GoRoute(
         path: '/posts/:id',
@@ -104,6 +101,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/activities/new',
         builder: (_, _) => const ActivityFormPage(),
+      ),
+      // MESTI didahulukan drpd '/activities/:id' — sama sebab dengan
+      // '/activities/new' di atas.
+      GoRoute(
+        path: '/activities/categories',
+        builder: (_, _) => const ActivityCategoriesPage(),
       ),
       GoRoute(
         path: '/activities/:id/edit',
@@ -151,6 +154,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/activities',
                 builder: (_, _) => const ActivitiesPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/notifications',
+                builder: (_, _) => const NotificationsPage(),
               ),
             ],
           ),

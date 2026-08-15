@@ -37,9 +37,11 @@ class RegisterController extends AsyncNotifier<void> {
   Future<void> build() async {}
 
   /// Pulang true kalau berjaya (page boleh navigasi + tunjuk mesej).
-  Future<bool> submit(String email, String password) async {
+  Future<bool> submit(String email, String password, String phone) async {
     state = const AsyncLoading();
-    final result = await ref.read(authServiceProvider).signUp(email, password);
+    final result = await ref
+        .read(authServiceProvider)
+        .signUp(email, password, phone);
     if (result.success) {
       state = const AsyncData(null);
       return true;

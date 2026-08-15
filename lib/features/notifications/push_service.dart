@@ -75,7 +75,12 @@ class PushService {
       });
       OneSignal.Notifications.addClickListener((event) {
         if (_ref.read(authNotifierProvider).isLoggedIn) {
-          _ref.read(routerProvider).push('/notifications');
+          // `.go`, BUKAN `.push` — `/notifications` kini akar cabang
+          // `StatefulShellBranch` (tab bottom nav), bukan route push
+          // biasa. `.push` atas route cabang shell akan buka Navigator
+          // bersarang tambahan di atas shell (nampak macam skrin baharu
+          // dengan butang kembali ganjil) bukan tukar terus ke tab tu.
+          _ref.read(routerProvider).go('/notifications');
         }
       });
     } catch (_) {}

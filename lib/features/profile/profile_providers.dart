@@ -15,6 +15,7 @@ class Profile {
     required this.roleRank,
     required this.category,
     this.avatarUrl,
+    this.registrationPaymentStatus,
   });
 
   final String memberId;
@@ -31,7 +32,17 @@ class Profile {
   /// null = tiada gambar profil.
   final String? avatarUrl;
 
+  /// "pending"/"succeeded"/"failed", atau null kalau ahli tak pernah
+  /// cuba bayar yuran pendaftaran langsung. Backend cuma isi bila
+  /// `status != 'approved'` (lihat `profile.go` Me).
+  final String? registrationPaymentStatus;
+
   bool get isManagement => category == 'management';
+
+  bool get registrationPaymentFailed => registrationPaymentStatus == 'failed';
+  bool get registrationPaymentSucceeded =>
+      registrationPaymentStatus == 'succeeded';
+  bool get registrationPaymentPending => registrationPaymentStatus == 'pending';
 
   Profile copyWith({Object? avatarUrl = _sentinel}) {
     return Profile(
@@ -46,6 +57,7 @@ class Profile {
       roleRank: roleRank,
       category: category,
       avatarUrl: avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
+      registrationPaymentStatus: registrationPaymentStatus,
     );
   }
 
@@ -64,6 +76,7 @@ class Profile {
       roleRank: (json['role_rank'] as num?)?.toInt() ?? 0,
       category: (json['category'] as String?) ?? 'ahli',
       avatarUrl: json['avatar_url'] as String?,
+      registrationPaymentStatus: json['registration_payment_status'] as String?,
     );
   }
 }
@@ -143,6 +156,7 @@ class MemberRow {
     required this.category,
     required this.status,
     this.avatarUrl,
+    this.registrationPaymentStatus,
   });
 
   final String userId;
@@ -162,6 +176,13 @@ class MemberRow {
   /// null = tiada gambar profil.
   final String? avatarUrl;
 
+  /// "pending"/"succeeded"/"failed", atau null. Backend cuma isi nilai
+  /// sebenar untuk management (lihat `registration_payment_status` di
+  /// `ListVisibleProfiles`) — ahli biasa dapat null, sama pola dengan
+  /// [email]. Ditambah 2026-08-15 supaya senarai kelulusan papar status
+  /// bayaran sebelum management tekan Luluskan.
+  final String? registrationPaymentStatus;
+
   factory MemberRow.fromJson(Map<String, dynamic> json) {
     return MemberRow(
       userId: json['user_id'] as String,
@@ -174,6 +195,7 @@ class MemberRow {
       category: (json['category'] as String?) ?? 'ahli',
       status: (json['status'] as String?) ?? 'pending',
       avatarUrl: json['avatar_url'] as String?,
+      registrationPaymentStatus: json['registration_payment_status'] as String?,
     );
   }
 }

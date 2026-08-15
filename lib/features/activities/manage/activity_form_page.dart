@@ -8,6 +8,7 @@ import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/activity_draft.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
+import 'package:marc/shared/widgets/app_action_sheet.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
@@ -264,7 +265,9 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
       if (!mounted) return false;
       MySnackBar.success(
         context,
-        patch.isEmpty ? 'Tiada perubahan untuk disimpan.' : 'Aktiviti dikemas kini.',
+        patch.isEmpty
+            ? 'Tiada perubahan untuk disimpan.'
+            : 'Aktiviti dikemas kini.',
       );
       return true;
     }
@@ -367,6 +370,33 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
     setState(() => s.endsAt = picked);
   }
 
+  /// Bottom sheet (bukan dropdown) — padanan pemilih role di
+  /// `members_page.dart`, guna semula `showAppActionSheet`.
+  Future<void> _pickCategory(List<ActivityCategory> rows) async {
+    if (rows.isEmpty) return;
+    final selected = await showAppActionSheet<ActivityCategory>(
+      context,
+      title: 'Pilih kategori',
+      actions: [
+        for (final c in rows)
+          AppSheetAction(
+            value: c,
+            label: c.name,
+            isSelected: c.id == _categoryId,
+          ),
+      ],
+    );
+    if (selected == null || !mounted) return;
+    setState(() => _categoryId = selected.id);
+  }
+
+  String _selectedCategoryName(List<ActivityCategory> rows) {
+    for (final c in rows) {
+      if (c.id == _categoryId) return c.name;
+    }
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -422,18 +452,35 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
           children: [
             if (a != null) _StatusBanner(activity: a),
 
-            _Label('Kategori'),
-            DropdownButtonFormField<String>(
-              initialValue: _categoryId,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Pilih kategori',
-              ),
-              items: [
-                for (final c in rows)
-                  DropdownMenuItem(value: c.id, child: Text(c.name)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _Label('Kategori'),
+                if (ref.watch(isManagerOrAboveProvider))
+                  TextButton(
+                    onPressed: () => context.push('/activities/categories'),
+                    child: const Text('Urus kategori'),
+                  ),
               ],
-              onChanged: (v) => setState(() => _categoryId = v),
+            ),
+            InkWell(
+              onTap: () => _pickCategory(rows),
+              child: InputDecorator(
+                // isEmpty MESTI ditetapkan — lalai InputDecorator ialah
+                // false, jadi hintText tak pernah dipapar langsung tanpanya
+                // (medan nampak kosong-kosong sahaja walaupun belum pilih).
+                isEmpty: _categoryId == null,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Pilih kategori',
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(_selectedCategoryName(rows))),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
+              ),
             ),
             if (categories.hasError)
               const Padding(

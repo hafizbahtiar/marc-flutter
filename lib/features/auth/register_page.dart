@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/auth/widgets/auth_field.dart';
 import 'package:marc/features/auth/widgets/button_busy.dart';
+import 'package:marc/shared/phone.dart';
 import 'package:marc/shared/validators.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
@@ -17,20 +18,42 @@ class RegisterPage extends ConsumerStatefulWidget {
 class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
+  final _phone = TextEditingController();
   final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
 
   @override
   void dispose() {
     _email.dispose();
+    _phone.dispose();
     _password.dispose();
+    _confirmPassword.dispose();
     super.dispose();
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Sahkan kata laluan diperlukan';
+    }
+    if (value != _password.text) {
+      return 'Kata laluan tidak sepadan';
+    }
+    return null;
   }
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    // Form validator (validatePhone) dah sahkan format — normalizeMY
+    // takkan pulang null di sini. Hantar bentuk TERNORMAL (bukan input
+    // mentah pengguna) supaya backend/ToyyibPay terima bentuk konsisten
+    // tak kira +60/60/0/dash/space yang ditaip.
     final ok = await ref
         .read(registerControllerProvider.notifier)
-        .submit(_email.text.trim(), _password.text);
+        .submit(
+          _email.text.trim(),
+          _password.text,
+          normalizeMY(_phone.text) ?? _phone.text.trim(),
+        );
     if (!mounted) return;
     if (ok) {
       // Tak perlu context.pop() — signUp() dah setTokens(), authNotifier
@@ -81,11 +104,27 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
                 const SizedBox(height: 16),
                 AuthField(
+                  controller: _phone,
+                  label: 'Nombor telefon',
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                  validator: validatePhone,
+                ),
+                const SizedBox(height: 16),
+                AuthField(
                   controller: _password,
                   label: 'Kata laluan',
                   icon: Icons.lock_outline,
                   obscureText: true,
                   validator: validatePassword,
+                ),
+                const SizedBox(height: 16),
+                AuthField(
+                  controller: _confirmPassword,
+                  label: 'Sahkan kata laluan',
+                  icon: Icons.lock_outline,
+                  obscureText: true,
+                  validator: _validateConfirmPassword,
                 ),
                 const SizedBox(height: 28),
                 FilledButton(

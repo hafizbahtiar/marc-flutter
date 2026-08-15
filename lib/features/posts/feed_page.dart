@@ -9,6 +9,8 @@ import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/registration_payment/registration_payment_providers.dart';
+import 'package:marc/shared/phone.dart';
+import 'package:marc/shared/validators.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
@@ -61,19 +63,24 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     // Guna .select dengan record supaya widget ni hanya rebuild bila
     // status ATAU emailVerified berubah — bukan pada sebarang field
     // Profile lain.
-    final (status: profileStatus, emailVerified: profileEmailVerified) = ref
-        .watch(
-          myProfileProvider.select(
-            (p) => (
-              status: p.valueOrNull?.status,
-              emailVerified: p.valueOrNull?.emailVerified,
-            ),
-          ),
-        );
+    final (
+      status: profileStatus,
+      emailVerified: profileEmailVerified,
+      registrationPaymentStatus: profileRegistrationPaymentStatus,
+    ) = ref.watch(
+      myProfileProvider.select(
+        (p) => (
+          status: p.valueOrNull?.status,
+          emailVerified: p.valueOrNull?.emailVerified,
+          registrationPaymentStatus: p.valueOrNull?.registrationPaymentStatus,
+        ),
+      ),
+    );
 
     if (profileStatus != null && profileStatus != 'approved') {
       return _PendingStatusView(
         status: profileStatus,
+        registrationPaymentStatus: profileRegistrationPaymentStatus,
         onRefresh: () async {
           try {
             final refreshed = await ref.refresh(myProfileProvider.future);
@@ -114,14 +121,16 @@ class _FeedPageState extends ConsumerState<FeedPage> {
             tooltip: 'Ahli',
             onPressed: () => context.push('/members'),
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: 'Notifikasi',
-            onPressed: () => context.push('/notifications'),
-          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        // heroTag unik WAJIB: StatefulShellRoute.indexedStack kekalkan
+        // semua tab yang pernah dilawati tetap mounted (simpan state),
+        // jadi FAB tab ni dan FAB ActivitiesPage (dua-dua default tag
+        // sebelum ni) wujud serentak dalam tree → Flutter Hero animation
+        // "multiple heroes share same tag" crash bila kedua-dua tab
+        // pernah dilawati dalam satu sesi.
+        heroTag: 'feed-fab',
         onPressed: () => context.push('/posts/new'),
         child: const Icon(Icons.add),
       ),
@@ -244,10 +253,18 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 }
 
 class _PendingStatusView extends ConsumerStatefulWidget {
-  const _PendingStatusView({required this.status, required this.onRefresh});
+  const _PendingStatusView({
+    required this.status,
+    required this.onRefresh,
+    this.registrationPaymentStatus,
+  });
 
   final String status;
   final Future<void> Function() onRefresh;
+
+  /// "pending"/"succeeded"/"failed", atau null kalau tak pernah cuba
+  /// bayar — lihat `Profile.registrationPaymentStatus`.
+  final String? registrationPaymentStatus;
 
   @override
   ConsumerState<_PendingStatusView> createState() =>
@@ -257,12 +274,43 @@ class _PendingStatusView extends ConsumerStatefulWidget {
 class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
   bool _submitting = false;
 
+  /// Papar dialog minta nombor telefon (ahli `pending` yang daftar
+  /// SEBELUM phone jadi wajib — lihat [PhoneRequiredException]). Pulang
+  /// nombor TERNORMAL (padanan `register_page.dart`) atau `null` kalau
+  /// dibatal/tak sah — caller MESTI berhenti (bukan cuba checkout lagi)
+  /// bila `null`.
+  Future<String?> _promptPhone() async {
+    final raw = await showEditTextDialog(
+      context,
+      title: 'Nombor Telefon',
+      initialValue: '',
+      maxLines: 1,
+    );
+    if (raw == null) return null; // dibatal
+    final error = validatePhone(raw);
+    if (error != null) {
+      if (!mounted) return null;
+      MySnackBar.error(context, error);
+      return null;
+    }
+    return normalizeMY(raw);
+  }
+
   Future<void> _payRegistrationFee() async {
     setState(() => _submitting = true);
     try {
-      final url = await ref
-          .read(registrationPaymentRepositoryProvider)
-          .checkout();
+      String url;
+      try {
+        url = await ref.read(registrationPaymentRepositoryProvider).checkout();
+      } on PhoneRequiredException {
+        if (!mounted) return;
+        final phone = await _promptPhone();
+        if (phone == null) return;
+        if (!mounted) return;
+        url = await ref
+            .read(registrationPaymentRepositoryProvider)
+            .checkout(phone: phone);
+      }
 
       // Padanan corak `RedirectCheckoutHandler.handle()`
       // (`lib/features/donation/donation_gateway.dart`): `Uri.tryParse`
@@ -333,8 +381,16 @@ class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
+                if (isPending && widget.registrationPaymentStatus != null) ...[
+                  const SizedBox(height: 12),
+                  _PaymentStatusChip(status: widget.registrationPaymentStatus!),
+                ],
                 const SizedBox(height: 20),
-                if (isPending) ...[
+                // Butang bayar disembunyikan bila SUDAH succeeded — tiada
+                // sebab bayar lagi, tinggal tunggu kelulusan pengurusan.
+                // Kekal untuk 'failed'/'pending'/null (belum cuba) supaya
+                // ahli boleh cuba/cuba semula.
+                if (isPending && widget.registrationPaymentStatus != 'succeeded') ...[
                   FilledButton(
                     onPressed: _submitting ? null : _payRegistrationFee,
                     child: _submitting
@@ -343,7 +399,11 @@ class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
                             width: 14,
                             child: CircularProgressIndicator.adaptive(),
                           )
-                        : const Text('Bayar Yuran Pendaftaran'),
+                        : Text(
+                            widget.registrationPaymentStatus == 'failed'
+                                ? 'Cuba Bayar Semula'
+                                : 'Bayar Yuran Pendaftaran',
+                          ),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -356,6 +416,53 @@ class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Isyarat visual status bayaran yuran pendaftaran — `pending`/`succeeded`/
+/// `failed`. Ditambah 2026-08-15: webhook ToyyibPay dah rekod hasil bayaran
+/// BETUL dalam DB sejak awal (gagal direkod gagal, berjaya direkod
+/// berjaya), tapi client tak pernah papar apa-apa, jadi ahli nampak
+/// "tiada apa berlaku" tak kira hasil sebenar.
+class _PaymentStatusChip extends StatelessWidget {
+  const _PaymentStatusChip({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final (icon, label, color) = switch (status) {
+      'succeeded' => (
+        Icons.check_circle_outline,
+        'Bayaran diterima — menunggu kelulusan pengurusan.',
+        theme.colorScheme.primary,
+      ),
+      'failed' => (
+        Icons.error_outline,
+        'Bayaran tidak berjaya. Sila cuba lagi.',
+        theme.colorScheme.error,
+      ),
+      _ => (
+        Icons.hourglass_top,
+        'Bayaran sedang disahkan — boleh ambil masa beberapa minit.',
+        theme.extension<AppSemanticColors>()!.warning,
+      ),
+    };
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(color: color),
+          ),
+        ),
+      ],
     );
   }
 }

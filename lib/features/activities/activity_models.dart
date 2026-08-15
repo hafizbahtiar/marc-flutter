@@ -77,6 +77,7 @@ class Activity {
     this.cancelledReason,
     this.attendanceThresholdPct = 100,
     this.certificatesIssuedAt,
+    this.feeCents = 0,
   });
 
   final String id;
@@ -111,6 +112,14 @@ class Activity {
   /// Bukan jaminan setiap failnya siap — penerbitan berlaku dalam dua
   /// fasa dan boleh disambung.
   final DateTime? certificatesIssuedAt;
+
+  /// Yuran aktiviti dalam sen. 0 = percuma. Pendaftaran aktiviti berbayar
+  /// tulis `payment_status='pending'` pada baris pendaftaran — status
+  /// bayaran sebenar (belum/dah dibayar) cuma didedahkan oleh
+  /// `GET /me/activities` (`MyRegistration.paymentStatus`), BUKAN respons
+  /// detail aktiviti ni — jadi medan ni hanya untuk tahu SAMA ADA perlu
+  /// bayar (untuk pandu ahli lepas daftar), bukan status bayaran semasa.
+  final int feeCents;
 
   bool get isFull => capacity != null && registrationCount >= capacity!;
   bool get registrationClosed => DateTime.now().isAfter(registrationClosesAt);
@@ -172,6 +181,7 @@ class Activity {
     cancelledReason: cancelledReason,
     attendanceThresholdPct: attendanceThresholdPct,
     certificatesIssuedAt: certificatesIssuedAt,
+    feeCents: feeCents,
   );
 
   /// `sessions` dan `is_registered` hanya wujud pada respons DETAIL
@@ -207,6 +217,7 @@ class Activity {
     certificatesIssuedAt: json['certificates_issued_at'] == null
         ? null
         : DateTime.parse(json['certificates_issued_at'] as String).toLocal(),
+    feeCents: (json['fee_cents'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -215,17 +226,27 @@ class ActivityCategory {
     required this.id,
     required this.key,
     required this.name,
+    this.sortOrder = 0,
+    this.isActive = true,
   });
 
   final String id;
   final String key;
   final String name;
+  final int sortOrder;
+
+  /// false = disembunyikan drpd borang cipta aktiviti (soft-delete —
+  /// `category_id` di `activities` ialah `on delete restrict`, jadi
+  /// kategori yang sudah digunakan TIDAK BOLEH dipadam terus).
+  final bool isActive;
 
   factory ActivityCategory.fromJson(Map<String, dynamic> json) =>
       ActivityCategory(
         id: json['id'] as String,
         key: json['key'] as String,
         name: json['name'] as String,
+        sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
+        isActive: (json['is_active'] as bool?) ?? true,
       );
 }
 
@@ -246,6 +267,7 @@ class MyRegistration {
     required this.endsAt,
     required this.activityStatus,
     required this.categoryName,
+    this.paymentStatus = 'not_required',
   });
 
   final String id;
@@ -261,7 +283,21 @@ class MyRegistration {
   final String activityStatus;
   final String categoryName;
 
+  /// Status yuran AKTIVITI (bukan yuran pendaftaran ahli) — lajur
+  /// `activity_registrations.payment_status`, satu daripada
+  /// `not_required` (percuma), `pending` (belum bayar), `paid`,
+  /// `refunded`. Lalai `not_required` untuk keserasian ke belakang kalau
+  /// medan tiada dalam respons lama.
+  final String paymentStatus;
+
   bool get isCancelled => activityStatus == 'cancelled';
+
+  /// Yuran aktiviti ini belum dibayar — butang "Bayar Yuran Aktiviti"
+  /// patut dipapar.
+  bool get feeUnpaid => paymentStatus == 'pending';
+
+  /// Yuran aktiviti ini sudah dibayar.
+  bool get feePaid => paymentStatus == 'paid';
 
   /// Aktiviti ini sudah lepas pada [now].
   ///
@@ -290,6 +326,7 @@ class MyRegistration {
     endsAt: DateTime.parse(json['ends_at'] as String).toLocal(),
     activityStatus: json['activity_status'] as String,
     categoryName: (json['category_name'] as String?) ?? '',
+    paymentStatus: (json['payment_status'] as String?) ?? 'not_required',
   );
 }
 

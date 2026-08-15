@@ -7,6 +7,7 @@ import 'package:marc/features/activities/activity_format.dart';
 import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
+import 'package:marc/shared/widgets/approval_gate.dart';
 
 /// Baris hantu untuk Skeletonizer semasa memuat — corak sama dengan
 /// `_placeholderRow` dalam members_page.dart.
@@ -28,14 +29,28 @@ final _placeholderActivity = Activity(
   isRegistered: false,
 );
 
-class ActivitiesPage extends ConsumerStatefulWidget {
+/// Gate `approved` (padanan `approved.GET("/activities")` backend) diletak
+/// DI LUAR isi kandungan sebenar — sama rasional dengan
+/// `NotificationsPage` (lihat komen di sana): provider aktiviti hanya
+/// di-watch bila `_ActivitiesContent` betul-betul dibina, elak panggilan
+/// 403 langsung untuk ahli `pending`.
+class ActivitiesPage extends StatelessWidget {
   const ActivitiesPage({super.key});
 
   @override
-  ConsumerState<ActivitiesPage> createState() => _ActivitiesPageState();
+  Widget build(BuildContext context) {
+    return const ApprovalGate(title: 'Aktiviti', child: _ActivitiesContent());
+  }
 }
 
-class _ActivitiesPageState extends ConsumerState<ActivitiesPage> {
+class _ActivitiesContent extends ConsumerStatefulWidget {
+  const _ActivitiesContent();
+
+  @override
+  ConsumerState<_ActivitiesContent> createState() => _ActivitiesPageState();
+}
+
+class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
   final _scrollController = ScrollController();
 
   @override
@@ -69,6 +84,8 @@ class _ActivitiesPageState extends ConsumerState<ActivitiesPage> {
     return Scaffold(
       floatingActionButton: isManagement
           ? FloatingActionButton.extended(
+              // heroTag unik — lihat komen padanan di feed_page.dart.
+              heroTag: 'activities-fab',
               onPressed: () => context.push('/activities/new'),
               icon: const Icon(Icons.add),
               label: const Text('Aktiviti'),

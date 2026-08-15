@@ -256,6 +256,10 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
       // butang yang membuka kamera tanpa sasaran hanya boleh mengecewakan
       // selepas imbasan pertama.
       floatingActionButton: FloatingActionButton.extended(
+        // heroTag unik — lihat komen padanan di feed_page.dart (elak
+        // clash Hero dgn FAB tab shell yang tetap mounted di belakang
+        // route push ni).
+        heroTag: 'registrations-fab',
         onPressed: selected == null ? null : () => _openScanner(selected),
         icon: const Icon(Icons.qr_code_scanner),
         label: const Text('Imbas QR'),

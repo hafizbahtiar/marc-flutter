@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/features/notifications/notifications_providers.dart';
 import 'package:marc/features/posts/post_models.dart';
+import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
+import 'package:marc/shared/widgets/approval_gate.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 /// Teks sandaran untuk jenis notifikasi yang klien ini belum kenal.
@@ -97,14 +99,34 @@ String? notificationDestination(AppNotification n) {
   return null;
 }
 
-class NotificationsPage extends ConsumerStatefulWidget {
+/// Gate `approved` + email disahkan (padanan `verified.GET("/notifications")`
+/// backend) diletak DI LUAR isi kandungan sebenar — provider notifikasi
+/// (dan panggilan API-nya) hanya di-watch bila `_NotificationsContent`
+/// betul-betul dibina oleh Flutter, iaitu bila ApprovalGate lulus. Ahli
+/// `pending` yang tekan tab Notifikasi TAK sampai cetus panggilan 403
+/// langsung, bukan setakat sembunyikan ralatnya.
+class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
 
   @override
-  ConsumerState<NotificationsPage> createState() => _NotificationsPageState();
+  Widget build(BuildContext context) {
+    return const ApprovalGate(
+      title: 'Notifikasi',
+      requireVerifiedEmail: true,
+      child: _NotificationsContent(),
+    );
+  }
 }
 
-class _NotificationsPageState extends ConsumerState<NotificationsPage> {
+class _NotificationsContent extends ConsumerStatefulWidget {
+  const _NotificationsContent();
+
+  @override
+  ConsumerState<_NotificationsContent> createState() =>
+      _NotificationsPageState();
+}
+
+class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
   final _scrollController = ScrollController();
 
   @override
@@ -130,6 +152,16 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     final notifications = ref.watch(notificationsProvider);
+    // Ditambah 2026-08-15: pintasan "Ahli Pending" letak di kepala senarai
+    // notifikasi, bukan cuma ikon dalam AppBar Ahli — ahli biasa langsung
+    // tak `watch` pendingMembersProvider (elak panggilan API sia-sia),
+    // management nampak kiraan terus tanpa kena pergi ke tab Ahli dahulu.
+    final isManagement = ref.watch(
+      myProfileProvider.select((p) => p.valueOrNull?.isManagement ?? false),
+    );
+    final pendingCount = isManagement
+        ? ref.watch(pendingMembersProvider).valueOrNull?.length ?? 0
+        : 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -170,12 +202,16 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
             ),
           ),
           data: (state) {
+            final headerOffset = isManagement ? 1 : 0;
+
             if (state.items.isEmpty) {
               return RefreshIndicator.adaptive(
                 onRefresh: () =>
                     ref.read(notificationsProvider.notifier).refresh(),
                 child: ListView(
                   children: [
+                    if (isManagement)
+                      _PendingMembersHeader(count: pendingCount),
                     Padding(
                       padding: const EdgeInsets.all(28),
                       child: Column(
@@ -206,10 +242,16 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                   ref.read(notificationsProvider.notifier).refresh(),
               child: ListView.separated(
                 controller: _scrollController,
-                itemCount: state.items.length + (state.hasMore ? 1 : 0),
+                itemCount:
+                    headerOffset + state.items.length + (state.hasMore ? 1 : 0),
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, i) {
-                  if (i >= state.items.length) {
+                  if (isManagement && i == 0) {
+                    return _PendingMembersHeader(count: pendingCount);
+                  }
+                  final idx = i - headerOffset;
+
+                  if (idx >= state.items.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
                       child: Center(
@@ -218,9 +260,12 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                     );
                   }
 
-                  final n = state.items[i];
+                  final n = state.items[idx];
                   return ListTile(
-                    leading: Icon(notificationIcon(n), color: notificationColor(context, n)),
+                    leading: Icon(
+                      notificationIcon(n),
+                      color: notificationColor(context, n),
+                    ),
                     title: Text(
                       notificationTitle(n),
                       style: TextStyle(
@@ -264,6 +309,35 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Kepala kumpulan "Ahli Pending" — pintasan ke `/members/pending`,
+/// management sahaja. Sengaja diletak SEBAGAI baris pertama senarai
+/// notifikasi (bukan widget berasingan di luar list) supaya ia turut
+/// gulung bersama & ikut RefreshIndicator yang sama. Nombor badge cuma
+/// dipapar bila ada ahli menunggu — baris ini kekal kelihatan walau
+/// kiraan sifar, jadi ia sentiasa jadi laluan pantas untuk management.
+class _PendingMembersHeader extends StatelessWidget {
+  const _PendingMembersHeader({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(Icons.person_add_alt_outlined, color: scheme.primary),
+      title: const Text('Ahli Menunggu Kelulusan'),
+      trailing: count > 0
+          ? Badge(
+              label: Text('$count'),
+              backgroundColor: scheme.error,
+              textColor: scheme.onError,
+            )
+          : const Icon(Icons.chevron_right),
+      onTap: () => context.push('/members/pending'),
     );
   }
 }

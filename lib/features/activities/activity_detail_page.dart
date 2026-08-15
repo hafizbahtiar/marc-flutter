@@ -30,7 +30,25 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
     setState(() => _busy = false);
 
     if (result.isOk) {
-      MySnackBar.success(context, 'Pendaftaran berjaya.');
+      // Aktiviti berbayar tulis payment_status='pending' pada pendaftaran
+      // (registerTx, backend) — tapi ahli tak nampak status tu di skrin
+      // ni langsung (respons detail tak dedahkan payment_status, cuma
+      // GET /me/activities). Tanpa mesej ni, ahli fikir pendaftaran dah
+      // "siap" dan tak sedar duit masih perlu dibayar, sehingga
+      // pendaftaran mereka DIBATAL sapuan latar sebab tak sempat bayar.
+      // Bukan repair penuh (idealnya skrin ni sendiri nampak status
+      // bayaran), tapi minimum yang perlu supaya kewajipan bayar tak
+      // "senyap" tepat pada saat ia tercipta.
+      final activity = ref.read(activityDetailProvider(widget.activityId)).valueOrNull;
+      if (activity != null && activity.feeCents > 0) {
+        MySnackBar.success(
+          context,
+          'Pendaftaran berjaya. Aktiviti ini berbayar — sila selesaikan '
+          'bayaran di "Aktiviti Saya" untuk kekalkan tempat anda.',
+        );
+      } else {
+        MySnackBar.success(context, 'Pendaftaran berjaya.');
+      }
     } else {
       // Termasuk 409 — "aktiviti sudah penuh" / "anda sudah berdaftar" /
       // "pendaftaran telah ditutup". Mesej datang terus dari backend dalam
