@@ -8,7 +8,7 @@
 #   3) flutter pub get       (auto)
 #   4) build_runner          (jika dipilih & tersedia)
 #   5) build APK / AAB
-#   6) salin + rename output ke  {nama_app}-{YYYYMMDD}({build}).{ext}
+#   6) salin + rename output ke  {nama_app}-{YYYY-MM-DD}-{version}({build}).{ext}
 #
 set -euo pipefail
 
@@ -106,9 +106,9 @@ if [[ ! -f "$SRC" ]]; then
   exit 1
 fi
 
-DATE="$(date +%Y%m%d)"
+DATE="$(date +%Y-%m-%d)"
 OUT_DIR="$ARTIFACT"
-DEST="${OUT_DIR}/${APP_NAME}-${DATE}(${NEW_BUILD}).${EXT}"
+DEST="${OUT_DIR}/${APP_NAME}-${DATE}-${NEW_NAME}(${NEW_BUILD}).${EXT}"
 
 mkdir -p "$OUT_DIR"
 cp "$SRC" "$DEST"
