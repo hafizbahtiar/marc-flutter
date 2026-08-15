@@ -2,12 +2,15 @@
 
 Status: **jalan hujung-ke-hujung dengan pembayaran sebenar** (kad;
 FPX belum diuji — lihat "Yang belum"). Ni bahagian **Stripe sahaja**
-drpd payment module — yuran ahli (ToyyibPay) dan donation <RM500
-(SociaBuzz) belum start.
+drpd payment module — yuran pendaftaran ahli + yuran aktiviti
+(ToyyibPay, gateway kod siap+disahkan sandbox, belum wired — lihat
+`PAYMENT-TOYYIB.md`) dan donation <RM500 (SociaBuzz, belum start) lain.
 
-## Kenapa dua akaun berasingan
+## Kenapa dua/tiga akaun berasingan
 
-- **ToyyibPay** — untuk yuran ahli (belum start). Bukan skop dokumen ni.
+- **ToyyibPay** — untuk yuran pendaftaran ahli (sekali bayar) + yuran
+  aktiviti berbayar. Gateway kod siap, belum wired ke handler. Bukan
+  skop dokumen ni, lihat `PAYMENT-TOYYIB.md`.
 - **Stripe** — akaun **peribadi** (pemaju app), untuk "Sokong MARC".
   Amount ≥RM500 guna Stripe; <RM500 akan guna SociaBuzz (belum wired).
   Currency **MYR sahaja** — elak isu penukaran mata wang.
@@ -443,7 +446,9 @@ recreate endpoint**, semak log server dulu (`donations.go` webhook
       sentiasa pulang Stripe tak kira amount.
 - [ ] **SociaBuzz** — belum research langsung: ada API/webhook rasmi untuk
       verify pembayaran, atau manual sahaja?
-- [ ] **ToyyibPay** (yuran ahli + gate feed) — belum start.
+- [ ] **ToyyibPay** (yuran pendaftaran ahli sekali bayar + yuran
+      aktiviti) — gateway kod siap+disahkan sandbox, belum wired. Lihat
+      `PAYMENT-TOYYIB.md`.
 - [ ] **Ujian automatik untuk `donation_page.dart`** — setakat ni bergantung
       pada `flutter analyze` + ujian sebenar pada peranti.
 

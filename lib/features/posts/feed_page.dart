@@ -8,9 +8,11 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/features/registration_payment/registration_payment_providers.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
@@ -241,15 +243,71 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   }
 }
 
-class _PendingStatusView extends StatelessWidget {
+class _PendingStatusView extends ConsumerStatefulWidget {
   const _PendingStatusView({required this.status, required this.onRefresh});
 
   final String status;
   final Future<void> Function() onRefresh;
 
   @override
+  ConsumerState<_PendingStatusView> createState() =>
+      _PendingStatusViewState();
+}
+
+class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
+  bool _submitting = false;
+
+  Future<void> _payRegistrationFee() async {
+    setState(() => _submitting = true);
+    try {
+      final url = await ref
+          .read(registrationPaymentRepositoryProvider)
+          .checkout();
+
+      // Padanan corak `RedirectCheckoutHandler.handle()`
+      // (`lib/features/donation/donation_gateway.dart`): `Uri.tryParse`
+      // (bukan `Uri.parse`, elak `FormatException` tak ditangkap), skim
+      // dihadkan `https` sahaja, `launchUrl` external + semak nilai bool.
+      final uri = Uri.tryParse(url);
+      if (uri == null || uri.scheme != 'https') {
+        if (!mounted) return;
+        MySnackBar.error(context, 'Pautan pembayaran tidak sah.');
+        return;
+      }
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened) {
+        if (!mounted) return;
+        MySnackBar.error(context, 'Gagal buka laman pembayaran.');
+        return;
+      }
+
+      if (!mounted) return;
+      MySnackBar.success(
+        context,
+        'Selesaikan pembayaran dalam pelayar, kemudian tekan "Semak semula" di sini.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal proses pembayaran. Cuba lagi.',
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isRejected = status == 'rejected';
+    final isRejected = widget.status == 'rejected';
+    // Eksplisit 'pending' (bukan `!isRejected`) untuk butang bayar — kalau
+    // status baharu ditambah kelak (bukan pending/rejected/approved), ia
+    // jatuh ke cabang "sedang disemak" (isRejected=false) tapi TAK patut
+    // automatik nampak butang bayar tanpa disemak dulu sama ada ia
+    // relevan (Opus verify 2026-08-15).
+    final isPending = widget.status == 'pending';
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('MARC')),
@@ -276,8 +334,21 @@ class _PendingStatusView extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 20),
+                if (isPending) ...[
+                  FilledButton(
+                    onPressed: _submitting ? null : _payRegistrationFee,
+                    child: _submitting
+                        ? const SizedBox(
+                            height: 14,
+                            width: 14,
+                            child: CircularProgressIndicator.adaptive(),
+                          )
+                        : const Text('Bayar Yuran Pendaftaran'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 OutlinedButton(
-                  onPressed: onRefresh,
+                  onPressed: widget.onRefresh,
                   child: const Text('Semak semula'),
                 ),
               ],

@@ -2,17 +2,42 @@
 
 Kerja yang **belum siap** sahaja. Sejarah penuh ada dalam git log.
 Corak wajib + gotcha platform: [`README.md`](./README.md).
-Aliran donation: [`PAYMENT-STRIPE.md`](./PAYMENT-STRIPE.md).
+Aliran donation Stripe: [`PAYMENT-STRIPE.md`](./PAYMENT-STRIPE.md).
+Aliran ToyyibPay (kajian API siap, kod belum): [`PAYMENT-TOYYIB.md`](./PAYMENT-TOYYIB.md).
 Backend: `../marc_go/TODO.md`.
 
 ---
 
 ## Ciri belum start
 
-- [ ] **Yuran ahli (ToyyibPay) + SociaBuzz (<RM500)** — backend pun belum.
-      Bila ToyyibPay siap, perlu skrin dues-status/gate baharu (ikut pattern
-      `_EmailNotVerifiedView` / `_PendingStatusView` dalam `feed_page.dart`).
-      `RedirectCheckoutHandler` dah sedia untuk gateway hosted-redirect.
+- [ ] **ToyyibPay: yuran pendaftaran ahli (sekali bayar) + yuran
+      aktiviti berbayar** — **BUKAN** "yuran ahli berulang"/dues (framing
+      lama dibetulkan 2026-08-15, sesi 3). Gateway kod **siap +
+      disahkan sandbox sebenar** (`marc_go/internal/payment/
+      toyyibpay.go`), lihat `PAYMENT-TOYYIB.md` untuk status penuh —
+      belum diwiring ke handler/route Flutter atau backend.
+
+      Isu reka bentuk paling penting: **ToyyibPay tiada sah callback
+      kriptografi** yang boleh dipercayai (dua sumber sekunder bagi
+      formula `hash` bercanggah) — backend poll `getBillTransactions`
+      untuk sahkan status, bukan percaya body callback terus (butiran
+      penuh dalam `PAYMENT-TOYYIB.md` dan `../marc_go/TODO.md`).
+
+      Bila sisi backend siap, perlu skrin baharu di sini: (1) langkah
+      bayar dalam aliran daftar ahli baharu (lokasi tepat — sebelum atau
+      selepas giliran kelulusan management — masih keputusan produk
+      terbuka), (2) langkah bayar pada pendaftaran aktiviti berbayar
+      (`activity_detail_page.dart`, ikut pattern skrin dues-status/gate
+      sedia ada macam `_EmailNotVerifiedView`/`_PendingStatusView` dalam
+      `feed_page.dart`).
+
+      `RedirectCheckoutHandler` dah sedia untuk gateway hosted-redirect
+      (disahkan https-only selepas audit 2026-08-15) — tak perlu ubah
+      bila endpoint backend sedia.
+
+      SociaBuzz (<RM500, donation) ialah gateway **BERASINGAN**, belum
+      diresearch — jangan keliru dengan ToyyibPay, dua guna kes/akaun
+      berbeza.
 
 ## Keputusan produk — belum diputuskan
 
@@ -283,6 +308,40 @@ yang sangat sedikit (fikir sen sebulan pada ratusan ahli). Berbaloi
 banding dengan kos: gangguan UX, kelulusan dasar AdMob, dan SDK iklan yang
 mengumpul data peranti ahli. Sumbangan mungkin sesuai dengan komuniti ni
 lebih baik daripada iklan.
+
+## Audit menyeluruh `lib/` (2026-08-15) — semua DIBAIKI
+
+Audit Opus berskop penuh atas `lib/`. Direkod supaya tidak diburu semula
+sebagai penemuan baharu — semua enam sudah dibaiki dan disahkan
+(`flutter analyze` bersih, 219/219 ujian lulus).
+
+- [x] **Storan token pecah kekal selepas Android backup/restore.**
+      `TokenStorage` tiada `AndroidOptions` eksplisit → default
+      `encryptedSharedPreferences: false`, dan `AndroidManifest.xml` tiada
+      `allowBackup="false"` → fail token disandar Google cloud, dipulih ke
+      peranti dengan kunci Keystore lain → setiap bacaan lepas itu throw
+      `PlatformException` yang tersasar daripada catch block sedia ada →
+      login gagal senyap selama-lamanya, satu-satunya pemulihan ialah clear
+      app data. Dibaiki: `AndroidOptions(encryptedSharedPreferences: true,
+      resetOnError: true)`, `allowBackup="false"`, `api_client.dart` dan
+      `auth_service.dart` kini tangkap `PlatformException` khusus dan cuba
+      `deleteAll()` + retry sekali sebelum mesej ralat generik.
+- [x] **`RedirectCheckoutHandler` lancar URL tanpa sahkan scheme.** Latent
+      (Stripe sahaja sekarang) tapi laluan sedia untuk ToyyibPay. Dibaiki:
+      `Uri.tryParse` + semakan `scheme == 'https'` dalam
+      `donation_gateway.dart` dan `my_certificates_page.dart`.
+- [x] **ID notifikasi disuntik mentah ke route string.** `activityId`/
+      `postId` boleh bawa `/`, `%`, `?`, `#`. Dibaiki: `Uri.encodeComponent`
+      dalam `notifications_page.dart`.
+- [x] **Debounce scanner catat cuba, bukan berjaya.** Kegagalan network
+      buat pengimbas nampak beku 3 saat pada kod sama. Dibaiki:
+      `ScanDebouncer.evict()` dipanggil bila `result.kind == network`.
+- [x] **Banner scan papar `display_name` mentah** — nama panjang/multi-baris
+      herot banner di pintu. Dibaiki: `_sanitizeName` (potong newline,
+      truncate 40 aksara).
+- [x] **Logout tak clear cache gambar disk.** Peranti kongsi warisi gambar
+      ahli sebelumnya. Dibaiki: `clearMemoryImageCache()` +
+      `clearDiskCachedImages()` dalam `signOut()`.
 
 ## Jurang ujian
 
