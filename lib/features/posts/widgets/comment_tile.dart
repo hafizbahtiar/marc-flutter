@@ -203,6 +203,9 @@ class _CommentRow extends ConsumerWidget {
                 Row(
                   children: [
                     InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      splashColor: scheme.error.withValues(alpha: 0.15),
+                      highlightColor: scheme.error.withValues(alpha: 0.08),
                       onTap: () async {
                         try {
                           await ref
@@ -218,32 +221,55 @@ class _CommentRow extends ConsumerWidget {
                           }
                         }
                       },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            comment.likedByMe
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            size: 15,
-                            color: comment.likedByMe
-                                ? scheme.error
-                                : scheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            comment.likeCount.toString(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: comment.likedByMe
-                                  ? scheme.error
-                                  : scheme.onSurfaceVariant,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 2,
+                          vertical: 2,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 22,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: comment.likedByMe
+                                    ? scheme.error.withValues(alpha: 0.12)
+                                    : null,
+                              ),
+                              child: Icon(
+                                comment.likedByMe
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 14,
+                                color: comment.likedByMe
+                                    ? scheme.error
+                                    : scheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                        ],
+                            if (comment.likeCount > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: Text(
+                                  comment.likeCount.toString(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: comment.likedByMe
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                    color: comment.likedByMe
+                                        ? scheme.error
+                                        : scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     InkWell(
                       onTap: onReply,
                       child: Text(

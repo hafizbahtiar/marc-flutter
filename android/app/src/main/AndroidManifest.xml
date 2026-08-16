@@ -1,86 +1,62 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Diperlukan untuk Supabase & OneSignal dalam build release
+  <!-- Diperlukan untuk Supabase & OneSignal dalam build release
          (manifest debug/profile ada sendiri, main mesti ada juga). -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Android 13+ : prompt kebenaran notifikasi OneSignal. -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- Kebenaran galeri untuk lampiran gambar post: READ_MEDIA_IMAGES
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <!-- Android 13+ : prompt kebenaran notifikasi OneSignal. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <!-- Kebenaran galeri untuk lampiran gambar post: READ_MEDIA_IMAGES
          (Android 13+) dan READ_EXTERNAL_STORAGE untuk versi lebih lama. -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"/>
-
-    <application
-        android:label="MARC"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:allowBackup="false">
-        <!-- allowBackup="false": Android Auto Backup lain masa upload
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+  <application android:label="@string/app_name" android:name="${applicationName}" android:icon="@mipmap/ic_launcher" android:allowBackup="false">
+    <!-- allowBackup="false": Android Auto Backup lain masa upload
              FlutterSecureStorage.xml ke cloud tapi bukan kunci Keystore
              yang bungkus dia — restore pada peranti baru/lepas Keystore
              invalid bawa blob yang tak boleh dinyahsulit langsung
              (PlatformException bila baca). Tiada data lain app ni yang
              perlu Auto Backup. -->
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
-            android:enableOnBackInvokedCallback="true"
-            android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
-            <!-- Specifies an Android theme to apply to this Activity as soon as
+    <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:taskAffinity="" android:enableOnBackInvokedCallback="true" android:theme="@style/LaunchTheme" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
+      <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues
                  to determine the Window background behind the Flutter UI. -->
-            <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-            <!-- Redirect balik ke app lepas payment method FPX (bank
+      <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme"/>
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+      <!-- Redirect balik ke app lepas payment method FPX (bank
                  Malaysia) authenticate di luar app — Stripe.urlScheme
                  'marc' (lib/app/stripe.dart) mesti padan scheme sini. -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="marc" android:host="stripe-redirect"/>
-            </intent-filter>
-        </activity>
-        <!-- Don't delete the meta-data below.
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="marc" android:host="stripe-redirect"/>
+      </intent-filter>
+    </activity>
+    <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
-        <meta-data
-            android:name="flutterEmbedding"
-            android:value="2" />
-        <!-- Diperlukan Stripe PaymentSheet (Google Pay integration dalaman
+    <meta-data android:name="flutterEmbedding" android:value="2"/>
+    <!-- Diperlukan Stripe PaymentSheet (Google Pay integration dalaman
              SDK, walaupun kita tak expose Google Pay button terus). -->
-        <meta-data
-            android:name="com.google.android.gms.wallet.api.enabled"
-            android:value="true" />
-    </application>
-    <!-- Required to query activities that can process text, see:
+    <meta-data android:name="com.google.android.gms.wallet.api.enabled" android:value="true"/>
+  </application>
+  <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
-        </intent>
-        <!-- Diperlukan url_launcher (Android 11+ package visibility) untuk
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.PROCESS_TEXT"/>
+      <data android:mimeType="text/plain"/>
+    </intent>
+    <!-- Diperlukan url_launcher (Android 11+ package visibility) untuk
              buka pautan https, contoh pautan pembangun di About page. -->
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="https"/>
-        </intent>
-    </queries>
+    <intent>
+      <action android:name="android.intent.action.VIEW"/>
+      <data android:scheme="https"/>
+    </intent>
+  </queries>
 </manifest>

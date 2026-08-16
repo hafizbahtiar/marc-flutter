@@ -131,7 +131,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   onPressed: loading ? null : _submit,
                   child: loading
                       ? const ButtonBusy(label: 'Sedang daftar…')
-                      : const Text('Daftar  →'),
+                      : const Text('Daftar →'),
                 ),
                 const SizedBox(height: 20),
                 Row(

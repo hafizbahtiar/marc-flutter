@@ -31,6 +31,7 @@ import 'package:marc/features/profile/about_page.dart';
 import 'package:marc/features/profile/edit_profile_page.dart';
 import 'package:marc/features/profile/faq_page.dart';
 import 'package:marc/features/profile/profile_page.dart';
+import 'package:marc/shared/widgets/web_view_page.dart';
 
 /// Adapter: dengar perubahan authNotifierProvider, notify GoRouter untuk
 /// refresh redirect. Gantian `GoRouterRefreshStream` yang dulu dengar
@@ -75,6 +76,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/about', builder: (_, _) => const AboutPage()),
       GoRoute(path: '/faq', builder: (_, _) => const FaqPage()),
+      GoRoute(
+        path: '/legal/:doc',
+        builder: (_, state) {
+          final doc = state.pathParameters['doc']!;
+          final title = switch (doc) {
+            'terma-dan-syarat' => 'Terma & Syarat',
+            'dasar-privasi' => 'Dasar Privasi',
+            _ => 'Dokumen',
+          };
+          return WebViewPage(
+            title: title,
+            url: 'https://marc.hafizbahtiar.com/$doc',
+          );
+        },
+      ),
       GoRoute(path: '/donate', builder: (_, _) => const DonationPage()),
       GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
       GoRoute(path: '/audit-logs', builder: (_, _) => const AuditPage()),

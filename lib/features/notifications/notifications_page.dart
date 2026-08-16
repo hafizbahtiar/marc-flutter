@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:marc/app/router.dart';
 import 'package:marc/features/notifications/notifications_providers.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/profile/profile_providers.dart';
@@ -104,6 +105,37 @@ String? notificationDestination(AppNotification n) {
   return null;
 }
 
+/// Label kumpulan tarikh ("Hari ini" / "Semalam" / "Lebih awal") — padanan
+/// hari kalendar TEMPATAN, bukan selang 24 jam (notifikasi 11pm semalam
+/// dan 1am hari ini tak patut sekumpulan).
+String _dateBucket(DateTime createdAt) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final local = createdAt.toLocal();
+  final day = DateTime(local.year, local.month, local.day);
+  final diff = today.difference(day).inDays;
+  if (diff == 0) return 'Hari ini';
+  if (diff == 1) return 'Semalam';
+  return 'Lebih awal';
+}
+
+/// Ratakan senarai notifikasi kepada label kumpulan + notifikasi tersusun
+/// ikut tarikh, supaya `itemBuilder` tak perlu kira semula kumpulan bagi
+/// setiap baris.
+List<Object> _groupByDate(List<AppNotification> items) {
+  final entries = <Object>[];
+  String? lastBucket;
+  for (final n in items) {
+    final bucket = _dateBucket(n.createdAt);
+    if (bucket != lastBucket) {
+      entries.add(bucket);
+      lastBucket = bucket;
+    }
+    entries.add(n);
+  }
+  return entries;
+}
+
 /// Gate `approved` + email disahkan (padanan `verified.GET("/notifications")`
 /// backend) diletak DI LUAR isi kandungan sebenar — provider notifikasi
 /// (dan panggilan API-nya) hanya di-watch bila `_NotificationsContent`
@@ -168,20 +200,27 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
         ? ref.watch(pendingMembersProvider).valueOrNull?.length ?? 0
         : 0;
 
+    final hasUnread =
+        notifications.valueOrNull?.items.any((n) => !n.read) ?? false;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifikasi'),
         actions: [
           TextButton(
-            onPressed: () async {
-              try {
-                await ref.read(notificationRepositoryProvider).markAllRead();
-              } catch (_) {
-                if (context.mounted) {
-                  MySnackBar.error(context, 'Gagal tanda semua dibaca.');
-                }
-              }
-            },
+            onPressed: hasUnread
+                ? () async {
+                    try {
+                      await ref
+                          .read(notificationRepositoryProvider)
+                          .markAllRead();
+                    } catch (_) {
+                      if (context.mounted) {
+                        MySnackBar.error(context, 'Gagal tanda semua dibaca.');
+                      }
+                    }
+                  }
+                : null,
             child: const Text('Tanda semua dibaca'),
           ),
         ],
@@ -208,6 +247,7 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
           ),
           data: (state) {
             final headerOffset = isManagement ? 1 : 0;
+            final entries = _groupByDate(state.items);
 
             if (state.items.isEmpty) {
               return RefreshIndicator.adaptive(
@@ -245,18 +285,17 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
             return RefreshIndicator.adaptive(
               onRefresh: () =>
                   ref.read(notificationsProvider.notifier).refresh(),
-              child: ListView.separated(
+              child: ListView.builder(
                 controller: _scrollController,
                 itemCount:
-                    headerOffset + state.items.length + (state.hasMore ? 1 : 0),
-                separatorBuilder: (_, _) => const Divider(height: 1),
+                    headerOffset + entries.length + (state.hasMore ? 1 : 0),
                 itemBuilder: (context, i) {
                   if (isManagement && i == 0) {
                     return _PendingMembersHeader(count: pendingCount);
                   }
                   final idx = i - headerOffset;
 
-                  if (idx >= state.items.length) {
+                  if (idx >= entries.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
                       child: Center(
@@ -265,8 +304,19 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
                     );
                   }
 
-                  final n = state.items[idx];
+                  final entry = entries[idx];
+                  if (entry is String) {
+                    return _SectionHeader(entry);
+                  }
+
+                  final n = entry as AppNotification;
+                  final scheme = Theme.of(context).colorScheme;
                   return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 4,
+                    ),
+                    tileColor: n.read ? null : scheme.surfaceContainerHighest,
                     leading: Icon(
                       notificationIcon(n),
                       color: notificationColor(context, n),
@@ -280,16 +330,6 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
                       ),
                     ),
                     subtitle: Text(relativeTime(n.createdAt)),
-                    trailing: n.read
-                        ? null
-                        : Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
                     onTap: () async {
                       if (!n.read) {
                         try {
@@ -303,8 +343,16 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
                         }
                       }
                       final destination = notificationDestination(n);
-                      if (destination != null && context.mounted) {
-                        context.push(destination);
+                      // `ref.read(routerProvider)` terus, BUKAN
+                      // `context.push` — baris ni bukan sinkron dengan
+                      // ketukan: `await markRead` di atas boleh buat list
+                      // notifikasi rebuild (bacaan berubah), dan context
+                      // ListTile ni boleh jadi lapuk sebelum sampai sini.
+                      // `GoRouter` instance tak bergantung pada context
+                      // yang mana, padanan corak sama di
+                      // `push_service.dart` untuk ketukan notifikasi OS.
+                      if (destination != null) {
+                        ref.read(routerProvider).push(destination);
                       }
                     },
                   );
@@ -334,7 +382,7 @@ class _PendingMembersHeader extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
       leading: Icon(Icons.person_add_alt_outlined, color: scheme.primary),
-      title: const Text('Ahli Menunggu Kelulusan'),
+      title: const Text('Ahli Pending'),
       trailing: count > 0
           ? Badge(
               label: Text('$count'),
@@ -343,6 +391,30 @@ class _PendingMembersHeader extends StatelessWidget {
             )
           : const Icon(Icons.chevron_right),
       onTap: () => context.push('/members/pending'),
+    );
+  }
+}
+
+/// Label kumpulan tarikh ("Hari ini" / "Semalam" / "Lebih awal") — gaya
+/// disalin (bukan dikongsi) daripada `_SectionHeader` di
+/// `payment_history_page.dart`; kedua-dua widget itu private kepada fail
+/// masing-masing.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

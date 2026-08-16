@@ -113,16 +113,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     final feed = ref.watch(feedProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('MARC'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.groups_outlined),
-            tooltip: 'Ahli',
-            onPressed: () => context.push('/members'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('MARC')),
       floatingActionButton: FloatingActionButton(
         // heroTag unik WAJIB: StatefulShellRoute.indexedStack kekalkan
         // semua tab yang pernah dilawati tetap mounted (simpan state),
@@ -190,6 +181,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 
                   final post = state.posts[index];
                   return PostCard(
+                    key: ValueKey(post.id),
                     post: post,
                     onTap: () => context.push('/posts/${post.id}'),
                     onToggleLike: () =>

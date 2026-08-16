@@ -10,6 +10,43 @@ Backend: `../marc_go/TODO.md`.
 
 ## Ciri belum start
 
+- [ ] **Onboard ahli lama (kertas/manual) ke app — BRAINSTORM BELUM
+      SIAP, belum ada spec/plan.** Ahli sedia ada yang dah daftar, dah
+      bayar, dan dah ada no. ahli (format LAMA, bukan `MARC{YYYY}/{MM}/
+      {seq}` app) secara manual/kertas sebelum app ni wujud. Rujuk
+      `../marc_go/TODO.md` bahagian sama untuk reka bentuk sisi backend
+      (jadual `legacy_members`, medan `profiles.legacy_member_id`/
+      `registration_fee_exempt`) — bahagian Flutter (medan "No. Ahli
+      Lama" pilihan pada skrin daftar, mesej ralat bila no. tak
+      dijumpai) BELUM direka lagi, sesi brainstorm terhenti sebelum
+      sampai ke situ.
+
+      **Keputusan disahkan (Q&A dgn pemilik produk, 2026-08-16):**
+      - Skala: ~ratusan ahli lama.
+      - Format no. ahli lama: **belum pasti** — pemilik produk akan
+        tanya client. Reka bentuk kekal agnostik format (rentetan
+        legap, TIADA parsing/validasi struktur).
+      - Ahli lama LANGSUNG skip yuran pendaftaran ToyyibPay (dah bayar
+        manual sebelum ni).
+      - Cara claim: medan "No. Ahli Lama" PILIHAN pada skrin daftar
+        (bukan kod jemputan, bukan padanan manual management
+        selepas). App cari padanan dlm senarai diimport; management
+        sahkan padanan tu betul semasa langkah kelulusan sedia ada.
+      - Import senarai lama: **one-off sahaja** (client hantar satu
+        senarai muktamad) — tak perlu UI import berulang.
+      - No. ahli tak dijumpai dlm senarai → **sekat submission**, ralat
+        jelas, user boleh cuba lagi ATAU kosongkan medan & daftar
+        sebagai ahli baharu biasa (bayar yuran macam biasa).
+
+      **Belum diputuskan / belum dibincang:**
+      - Bentuk medan + UX skrin daftar Flutter sebenar.
+      - Macam mana skrin kelulusan management (pending members) papar
+        padanan rekod lama untuk semakan admin sebelum lulus.
+      - Kes pertindihan (dua orang cuba claim no. ahli sama serentak).
+      - Sama ada perlu ubah `profile_page.dart`/paparan member_id lain
+        untuk kes format lama yang berbeza panjang/corak drpd format
+        app.
+
 - [ ] **ToyyibPay: yuran pendaftaran ahli (sekali bayar) + yuran
       aktiviti berbayar** — **BUKAN** "yuran ahli berulang"/dues (framing
       lama dibetulkan 2026-08-15, sesi 3). Gateway kod **siap +
@@ -349,6 +386,122 @@ sebagai penemuan baharu — semua enam sudah dibaiki dan disahkan
 - [ ] Unit test `PostRepository.uploadImage` (mock respons presign)
 - [ ] Pas UI visual menyeluruh pada peranti. Aliran donation, upload gambar,
       grid + pemapar dah disahkan pada Infinix X6833B; selebihnya belum.
+
+## Terma & Syarat / Dasar Privasi dalam-app (2026-08-16)
+
+Dua butang baharu di `about_page.dart` ("Terma & Syarat" / "Dasar Privasi")
+buka halaman berkenaan dalam-app guna `webview_flutter` (bukan
+`launchUrl` external — tak macam pautan `hafizbahtiar.com` sedia ada, yang
+sengaja kekal luar app). Route generik `/legal/:doc` (`router.dart`) petakan
+slug ke tajuk + `https://marc.hafizbahtiar.com/<doc>` (sumber:
+`marc_astro/src/pages/terma-dan-syarat.astro` dan `dasar-privasi.astro`).
+Widget kongsi: `shared/widgets/web_view_page.dart`.
+
+`webview_flutter` dipilih berbanding `flutter_inappwebview` — pakej rasmi
+Flutter, kurang berisiko terhadap siling **compileSdk 35** projek ni (lihat
+nota `permission_handler`/`mobile_scanner` di atas). Disahkan:
+`flutter build apk --debug` lulus (74.3s, cuma amaran KGP sedia ada), 233/233
+ujian lulus, `flutter analyze` bersih.
+
+- [ ] **Tak pernah dilihat pada peranti sebenar.** Susun atur `WebViewPage`
+      (progress bar, appbar), rendering sebenar halaman Astro dalam
+      `WebViewWidget`, dan navigasi balik/tutup — semua andaian belum
+      disahkan mata.
+
+## Notifikasi — polish visual (2026-08-16)
+
+`notifications_page.dart` disusun semula: kumpulan tarikh ("Hari ini" /
+"Semalam" / "Lebih awal", gaya disalin daripada `_SectionHeader` di
+`payment_history_page.dart`), baris tak dibaca kini ditanda dengan tint latar
+(`surfaceContainerHighest`) + teks tebal (titik trailing lama dibuang —
+lebihan isyarat), `ListView.separated`+`Divider` ditukar ke `ListView.builder`
+tanpa garisan (padding + tint sudah cukup pisah baris), padding kandungan
+`ListTile` diselaraskan (`horizontal: 20`, padan `payment_history_page.dart`),
+dan butang "Tanda semua dibaca" kini `disabled` bila tiada notifikasi belum
+dibaca. Tiada perubahan pada data/provider/routing — semata polish visual.
+Disahkan: `flutter analyze` bersih, 233/233 ujian lulus.
+
+- [ ] **Tak pernah dilihat pada peranti sebenar.** Susun atur kumpulan
+      tarikh, tint baris tak dibaca, dan padding baharu — semua andaian
+      belum disahkan mata (skrin lama pun belum pernah, ikut nota "Pas UI
+      visual menyeluruh" di bawah).
+
+## Like button — betulkan tint + tambah bounce (2026-08-16)
+
+`_ActionButton` (`post_card.dart`) dah lama ada komen dakwa "tint separa-lut
+bila active", tapi `BoxDecoration` bulatan sentuh tak pernah diberi `color:`
+— tint itu tak pernah render. Dibetulkan: `color: active ? color.withValues
+(alpha: 0.12) : null`. Ditambah juga "pop" gaya Threads/Twitter: ikon like
+melantun skala 1.0 → 1.35 → 1.0 (`AnimationController` + `TweenSequence`)
+bila `likedByMe` bertukar false → true — bukan pada setiap rebuild, hanya
+peralihan. Param `bounceOnActive` khusus untuk butang like; butang comment
+kekal tanpa animasi. `_ActionButton` bertukar `StatelessWidget` →
+`StatefulWidget` untuk `AnimationController`. Disahkan: `flutter analyze`
+bersih, 233/233 ujian lulus.
+
+- [ ] **Tak pernah dilihat pada peranti sebenar.** Tint active + animasi
+      bounce — belum disahkan mata (`post_card.dart` sendiri belum pernah
+      di-screenshot ikut nota "Pas UI visual menyeluruh" di bawah).
+
+**Ralat susulan dibaiki**: `PostCard` dalam `feed_page.dart` (`ListView.
+builder`) tiada `key:` — bila `removePost` mengecut senarai (atau
+refresh/load-more ubah susunan), Flutter guna semula Element/State
+mengikut INDEKS, bukan identiti post. `_ActionButtonState` yang baru
+bawa `AnimationController` jadi terdedah: State animasi post lama boleh
+terlekat pada post lain semasa deactivate, tercetus `FlutterError`
+"Looking up a deactivated widget's ancestor is unsafe". Dibaiki:
+`key: ValueKey(post.id)` pada `PostCard` dalam `feed_page.dart`.
+(`post_detail_page.dart` guna SATU `PostCard` sahaja — bukan senarai
+berubah — jadi tak terjejas.)
+
+## PUNCA SEBENAR: `late final` AnimationController baca kali pertama dalam dispose() (2026-08-16)
+
+Stack trace penuh (selepas log ditambah) dedah punca SEBENAR ralat
+`FlutterError: Looking up a deactivated widget's ancestor is unsafe` —
+BUKAN isu context notifikasi/router (fix itu di bawah kekal betul sebagai
+amalan baik, tapi bukan punca):
+
+```
+#8  _ActionButtonState._controller (post_card.dart:203:28)
+#10 _ActionButtonState.dispose (post_card.dart:248:10)
+```
+
+`_ActionButton` (`post_card.dart`) guna `late final _controller =
+AnimationController(vsync: this,...)` — malas, cuma cipta bila `_controller`
+DIBACA kali pertama. Butang **comment** (`bounceOnActive: false`) tak
+pernah sentuh `_controller`/`_scale` dalam `build()` (cabang `: icon`
+terus). Jadi bacaan PERTAMA field tu jatuh dalam `dispose()` sendiri —
+`_controller.dispose()` cipta `AnimationController` BAHARU (`vsync: this`)
+semasa widget tengah di-unmount, carian ancestor `TickerMode` di dalamnya
+gagal sebab context dah tak aktif. Ralat tercetus setiap kali ANY
+`_ActionButton` (bukan sahaja like) di-dispose — padam post, navigasi
+keluar skrin feed/detail, senarai rebuild, dsb. Notifikasi cuma laluan
+biasa pengguna navigate keluar/masuk skrin post, bukan punca istimewa.
+
+Dibaiki: `_controller`/`_scale` jadi nullable, dicipta EAGER dalam
+`initState()` (semasa mesti masih mounted) HANYA untuk butang yang
+`bounceOnActive: true` (like). Butang comment terus tak pernah cipta
+controller — `dispose()` guna `_controller?.dispose()`. Log diagnostik
+sementara (debugPrint) yang ditambah untuk kenal pasti isu ni dah dibuang
+balik selepas punca disahkan; hook ralat global (`FlutterError.onError` +
+`PlatformDispatcher.instance.onError`) dalam `main.dart` DIKEKALKAN —
+manfaat am, bukan spesifik isu ni.
+
+Disahkan: `flutter analyze` bersih, 233/233 ujian lulus.
+
+- [ ] **Belum disahkan pengguna pada peranti sebenar** — perlu ulang
+      senario yang sama (padam post / navigasi keluar dari skrin
+      post/notifikasi) untuk sahkan ralat dah hilang sepenuhnya.
+
+## Notifikasi — navigasi guna router terus, bukan context (2026-08-16)
+
+Ketukan baris notifikasi (`onTap` dlm `_NotificationsPageState`) buat
+`await markRead(...)` dahulu, kemudian `context.push(destination)` guna
+`BuildContext` baris `ListTile` tu sendiri — kalau senarai rebuild semasa
+`await` (status dibaca berubah), context baris tu boleh jadi lapuk sebelum
+push sempat jalan. **Ini bukan punca ralat yang dilaporkan** (lihat entri
+di atas), tapi kekal sebagai fix — amalan yang lebih selamat, padanan
+corak yang `push_service.dart` DAH guna untuk ketukan notifikasi OS.
 
 ## Polish yang diketahui
 

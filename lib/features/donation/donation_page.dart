@@ -271,7 +271,7 @@ class _AmountForm extends StatelessWidget {
             controller: amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
-              labelText: 'Amount (RM)',
+              labelText: 'Jumlah (RM)',
               prefixText: 'RM ',
             ),
             validator: (v) {
@@ -283,7 +283,7 @@ class _AmountForm extends StatelessWidget {
           const SizedBox(height: 12),
           TextFormField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'Nama (optional)'),
+            decoration: const InputDecoration(labelText: 'Nama (pilihan)'),
           ),
           // Ahli yang log masuk backend kaitkan user_id automatik
           // (OptionalAuth) dan boleh trace balik ke emel akaun terus,
@@ -297,7 +297,7 @@ class _AmountForm extends StatelessWidget {
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
-              labelText: requireEmail ? 'Emel' : 'Emel (optional)',
+              labelText: requireEmail ? 'Emel' : 'Emel (pilihan)',
             ),
             validator: (v) {
               final value = (v ?? '').trim();

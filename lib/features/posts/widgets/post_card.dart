@@ -81,22 +81,22 @@ class PostCard extends ConsumerWidget {
                       ),
                       if (post.isAnnouncement)
                         Container(
-                          margin: const EdgeInsets.only(top: 2),
+                          margin: const EdgeInsets.only(top: 3),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
-                            vertical: 2,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: scheme.primary.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             'PENGUMUMAN',
                             style: TextStyle(
                               color: scheme.primary,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                               fontSize: 10,
-                              letterSpacing: 0.5,
+                              letterSpacing: 0.6,
                             ),
                           ),
                         ),
@@ -135,13 +135,14 @@ class PostCard extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurface,
                 fontSize: 15,
+                height: 1.35,
               ),
             ),
             if (post.images.isNotEmpty) ...[
               const SizedBox(height: 10),
               PostImageGrid(urls: post.images),
             ],
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Row(
               children: [
                 _ActionButton(
@@ -149,14 +150,16 @@ class PostCard extends ConsumerWidget {
                   color: post.likedByMe
                       ? scheme.error
                       : scheme.onSurfaceVariant,
-                  label: post.likeCount.toString(),
+                  active: post.likedByMe,
+                  bounceOnActive: true,
+                  count: post.likeCount,
                   onTap: onToggleLike,
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 4),
                 _ActionButton(
                   icon: Icons.mode_comment_outlined,
                   color: scheme.onSurfaceVariant,
-                  label: post.commentCount.toString(),
+                  count: post.commentCount,
                   onTap: onTap,
                 ),
               ],
@@ -168,32 +171,125 @@ class PostCard extends ConsumerWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
+/// Butang aksi gaya Twitter — ikon dalam bulatan sentuh dengan tint
+/// separa-lut bila `active` (cth. post yang dah di-like), dan splash tint
+/// warna sama bila ditekan. Kiraan disembunyikan bila 0 (padanan gaya
+/// Twitter yang tak papar "0"). [bounceOnActive] tambah "pop" gaya
+/// Threads/Twitter pada ikon like: skala melantun sekali bila `active`
+/// bertukar false → true (bukan pada setiap rebuild).
+class _ActionButton extends StatefulWidget {
   const _ActionButton({
     required this.icon,
     required this.color,
-    required this.label,
+    required this.count,
     required this.onTap,
+    this.active = false,
+    this.bounceOnActive = false,
   });
 
   final IconData icon;
   final Color color;
-  final String label;
+  final int count;
+  final bool active;
+  final bool bounceOnActive;
   final VoidCallback onTap;
 
   @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton>
+    with SingleTickerProviderStateMixin {
+  // NULLABLE + dicipta dalam initState() (bukan `late final` malas) —
+  // punca ralat "Looking up a deactivated widget's ancestor is unsafe"
+  // yang dilaporkan: `late final` baca kali PERTAMA pada butang comment
+  // (`bounceOnActive: false`, cabang `build()` tak pernah sentuh
+  // `_scale`/`_controller`) berlaku dalam `dispose()` sendiri — bina
+  // `AnimationController(vsync: this,...)` BAHARU semasa widget tengah
+  // di-unmount, dan carian ancestor `TickerMode` di dalamnya gagal sebab
+  // context dah tak aktif. Bina awal (initState, semasa masih mounted)
+  // untuk butang yang betul-betul perlukannya sahaja mengelak isu ni.
+  AnimationController? _controller;
+  Animation<double>? _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.bounceOnActive) {
+      final controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 220),
+      );
+      _controller = controller;
+      _scale = TweenSequence<double>([
+        TweenSequenceItem(
+          weight: 50,
+          tween: Tween(
+            begin: 1.0,
+            end: 1.35,
+          ).chain(CurveTween(curve: Curves.easeOut)),
+        ),
+        TweenSequenceItem(
+          weight: 50,
+          tween: Tween(
+            begin: 1.35,
+            end: 1.0,
+          ).chain(CurveTween(curve: Curves.easeIn)),
+        ),
+      ]).animate(controller);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_ActionButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.bounceOnActive && !oldWidget.active && widget.active) {
+      _controller?.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final icon = Icon(widget.icon, color: widget.color, size: 18);
+    final scale = _scale;
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: onTap,
+      splashColor: Colors.transparent,
+      highlightColor: widget.color.withValues(alpha: 0.08),
+      onTap: widget.onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 5),
-            Text(label, style: TextStyle(color: color, fontSize: 13)),
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.center,
+              child: scale != null
+                  ? ScaleTransition(scale: scale, child: icon)
+                  : icon,
+            ),
+            if (widget.count > 0)
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Text(
+                  widget.count.toString(),
+                  style: TextStyle(
+                    color: widget.color,
+                    fontSize: 13,
+                    fontWeight: widget.active
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

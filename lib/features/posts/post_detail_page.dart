@@ -7,8 +7,10 @@ import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/comment_tile.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
+import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
+import 'package:marc/shared/widgets/member_avatar.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
 class PostDetailPage extends ConsumerStatefulWidget {
@@ -62,6 +64,8 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
   Widget build(BuildContext context) {
     final postAsync = ref.watch(postDetailProvider(widget.postId));
     final commentsAsync = ref.watch(commentsProvider(widget.postId));
+    final myProfile = ref.watch(myProfileProvider).valueOrNull;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Post')),
@@ -217,27 +221,66 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                         ),
                       ),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        MemberAvatar(
+                          label:
+                              myProfile?.displayName ?? myProfile?.email ?? '',
+                          avatarUrl: myProfile?.avatarUrl,
+                          radius: 16,
+                        ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
                             controller: _commentController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: 'Tulis comment...',
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  color: scheme.primary,
+                                  width: 1.6,
+                                ),
+                              ),
                             ),
                             minLines: 1,
                             maxLines: 4,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        IconButton.filled(
-                          onPressed: _sending ? null : _sendComment,
-                          icon: _sending
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator.adaptive(),
-                                )
-                              : const Icon(Icons.send),
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: IconButton.filled(
+                            style: IconButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              shape: const CircleBorder(),
+                            ),
+                            onPressed: _sending ? null : _sendComment,
+                            icon: _sending
+                                ? SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator.adaptive(
+                                      valueColor: AlwaysStoppedAnimation(
+                                        scheme.onPrimary,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.send, size: 18),
+                          ),
                         ),
                       ],
                     ),

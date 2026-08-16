@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -139,6 +140,21 @@ class AboutPage extends StatelessWidget {
                           decoration: TextDecoration.underline,
                         ),
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          context.push('/legal/terma-dan-syarat'),
+                      child: const Text('Terma & Syarat'),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/legal/dasar-privasi'),
+                      child: const Text('Dasar Privasi'),
                     ),
                   ],
                 ),

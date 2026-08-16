@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show appFlavor;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/onesignal.dart';
@@ -14,8 +16,30 @@ import 'package:marc/features/notifications/push_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Pastikan trace PENUH sentiasa masuk console, bukan cuma ringkasan
+  // mesej — susulan ralat "Looking up a deactivated widget's ancestor"
+  // yang dilaporkan tanpa trace. `FlutterError.dumpErrorToConsole` default
+  // pun buat ni, tapi eksplisit di sini elak kehilangan bila `onError`
+  // lain (cth. Crashlytics kemudian) menggantikannya tanpa forward.
+  FlutterError.onError = (details) {
+    FlutterError.dumpErrorToConsole(details);
+    debugPrint('[uncaught-flutter-error] ${details.exceptionAsString()}');
+    debugPrint('[uncaught-flutter-error] stack:\n${details.stack}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('[uncaught-platform-error] $error\n$stack');
+    return true;
+  };
+  // appFlavor null = `flutter run` tanpa --flavor (dev tempatan, guna
+  // .env sedia ada). --flavor staging/prod pilih .env.staging/.env.prod.
+  final envFile = switch (appFlavor) {
+    'staging' => '.env.staging',
+    'prod' => '.env.prod',
+    _ => '.env',
+  };
   try {
-    await dotenv.load(fileName: '.env');
+    await dotenv.load(fileName: envFile);
   } catch (_) {
     // .env belum diisi — salin .env.example ke .env dan isi kredential.
   }

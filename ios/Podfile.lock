@@ -2,8 +2,14 @@ PODS:
   - Flutter (1.0.0)
   - flutter_secure_storage (6.0.0):
     - Flutter
+  - gal (1.0.0):
+    - Flutter
+    - FlutterMacOS
   - image_picker_ios (0.0.1):
     - Flutter
+  - mobile_scanner (7.0.0):
+    - Flutter
+    - FlutterMacOS
   - onesignal_flutter (5.6.7):
     - Flutter
     - OneSignalXCFramework (= 5.5.5)
@@ -56,34 +62,149 @@ PODS:
     - OneSignalXCFramework/OneSignalNotifications
     - OneSignalXCFramework/OneSignalOSCore
     - OneSignalXCFramework/OneSignalOutcomes
+  - package_info_plus (0.4.5):
+    - Flutter
+  - permission_handler_apple (9.4.8):
+    - Flutter
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - Stripe (25.17.0):
+    - StripeApplePay (= 25.17.0)
+    - StripeCore (= 25.17.0)
+    - StripeIssuing (= 25.17.0)
+    - StripePayments (= 25.17.0)
+    - StripePaymentsUI (= 25.17.0)
+    - StripeUICore (= 25.17.0)
+  - stripe_ios (0.0.1):
+    - Flutter
+    - Stripe (~> 25.17.0)
+    - stripe_ios/stripe_ios (= 0.0.1)
+    - stripe_ios/stripe_objc (= 0.0.1)
+    - StripeApplePay (~> 25.17.0)
+    - StripeFinancialConnections (~> 25.17.0)
+    - StripePayments (~> 25.17.0)
+    - StripePaymentSheet (~> 25.17.0)
+    - StripePaymentsUI (~> 25.17.0)
+  - stripe_ios/stripe_ios (0.0.1):
+    - Flutter
+    - Stripe (~> 25.17.0)
+    - stripe_ios/stripe_objc
+    - StripeApplePay (~> 25.17.0)
+    - StripeFinancialConnections (~> 25.17.0)
+    - StripePayments (~> 25.17.0)
+    - StripePaymentSheet (~> 25.17.0)
+    - StripePaymentsUI (~> 25.17.0)
+  - stripe_ios/stripe_objc (0.0.1):
+    - Flutter
+    - Stripe (~> 25.17.0)
+    - StripeApplePay (~> 25.17.0)
+    - StripeFinancialConnections (~> 25.17.0)
+    - StripePayments (~> 25.17.0)
+    - StripePaymentSheet (~> 25.17.0)
+    - StripePaymentsUI (~> 25.17.0)
+  - StripeApplePay (25.17.0):
+    - StripeCore (= 25.17.0)
+  - StripeCore (25.17.0)
+  - StripeFinancialConnections (25.17.0):
+    - StripeCore (= 25.17.0)
+    - StripeUICore (= 25.17.0)
+  - StripeIssuing (25.17.0):
+    - StripeCore (= 25.17.0)
+    - StripePayments (= 25.17.0)
+    - StripePaymentsUI (= 25.17.0)
+  - StripePayments (25.17.0):
+    - StripeCore (= 25.17.0)
+    - StripePayments/Stripe3DS2 (= 25.17.0)
+  - StripePayments/Stripe3DS2 (25.17.0):
+    - StripeCore (= 25.17.0)
+  - StripePaymentSheet (25.17.0):
+    - StripeApplePay (= 25.17.0)
+    - StripeCore (= 25.17.0)
+    - StripePayments (= 25.17.0)
+    - StripePaymentsUI (= 25.17.0)
+  - StripePaymentsUI (25.17.0):
+    - StripeCore (= 25.17.0)
+    - StripePayments (= 25.17.0)
+    - StripeUICore (= 25.17.0)
+  - StripeUICore (25.17.0):
+    - StripeCore (= 25.17.0)
+  - url_launcher_ios (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - gal (from `.symlinks/plugins/gal/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - onesignal_flutter (from `.symlinks/plugins/onesignal_flutter/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - stripe_ios (from `.symlinks/plugins/stripe_ios/ios`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
     - OneSignalXCFramework
+    - Stripe
+    - StripeApplePay
+    - StripeCore
+    - StripeFinancialConnections
+    - StripeIssuing
+    - StripePayments
+    - StripePaymentSheet
+    - StripePaymentsUI
+    - StripeUICore
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  gal:
+    :path: ".symlinks/plugins/gal/darwin"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/darwin"
   onesignal_flutter:
     :path: ".symlinks/plugins/onesignal_flutter/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  stripe_ios:
+    :path: ".symlinks/plugins/stripe_ios/ios"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
+  gal: baecd024ebfd13c441269ca7404792a7152fde89
   image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   onesignal_flutter: 29eeda57e99e9615280a7f10dc103840ed6f4746
   OneSignalXCFramework: 48e5b7c5b51d4e67bab3405229f963efde1a3894
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  permission_handler_apple: 92d754bbaa7361d436db2d6c3c1c2a0fdcec462e
+  shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
+  Stripe: da4f210385ff97d786968eb751d5c0d5c47ba539
+  stripe_ios: 4cc4ead50c59fe63e0ef7507c3a3bae056f88abb
+  StripeApplePay: 7b1b6e86eb75be5d4bcf109c34224adf38000fe2
+  StripeCore: 60849de0ae448eb9a7ed4ee8208acce78832b255
+  StripeFinancialConnections: 280e67822cea7a8f89fb4fa97e6e7fb7293cff27
+  StripeIssuing: 7ece6d6d59ddb8636de386257175e71ced6966ad
+  StripePayments: befce228ec3545503c6ac54603b7e5a7cdb01a06
+  StripePaymentSheet: 11fe4afb439379bf905a09d99d99b80a6fac5cf1
+  StripePaymentsUI: c0e4426ec5aeaaedf3e4f32d30b77c4ef6e3dafa
+  StripeUICore: 124b860ab571114c2dec947d7b66a11e0d3238b6
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
 
-PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+PODFILE CHECKSUM: f7676b771116fc578eb778864fb2c05f68bfdd6c
 
 COCOAPODS: 1.17.0
