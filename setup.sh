@@ -8,7 +8,7 @@
 #   3) flutter pub get       (auto)
 #   4) build_runner          (jika dipilih & tersedia)
 #   5) build APK / AAB
-#   6) salin + rename output ke  {nama_app}-{YYYY-MM-DD}-{version}({build}).{ext}
+#   6) salin + rename output ke  {nama_app}-{flavor}-{YYYY-MM-DD}-{version}({build}).{ext}
 #
 set -euo pipefail
 
@@ -52,6 +52,12 @@ while [[ "$ARTIFACT" != "apk" && "$ARTIFACT" != "aab" ]]; do
   ARTIFACT="$(echo "$ARTIFACT" | tr '[:upper:]' '[:lower:]')"
 done
 
+FLAVOR=""
+while [[ "$FLAVOR" != "staging" && "$FLAVOR" != "prod" ]]; do
+  read -r -p "5) Flavor? [staging/prod]: " FLAVOR
+  FLAVOR="$(echo "$FLAVOR" | tr '[:upper:]' '[:lower:]')"
+done
+
 NEW_VERSION="${NEW_NAME}+${NEW_BUILD}"
 
 # ── Ringkasan + pengesahan ─────────────────────────────────────────
@@ -59,6 +65,7 @@ echo
 echo "---------------------------------------------------"
 echo " build_runner : ${Q_GEN}"
 echo " version      : ${VERSION_LINE}  ->  ${NEW_VERSION}"
+echo " flavor       : ${FLAVOR}"
 echo " output       : $(echo "$ARTIFACT" | tr '[:lower:]' '[:upper:]')"
 echo "---------------------------------------------------"
 read -r -p "Teruskan? [Y/n]: " GO
@@ -89,14 +96,14 @@ fi
 
 # ── 5) build ───────────────────────────────────────────────────────
 if [[ "$ARTIFACT" == "apk" ]]; then
-  echo "→ flutter build apk --release"
-  flutter build apk --release
-  SRC="build/app/outputs/flutter-apk/app-release.apk"
+  echo "→ flutter build apk --release --flavor ${FLAVOR}"
+  flutter build apk --release --flavor "$FLAVOR"
+  SRC="build/app/outputs/flutter-apk/app-${FLAVOR}-release.apk"
   EXT="apk"
 else
-  echo "→ flutter build appbundle --release"
-  flutter build appbundle --release
-  SRC="build/app/outputs/bundle/release/app-release.aab"
+  echo "→ flutter build appbundle --release --flavor ${FLAVOR}"
+  flutter build appbundle --release --flavor "$FLAVOR"
+  SRC="build/app/outputs/bundle/${FLAVOR}Release/app-${FLAVOR}-release.aab"
   EXT="aab"
 fi
 
@@ -108,7 +115,7 @@ fi
 
 DATE="$(date +%Y-%m-%d)"
 OUT_DIR="$ARTIFACT"
-DEST="${OUT_DIR}/${APP_NAME}-${DATE}-${NEW_NAME}(${NEW_BUILD}).${EXT}"
+DEST="${OUT_DIR}/${APP_NAME}-${FLAVOR}-${DATE}-${NEW_NAME}(${NEW_BUILD}).${EXT}"
 
 mkdir -p "$OUT_DIR"
 cp "$SRC" "$DEST"

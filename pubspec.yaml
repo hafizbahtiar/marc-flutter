@@ -89,6 +89,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_native_splash: ^2.4.8
   flutter_launcher_icons: ^0.14.4
+  flutter_flavorizr: ^2.6.0
 
 # App icon (jana: dart run flutter_launcher_icons)
 flutter_launcher_icons:
@@ -118,6 +119,32 @@ flutter_native_splash:
   ios: true
   web: false
 
+# Flavor config (jana semula: dart run flutter_flavorizr -f).
+# staging -> .env.staging, prod -> .env.prod (lihat main.dart).
+# applicationId/bundle id prod kekal com.hafizbahtiar.marc (elak reset
+# listing Play Store/App Store sedia ada); staging dapat suffix .staging
+# supaya kedua-dua flavor boleh dipasang serentak pada satu peranti.
+flavorizr:
+  app:
+    android:
+      flavorDimensions: "flavor-type"
+
+  flavors:
+    staging:
+      app:
+        name: "Marc Staging"
+      android:
+        applicationId: "com.hafizbahtiar.marc.staging"
+      ios:
+        bundleId: "com.hafizbahtiar.marc.staging"
+    prod:
+      app:
+        name: "Marc"
+      android:
+        applicationId: "com.hafizbahtiar.marc"
+      ios:
+        bundleId: "com.hafizbahtiar.marc"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -130,6 +157,8 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - .env.staging
+    - .env.prod
     - assets/splash/logo.png
     - assets/donation/maybank_hafiz.jpeg
 

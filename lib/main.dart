@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show appFlavor;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/onesignal.dart';
@@ -14,8 +15,15 @@ import 'package:marc/features/notifications/push_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // appFlavor null = `flutter run` tanpa --flavor (dev tempatan, guna
+  // .env sedia ada). --flavor staging/prod pilih .env.staging/.env.prod.
+  final envFile = switch (appFlavor) {
+    'staging' => '.env.staging',
+    'prod' => '.env.prod',
+    _ => '.env',
+  };
   try {
-    await dotenv.load(fileName: '.env');
+    await dotenv.load(fileName: envFile);
   } catch (_) {
     // .env belum diisi — salin .env.example ke .env dan isi kredential.
   }

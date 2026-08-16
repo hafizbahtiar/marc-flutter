@@ -20,6 +20,46 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
+        },
+        {
+            "name": "marc (staging)",
+            "request": "launch",
+            "type": "dart",
+            "args": ["--flavor", "staging"]
+        },
+        {
+            "name": "marc (staging, profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile",
+            "args": ["--flavor", "staging"]
+        },
+        {
+            "name": "marc (staging, release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "args": ["--flavor", "staging"]
+        },
+        {
+            "name": "marc (prod)",
+            "request": "launch",
+            "type": "dart",
+            "args": ["--flavor", "prod"]
+        },
+        {
+            "name": "marc (prod, profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile",
+            "args": ["--flavor", "prod"]
+        },
+        {
+            "name": "marc (prod, release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "args": ["--flavor", "prod"]
         }
     ]
 }
