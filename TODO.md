@@ -10,6 +10,43 @@ Backend: `../marc_go/TODO.md`.
 
 ## Ciri belum start
 
+- [ ] **Onboard ahli lama (kertas/manual) ke app — BRAINSTORM BELUM
+      SIAP, belum ada spec/plan.** Ahli sedia ada yang dah daftar, dah
+      bayar, dan dah ada no. ahli (format LAMA, bukan `MARC{YYYY}/{MM}/
+      {seq}` app) secara manual/kertas sebelum app ni wujud. Rujuk
+      `../marc_go/TODO.md` bahagian sama untuk reka bentuk sisi backend
+      (jadual `legacy_members`, medan `profiles.legacy_member_id`/
+      `registration_fee_exempt`) — bahagian Flutter (medan "No. Ahli
+      Lama" pilihan pada skrin daftar, mesej ralat bila no. tak
+      dijumpai) BELUM direka lagi, sesi brainstorm terhenti sebelum
+      sampai ke situ.
+
+      **Keputusan disahkan (Q&A dgn pemilik produk, 2026-08-16):**
+      - Skala: ~ratusan ahli lama.
+      - Format no. ahli lama: **belum pasti** — pemilik produk akan
+        tanya client. Reka bentuk kekal agnostik format (rentetan
+        legap, TIADA parsing/validasi struktur).
+      - Ahli lama LANGSUNG skip yuran pendaftaran ToyyibPay (dah bayar
+        manual sebelum ni).
+      - Cara claim: medan "No. Ahli Lama" PILIHAN pada skrin daftar
+        (bukan kod jemputan, bukan padanan manual management
+        selepas). App cari padanan dlm senarai diimport; management
+        sahkan padanan tu betul semasa langkah kelulusan sedia ada.
+      - Import senarai lama: **one-off sahaja** (client hantar satu
+        senarai muktamad) — tak perlu UI import berulang.
+      - No. ahli tak dijumpai dlm senarai → **sekat submission**, ralat
+        jelas, user boleh cuba lagi ATAU kosongkan medan & daftar
+        sebagai ahli baharu biasa (bayar yuran macam biasa).
+
+      **Belum diputuskan / belum dibincang:**
+      - Bentuk medan + UX skrin daftar Flutter sebenar.
+      - Macam mana skrin kelulusan management (pending members) papar
+        padanan rekod lama untuk semakan admin sebelum lulus.
+      - Kes pertindihan (dua orang cuba claim no. ahli sama serentak).
+      - Sama ada perlu ubah `profile_page.dart`/paparan member_id lain
+        untuk kes format lama yang berbeza panjang/corak drpd format
+        app.
+
 - [ ] **ToyyibPay: yuran pendaftaran ahli (sekali bayar) + yuran
       aktiviti berbayar** — **BUKAN** "yuran ahli berulang"/dues (framing
       lama dibetulkan 2026-08-15, sesi 3). Gateway kod **siap +
