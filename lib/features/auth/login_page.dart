@@ -83,7 +83,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   onPressed: loading ? null : _submit,
                   child: loading
                       ? const ButtonBusy(label: 'Sedang log masuk…')
-                      : const Text('Log Masuk  →'),
+                      : const Text('Log masuk →'),
                 ),
                 const SizedBox(height: 20),
                 Row(

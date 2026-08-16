@@ -137,7 +137,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit profil',
+            tooltip: 'Edit Profil',
             onPressed: () => context.push('/edit-profile'),
           ),
         ],

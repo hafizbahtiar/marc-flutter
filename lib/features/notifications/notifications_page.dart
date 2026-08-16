@@ -334,7 +334,7 @@ class _PendingMembersHeader extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
       leading: Icon(Icons.person_add_alt_outlined, color: scheme.primary),
-      title: const Text('Ahli Menunggu Kelulusan'),
+      title: const Text('Ahli Pending'),
       trailing: count > 0
           ? Badge(
               label: Text('$count'),
