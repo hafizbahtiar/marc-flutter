@@ -193,6 +193,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ],
             const SizedBox(height: 28),
+            _GroupLabel('Komuniti'),
+            _InfoCard(
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.groups_outlined),
+                  title: const Text('Ahli'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/members'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             _GroupLabel('Tetapan'),
             _InfoCard(
               children: [
@@ -251,32 +264,59 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             // dalam Kewangan/mana-mana) — semua tindakan di sini alat
             // pengurusan, bukan sesuatu ahli biasa pernah nampak pun.
             if (p?.isManagement ?? false) ...[
-              const SizedBox(height: 20),
-              _GroupLabel('Pengurusan'),
-              _InfoCard(
-                children: [
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                    leading: const Icon(Icons.pending_actions_outlined),
-                    title: const Text('Ahli Pending'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/members/pending'),
-                  ),
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                    leading: const Icon(Icons.history),
-                    title: const Text('Jejak Audit'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/audit-logs'),
-                  ),
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                    leading: const Icon(Icons.payments_outlined),
-                    title: const Text('Semua Bayaran'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/admin/payments'),
-                  ),
-                ],
+              Builder(
+                builder: (context) {
+                  // `watch` di sini (bukan skop `build` luar) — hanya
+                  // panggil `pendingMembersProvider` bila management,
+                  // padanan pattern `notifications_page.dart`.
+                  final pendingCount =
+                      ref.watch(pendingMembersProvider).valueOrNull?.length ??
+                      0;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      _GroupLabel('Pengurusan'),
+                      _InfoCard(
+                        children: [
+                          ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                            ),
+                            leading: const Icon(Icons.pending_actions_outlined),
+                            title: const Text('Ahli Pending'),
+                            trailing: pendingCount > 0
+                                ? Badge(
+                                    label: Text('$pendingCount'),
+                                    backgroundColor: scheme.error,
+                                    textColor: scheme.onError,
+                                  )
+                                : const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/members/pending'),
+                          ),
+                          ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                            ),
+                            leading: const Icon(Icons.history),
+                            title: const Text('Jejak Audit'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/audit-logs'),
+                          ),
+                          ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                            ),
+                            leading: const Icon(Icons.payments_outlined),
+                            title: const Text('Semua Bayaran'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/admin/payments'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
             // Kumpulan BERASINGAN drpd "Pengurusan" (bukan disisip sekali)

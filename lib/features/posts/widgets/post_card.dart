@@ -81,22 +81,22 @@ class PostCard extends ConsumerWidget {
                       ),
                       if (post.isAnnouncement)
                         Container(
-                          margin: const EdgeInsets.only(top: 2),
+                          margin: const EdgeInsets.only(top: 3),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
-                            vertical: 2,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: scheme.primary.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             'PENGUMUMAN',
                             style: TextStyle(
                               color: scheme.primary,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                               fontSize: 10,
-                              letterSpacing: 0.5,
+                              letterSpacing: 0.6,
                             ),
                           ),
                         ),
@@ -135,13 +135,14 @@ class PostCard extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurface,
                 fontSize: 15,
+                height: 1.35,
               ),
             ),
             if (post.images.isNotEmpty) ...[
               const SizedBox(height: 10),
               PostImageGrid(urls: post.images),
             ],
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Row(
               children: [
                 _ActionButton(
@@ -149,14 +150,15 @@ class PostCard extends ConsumerWidget {
                   color: post.likedByMe
                       ? scheme.error
                       : scheme.onSurfaceVariant,
-                  label: post.likeCount.toString(),
+                  active: post.likedByMe,
+                  count: post.likeCount,
                   onTap: onToggleLike,
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 4),
                 _ActionButton(
                   icon: Icons.mode_comment_outlined,
                   color: scheme.onSurfaceVariant,
-                  label: post.commentCount.toString(),
+                  count: post.commentCount,
                   onTap: onTap,
                 ),
               ],
@@ -168,32 +170,56 @@ class PostCard extends ConsumerWidget {
   }
 }
 
+/// Butang aksi gaya Twitter — ikon dalam bulatan sentuh dengan tint
+/// separa-lut bila `active` (cth. post yang dah di-like), dan splash tint
+/// warna sama bila ditekan. Kiraan disembunyikan bila 0 (padanan gaya
+/// Twitter yang tak papar "0").
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
     required this.color,
-    required this.label,
+    required this.count,
     required this.onTap,
+    this.active = false,
   });
 
   final IconData icon;
   final Color color;
-  final String label;
+  final int count;
+  final bool active;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
+      splashColor: color.withValues(alpha: 0.15),
+      highlightColor: color.withValues(alpha: 0.08),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 5),
-            Text(label, style: TextStyle(color: color, fontSize: 13)),
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            if (count > 0)
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Text(
+                  count.toString(),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 13,
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
