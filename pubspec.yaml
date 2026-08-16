@@ -76,6 +76,7 @@ dependencies:
   # tanpa pengimbas, jadi menaikkan compileSdk seluruh projek untuk pakej
   # ini bukan pertukaran yang berbaloi.
   mobile_scanner: ^7.4.0
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:

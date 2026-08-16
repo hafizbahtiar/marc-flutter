@@ -181,6 +181,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 
                   final post = state.posts[index];
                   return PostCard(
+                    key: ValueKey(post.id),
                     post: post,
                     onTap: () => context.push('/posts/${post.id}'),
                     onToggleLike: () =>

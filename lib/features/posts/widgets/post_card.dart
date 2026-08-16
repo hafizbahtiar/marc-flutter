@@ -151,6 +151,7 @@ class PostCard extends ConsumerWidget {
                       ? scheme.error
                       : scheme.onSurfaceVariant,
                   active: post.likedByMe,
+                  bounceOnActive: true,
                   count: post.likeCount,
                   onTap: onToggleLike,
                 ),
@@ -173,29 +174,95 @@ class PostCard extends ConsumerWidget {
 /// Butang aksi gaya Twitter — ikon dalam bulatan sentuh dengan tint
 /// separa-lut bila `active` (cth. post yang dah di-like), dan splash tint
 /// warna sama bila ditekan. Kiraan disembunyikan bila 0 (padanan gaya
-/// Twitter yang tak papar "0").
-class _ActionButton extends StatelessWidget {
+/// Twitter yang tak papar "0"). [bounceOnActive] tambah "pop" gaya
+/// Threads/Twitter pada ikon like: skala melantun sekali bila `active`
+/// bertukar false → true (bukan pada setiap rebuild).
+class _ActionButton extends StatefulWidget {
   const _ActionButton({
     required this.icon,
     required this.color,
     required this.count,
     required this.onTap,
     this.active = false,
+    this.bounceOnActive = false,
   });
 
   final IconData icon;
   final Color color;
   final int count;
   final bool active;
+  final bool bounceOnActive;
   final VoidCallback onTap;
 
   @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton>
+    with SingleTickerProviderStateMixin {
+  // NULLABLE + dicipta dalam initState() (bukan `late final` malas) —
+  // punca ralat "Looking up a deactivated widget's ancestor is unsafe"
+  // yang dilaporkan: `late final` baca kali PERTAMA pada butang comment
+  // (`bounceOnActive: false`, cabang `build()` tak pernah sentuh
+  // `_scale`/`_controller`) berlaku dalam `dispose()` sendiri — bina
+  // `AnimationController(vsync: this,...)` BAHARU semasa widget tengah
+  // di-unmount, dan carian ancestor `TickerMode` di dalamnya gagal sebab
+  // context dah tak aktif. Bina awal (initState, semasa masih mounted)
+  // untuk butang yang betul-betul perlukannya sahaja mengelak isu ni.
+  AnimationController? _controller;
+  Animation<double>? _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.bounceOnActive) {
+      final controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 220),
+      );
+      _controller = controller;
+      _scale = TweenSequence<double>([
+        TweenSequenceItem(
+          weight: 50,
+          tween: Tween(
+            begin: 1.0,
+            end: 1.35,
+          ).chain(CurveTween(curve: Curves.easeOut)),
+        ),
+        TweenSequenceItem(
+          weight: 50,
+          tween: Tween(
+            begin: 1.35,
+            end: 1.0,
+          ).chain(CurveTween(curve: Curves.easeIn)),
+        ),
+      ]).animate(controller);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_ActionButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.bounceOnActive && !oldWidget.active && widget.active) {
+      _controller?.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final icon = Icon(widget.icon, color: widget.color, size: 18);
+    final scale = _scale;
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      splashColor: color.withValues(alpha: 0.15),
-      highlightColor: color.withValues(alpha: 0.08),
-      onTap: onTap,
+      splashColor: Colors.transparent,
+      highlightColor: widget.color.withValues(alpha: 0.08),
+      onTap: widget.onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: Row(
@@ -205,18 +272,21 @@ class _ActionButton extends StatelessWidget {
               width: 30,
               height: 30,
               alignment: Alignment.center,
-              decoration: BoxDecoration(shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 18),
+              child: scale != null
+                  ? ScaleTransition(scale: scale, child: icon)
+                  : icon,
             ),
-            if (count > 0)
+            if (widget.count > 0)
               Padding(
                 padding: const EdgeInsets.only(left: 2),
                 child: Text(
-                  count.toString(),
+                  widget.count.toString(),
                   style: TextStyle(
-                    color: color,
+                    color: widget.color,
                     fontSize: 13,
-                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: widget.active
+                        ? FontWeight.w600
+                        : FontWeight.w400,
                   ),
                 ),
               ),
