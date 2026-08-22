@@ -98,6 +98,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ],
                 ),
+                TextButton(
+                  onPressed: () => context.push('/forgot-password'),
+                  child: const Text('Lupa kata laluan?'),
+                ),
               ],
             ),
           ),

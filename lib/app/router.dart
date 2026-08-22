@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/app/nav_shell.dart';
 import 'package:marc/core/auth_state.dart';
+import 'package:marc/features/auth/forgot_password_page.dart';
 import 'package:marc/features/auth/login_page.dart';
 import 'package:marc/features/auth/register_page.dart';
 import 'package:marc/features/activities/activities_page.dart';
@@ -62,7 +63,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final loggedIn = ref.read(authNotifierProvider).isLoggedIn;
       final loc = state.matchedLocation;
-      final onAuthPage = loc == '/login' || loc == '/register';
+      final onAuthPage =
+          loc == '/login' || loc == '/register' || loc == '/forgot-password';
       if (loggedIn && onAuthPage) return '/feed';
       if (!loggedIn && !onAuthPage) return '/login';
       return null;
@@ -70,6 +72,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterPage()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, _) => const ForgotPasswordPage(),
+      ),
       GoRoute(
         path: '/edit-profile',
         builder: (_, _) => const EditProfilePage(),

@@ -79,6 +79,26 @@ class AuthService {
     }
   }
 
+  /// Minta pautan reset kata laluan. Backend pulang 204 SENTIASA (tiada
+  /// enumerasi akaun), jadi "berjaya" di sini bermakna "permintaan
+  /// diterima" — BUKAN "akaun itu wujud". Mesej UI mesti kekal neutral.
+  Future<AuthResult> requestPasswordReset(String email) async {
+    try {
+      await _dio.post(
+        '/auth/password-reset/request',
+        data: {'email': email},
+      );
+      return const AuthResult(success: true);
+    } on DioException catch (e) {
+      return AuthResult(success: false, error: extractErrorMessage(e));
+    } catch (_) {
+      return const AuthResult(
+        success: false,
+        error: 'Ralat tidak dijangka. Cuba lagi.',
+      );
+    }
+  }
+
   /// Simpan token, tapi kalau secure storage rosak (cth: PlatformException
   /// sebab Keystore invalid lepas restore backup Android — lihat
   /// TokenStorage) buang SEMUA entri lama sekali sahaja dan cuba simpan

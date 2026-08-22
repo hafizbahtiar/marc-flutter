@@ -53,3 +53,30 @@ class RegisterController extends AsyncNotifier<void> {
 
 final registerControllerProvider =
     AsyncNotifierProvider<RegisterController, void>(RegisterController.new);
+
+class ForgotPasswordController extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  /// Pulang true kalau permintaan diterima (page papar mesej neutral).
+  Future<bool> submit(String email) async {
+    state = const AsyncLoading();
+    final result = await ref
+        .read(authServiceProvider)
+        .requestPasswordReset(email);
+    if (result.success) {
+      state = const AsyncData(null);
+      return true;
+    }
+    state = AsyncError(
+      result.error ?? 'Gagal hantar pautan reset',
+      StackTrace.current,
+    );
+    return false;
+  }
+}
+
+final forgotPasswordControllerProvider =
+    AsyncNotifierProvider<ForgotPasswordController, void>(
+      ForgotPasswordController.new,
+    );

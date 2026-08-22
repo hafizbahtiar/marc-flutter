@@ -13,6 +13,8 @@ class _FakeAuthService implements AuthService {
       _result;
   @override
   Future<void> signOut() async {}
+  @override
+  Future<AuthResult> requestPasswordReset(String email) async => _result;
 }
 
 ProviderContainer _containerWith(AuthResult result) {
