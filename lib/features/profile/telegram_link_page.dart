@@ -101,6 +101,18 @@ class _TelegramLinkPageState extends ConsumerState<TelegramLinkPage>
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
               children: [
+                Text(
+                  'Sambungkan akaun Telegram anda ke akaun MARC. Ini asas '
+                  'untuk ciri akan datang — notifikasi tambahan terus ke '
+                  'Telegram, dan pengesahan dua langkah (2FA) semasa log '
+                  'masuk. Buat masa ini binding sahaja belum menghantar '
+                  'notifikasi apa-apa.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 20),
                 // Material (bukan Container+BoxDecoration) — padanan
                 // _InfoCard di profile_page.dart, elak splash ink
                 // tersorok bawah decoration.
@@ -130,7 +142,7 @@ class _TelegramLinkPageState extends ConsumerState<TelegramLinkPage>
                           ? (profile.telegramUsername != null
                                 ? '@${profile.telegramUsername}'
                                 : 'Akaun Telegram disambungkan')
-                          : 'Sambung untuk terima notifikasi tambahan',
+                          : 'Belum ada akaun Telegram disambungkan',
                     ),
                   ),
                 ),
