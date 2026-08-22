@@ -380,6 +380,76 @@ sebagai penemuan baharu — semua enam sudah dibaiki dan disahkan
       ahli sebelumnya. Dibaiki: `clearMemoryImageCache()` +
       `clearDiskCachedImages()` dalam `signOut()`.
 
+## Perubahan backend 2026-08-22 — kesan pada Flutter: TIADA kod perlu diubah
+
+Audit `marc_go` (`queries/`, `internal/`, `cmd/` — laporan penuh:
+`../marc_go/docs/audits/2026-08-22-queries-internal-cmd.md`) menghasilkan
+tujuh pembaikan. Semuanya disemak terhadap `lib/` sebelum dihantar.
+**Tiada satu pun memerlukan perubahan Flutter.** Direkod di sini supaya
+kontrak yang berubah tak ditemui secara terkejut kemudian.
+
+**Disahkan selamat, tiada tindakan:**
+
+- **`checkin_token` DIBUANG daripada `GET /activities/:id/registrations`**
+  (L12). `manage_providers.dart` sudah menyatakan medan itu "SENGAJA tidak
+  dimodelkan", jadi `ActivityRegistrant` tak pernah membacanya —
+  itulah yang membolehkan backend membuangnya. Kini konvensyen klien tu
+  dikuatkuasakan di pelayan.
+
+  ⚠️ Ia **kekal** dalam `GET /me/activities` (`ListMyRegistrations`) —
+  `my_activities_page.dart` melukis QR ahli daripadanya. Jangan andaikan
+  medan itu hilang di semua tempat.
+
+- **`PATCH /comments/:id` kini pulangkan `author` + `like_count` +
+  `liked_by_me`** (L34, sebelum ni ketiga-tiganya nilai sifar).
+  `editComment` (`post_providers.dart`) buang respons sepenuhnya dan
+  `_ref.invalidate(commentsProvider)`, jadi pepijat itu **tak pernah
+  kelihatan** kepada pengguna di klien ni — selamat secara kebetulan
+  corak invalidate-refetch, bukan secara reka bentuk.
+
+  Peluang (BUKAN keperluan): respons kini lengkap, jadi `editComment`
+  boleh mengemas kini komen itu di tempatnya dan melangkau refetch
+  senarai penuh. Cuma buat kalau latensi edit jadi masalah sebenar —
+  invalidate lebih mudah dan tak boleh terpesong.
+
+- **`WriteTimeout` backend 15s → 90s** (L31).
+
+  ⚠️ **JANGAN buang `certificatesIssueTimeout` (5 minit) dalam
+  `manage_providers.dart`.** Ia masih diperlukan, dan sekarang lebih
+  berguna daripada sebelum ini.
+
+  Siapa mengehadkan siapa, sebelum dan selepas:
+
+  | | Klien (dio) | Pelayan (`WriteTimeout`) | Yang mengikat |
+  |---|---|---|---|
+  | Terbit sijil, dulu | 5 min | 15s | **pelayan** (~20 sijil) |
+  | Terbit sijil, kini | 5 min | 90s | **pelayan** (~120 sijil) |
+  | Selebihnya | 12s | 90s | **klien** |
+
+  Jadi 90s itu menaikkan saiz kohort yang benar-benar mendapat respons
+  daripada ~20 kepada ~120 sijil (fasa 2 berjujukan, ~0.7s sesijil).
+  Melebihi itu, pelayan masih memutuskan dahulu dan pengurus masih
+  bergantung pada laluan 202/timeout + "Tekan Terbitkan sekali lagi"
+  yang sudah dibina — yang kekal betul dan kekal diperlukan.
+
+  Siling itu hanya hilang sepenuhnya apabila fasa 2 jadi kerja latar di
+  pelayan (kekal terbuka sebagai L31 dalam `../marc_go/TODO.md`).
+
+  Laluan lain (resit, dsb) diikat oleh lalai dio 12s, bukan oleh pelayan
+  — tidak berubah, dan tidak terjejas.
+
+- L13 (kolam sambungan), L28 (reaper), L29 (log bil yatim), L30 (tingkap
+  reconcile) — semuanya dalaman pelayan, tiada permukaan API berubah.
+
+**L26a — DITUTUP, tiada tindakan.** `../marc_go/TODO.md` meminta sahkan
+Flutter tak melayan **429** pada `/auth/refresh` sebagai token tak sah
+(kalau ya, had kadar bersama akan jadi forced-logout beramai-ramai).
+Disahkan selamat: `api_client.dart` melayan **hanya 401** sebagai
+`_RefreshOutcome.rejected`; 429 jatuh ke `networkFailure`, yang
+mengekalkan refresh token. Backend juga sudah memberi `/refresh` dan
+`/logout` baldi `auth-session` sendiri, berasingan daripada baldi `auth`
+ketat.
+
 ## Jurang ujian
 
 - [ ] Widget test `post_card.dart` (rendering + tindakan)

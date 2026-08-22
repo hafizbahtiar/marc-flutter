@@ -1,0 +1,11 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1080, "h": 1920, "title": "Feed" },
+    { "file": "Activities.dc.html", "x": 1160, "y": 0, "w": 1080, "h": 1920, "title": "Aktiviti" },
+    { "file": "Members.dc.html", "x": 2320, "y": 0, "w": 1080, "h": 1920, "title": "Ahli" },
+    { "file": "Donation.dc.html", "x": 3480, "y": 0, "w": 1080, "h": 1920, "title": "Sokong MARC" },
+    { "file": "Notifications.dc.html", "x": 4640, "y": 0, "w": 1080, "h": 1920, "title": "Notifikasi" },
+    { "file": "FeatureGraphic.dc.html", "x": 0, "y": 2020, "w": 1024, "h": 500, "title": "Feature Graphic" }
+  ],
+  "launch": { "view": "canvas" }
+}
