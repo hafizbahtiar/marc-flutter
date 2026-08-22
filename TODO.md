@@ -380,6 +380,17 @@ sebagai penemuan baharu — semua enam sudah dibaiki dan disahkan
       ahli sebelumnya. Dibaiki: `clearMemoryImageCache()` +
       `clearDiskCachedImages()` dalam `signOut()`.
 
+## Backend L32 (2026-08-22) — reset kata laluan ✅
+
+Skrin `forgot_password_page.dart` baharu + pautan "Lupa kata laluan?" pada
+`login_page.dart`. Flutter hanya mengumpul EMEL; kata laluan baharu ditaip
+pada halaman `marc_astro` (tiada app-link https dikonfigur, jadi pautan
+emel membuka pelayar).
+
+⚠️ `forgotPasswordSentMessage` MESTI kekal neutral — backend pulang 204
+sama ada akaun wujud atau tidak, dan mesej yang berkata "Pautan dihantar!"
+akan membocorkan apa yang backend sengaja sembunyikan. Dikunci oleh ujian.
+
 ## Backend L33 (2026-08-22) — derma dalam "Bayaran Saya" ✅
 
 `GET /me/payments` kini memulangkan senarai KETIGA, `donations`
