@@ -518,6 +518,16 @@ ketat.
 
 ## Jurang ujian
 
+- [ ] Widget test `forgot_password_page.dart` — mesej kejayaan benar-benar
+      **dirender**. Ujian sedia ada mengesahkan pemalar itu neutral (itu
+      invarian keselamatan, dan sudah dikunci); yang tak dilindungi ialah
+      `_sent` bertukar dan `Text(forgotPasswordSentMessage)` muncul. Kalau
+      refactor memutuskan `setState`, ahli hantar emel, skrin tak berubah,
+      mereka hantar lagi — dan setiap permintaan baharu **membunuh token
+      sebelumnya** di backend, jadi pautan dalam emel yang mereka akhirnya
+      buka sudah mati. Bug UI senyap yang jadi jauh lebih teruk kerana
+      kelakuan backend. Tak disekat kerana `login_page`/`register_page`
+      pun tiada widget test. (Semakan akhir L32, 2026-08-22.)
 - [ ] Widget test `post_card.dart` (rendering + tindakan)
 - [ ] Unit test `PostRepository.uploadImage` (mock respons presign)
 - [ ] Pas UI visual menyeluruh pada peranti. Aliran donation, upload gambar,
