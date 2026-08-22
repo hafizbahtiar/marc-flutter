@@ -39,6 +39,53 @@ Widget _host(
 }
 
 void main() {
+  group('AppActionSheetMetrics', () {
+    const screen = 780.0;
+
+    test('sedikit item → compact, tinggi ikut kandungan', () {
+      final e = AppActionSheetMetrics.layout(
+        actionCount: 2,
+        hasHeader: true,
+        hasSubtitle: false,
+        screenHeight: screen,
+        bottomInset: 0,
+      );
+      expect(e.compact, isTrue);
+      expect(e.initial, e.max);
+      expect(e.initial, lessThan(AppActionSheetMetrics.defaultInitial));
+      expect(e.initial, greaterThan(0));
+    });
+
+    test('lebih sikit dari default → initial ikut item, bukan default', () {
+      // 7 jubin: melepasi 50% sikit, masih dalam slack 2 jubin.
+      final e = AppActionSheetMetrics.layout(
+        actionCount: 7,
+        hasHeader: true,
+        hasSubtitle: false,
+        screenHeight: screen,
+        bottomInset: 0,
+      );
+      expect(e.compact, isFalse);
+      expect(e.initial, greaterThan(AppActionSheetMetrics.defaultInitial));
+      expect(e.initial, lessThanOrEqualTo(AppActionSheetMetrics.maxSize));
+      expect(e.max, AppActionSheetMetrics.maxSize);
+    });
+
+    test('banyak item → initial default, boleh dileret ke max', () {
+      final e = AppActionSheetMetrics.layout(
+        actionCount: 20,
+        hasHeader: true,
+        hasSubtitle: false,
+        screenHeight: screen,
+        bottomInset: 0,
+      );
+      expect(e.compact, isFalse);
+      expect(e.initial, AppActionSheetMetrics.defaultInitial);
+      expect(e.max, AppActionSheetMetrics.maxSize);
+      expect(e.min, lessThan(e.initial));
+    });
+  });
+
   testWidgets('Material: pilih tindakan pulang value-nya', (tester) async {
     _Action? dipilih;
     await tester.pumpWidget(
@@ -139,6 +186,38 @@ void main() {
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
     expect(dipilih, _Action.edit);
+  });
+
+  testWidgets('Material: senarai panjang tak overflow dan boleh di-scroll', (
+    tester,
+  ) async {
+    // Padanan peranti overflow sebenar (~360x780 logik, sheet ~separuh).
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final actions = [
+      for (var i = 0; i < 20; i++)
+        AppSheetAction(value: i, label: 'Kategori $i'),
+    ];
+    await tester.pumpWidget(
+      _host(
+        TargetPlatform.android,
+        (context) => showAppActionSheet<int>(
+          context,
+          title: 'Pilih kategori',
+          actions: actions,
+        ),
+      ),
+    );
+    await tester.tap(find.text('buka'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Kategori 0'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Kategori 19'), 300);
+    expect(find.text('Kategori 19'), findsOneWidget);
   });
 
   testWidgets('Sheet kekal boleh dibaca dalam mod gelap', (tester) async {

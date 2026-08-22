@@ -94,19 +94,86 @@ Future<T?> showAppActionSheet<T>(
 
   return showModalBottomSheet<T>(
     context: context,
-    // showDragHandle: pengesahan visual yang sheet ni boleh dileret turun —
-    // di Material tiada butang Batal (berbeza dengan iOS), jadi affordance
-    // tutup mesti jelas.
-    showDragHandle: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-    ),
+    // Handle diletak dalam DraggableScrollableSheet supaya leret
+    // atas handle + senarai memandu saiz sheet yang sama.
+    showDragHandle: false,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
     builder: (ctx) => _MaterialActionSheet<T>(
       title: title,
       message: message,
       actions: actions,
     ),
   );
+}
+
+/// Saiz [DraggableScrollableSheet] untuk action sheet Material.
+///
+/// Dua mode:
+/// * **compact** — semua item muat di bawah [defaultInitial]; tinggi ikut
+///   kandungan, tak boleh dileret naik.
+/// * **scroll** — item lebih dari itu. Kalau lebih sikit (dalam slack 2
+///   jubin), [initial] ikut kandungan. Kalau banyak, buka pada
+///   [defaultInitial] dan boleh dileret ke [maxSize].
+@visibleForTesting
+class AppActionSheetMetrics {
+  const AppActionSheetMetrics({
+    required this.min,
+    required this.initial,
+    required this.max,
+    required this.compact,
+  });
+
+  static const defaultInitial = 0.5;
+  static const maxSize = 0.9;
+  static const minSize = 0.22;
+
+  static const tileHeight = 56.0;
+  static const subtitleTileHeight = 72.0;
+  static const handleHeight = 20.0;
+  static const headerHeight = 48.0;
+  static const footerHeight = 12.0;
+  static const slackTiles = 2;
+
+  final double min;
+  final double initial;
+  final double max;
+  final bool compact;
+
+  static AppActionSheetMetrics layout({
+    required int actionCount,
+    required bool hasHeader,
+    required bool hasSubtitle,
+    required double screenHeight,
+    required double bottomInset,
+  }) {
+    final tile = hasSubtitle ? subtitleTileHeight : tileHeight;
+    final contentHeight =
+        handleHeight +
+        (hasHeader ? headerHeight : 0) +
+        actionCount * tile +
+        footerHeight +
+        bottomInset;
+    final needed = (contentHeight / screenHeight).clamp(0.0, maxSize);
+    final slack = slackTiles * tile / screenHeight;
+
+    if (needed <= defaultInitial) {
+      return AppActionSheetMetrics(
+        min: needed,
+        initial: needed,
+        max: needed,
+        compact: true,
+      );
+    }
+
+    final initial = needed <= defaultInitial + slack ? needed : defaultInitial;
+    return AppActionSheetMetrics(
+      min: minSize,
+      initial: initial,
+      max: maxSize,
+      compact: false,
+    );
+  }
 }
 
 class _MaterialActionSheet<T> extends StatelessWidget {
@@ -124,65 +191,127 @@ class _MaterialActionSheet<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final media = MediaQuery.of(context);
+    final metrics = AppActionSheetMetrics.layout(
+      actionCount: actions.length,
+      hasHeader: title != null || message != null,
+      hasSubtitle: actions.any((a) => a.subtitle != null),
+      screenHeight: media.size.height,
+      bottomInset: media.padding.bottom,
+    );
 
-    return SafeArea(
-      top: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (title != null || message != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (title != null)
-                    Text(
-                      title!,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+    return DraggableScrollableSheet(
+      expand: false,
+      minChildSize: metrics.min,
+      initialChildSize: metrics.initial,
+      maxChildSize: metrics.max,
+      shouldCloseOnMinExtent: true,
+      builder: (context, scrollController) {
+        return Material(
+          color: scheme.surface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _SheetHandle(),
+              if (title != null || message != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (title != null)
+                        Text(
+                          title!,
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      if (message != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          message!,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: actions.length,
+                  itemBuilder: (context, i) {
+                    final a = actions[i];
+                    return ListTile(
+                      enabled: a.enabled,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
                       ),
-                    ),
-                  if (message != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      message!,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                      leading: a.icon == null
+                          ? null
+                          : Icon(
+                              a.icon,
+                              color: a.isDestructive
+                                  ? scheme.error
+                                  : scheme.onSurface,
+                            ),
+                      title: Text(
+                        a.label,
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: a.isDestructive
+                              ? scheme.error
+                              : scheme.onSurface,
+                        ),
                       ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          for (final a in actions)
-            ListTile(
-              enabled: a.enabled,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-              leading: a.icon == null
-                  ? null
-                  : Icon(
-                      a.icon,
-                      color: a.isDestructive ? scheme.error : scheme.onSurface,
-                    ),
-              title: Text(
-                a.label,
-                style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: a.isDestructive ? scheme.error : scheme.onSurface,
+                      subtitle: a.subtitle == null
+                          ? null
+                          : Text(a.subtitle!),
+                      trailing: a.isSelected
+                          ? Icon(Icons.check, color: scheme.primary)
+                          : null,
+                      onTap: a.enabled
+                          ? () => Navigator.of(context).pop(a.value)
+                          : null,
+                    );
+                  },
                 ),
               ),
-              subtitle: a.subtitle == null ? null : Text(a.subtitle!),
-              trailing: a.isSelected
-                  ? Icon(Icons.check, color: scheme.primary)
-                  : null,
-              onTap: a.enabled
-                  ? () => Navigator.of(context).pop(a.value)
-                  : null,
-            ),
-          const SizedBox(height: 12),
-        ],
+              SizedBox(
+                height:
+                    AppActionSheetMetrics.footerHeight + media.padding.bottom,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SheetHandle extends StatelessWidget {
+  const _SheetHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: AppActionSheetMetrics.handleHeight,
+      child: Center(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: const SizedBox(width: 32, height: 4),
+        ),
       ),
     );
   }
