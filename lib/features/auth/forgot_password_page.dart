@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/features/auth/auth_providers.dart';
@@ -15,12 +14,6 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 const forgotPasswordSentMessage =
     'Kalau emel itu berdaftar, kami dah hantar pautan reset. '
     'Semak peti masuk anda.';
-
-/// 429 bermakna terlalu banyak percubaan, bukan permintaan tak sah —
-/// pengguna patut cuba lagi sebentar, bukan menganggap ia gagal kekal.
-bool isRetryableResetError(Object error) {
-  return error is DioException && error.response?.statusCode == 429;
-}
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
