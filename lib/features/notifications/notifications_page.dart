@@ -21,6 +21,7 @@ const unknownNotificationTitle = 'Anda ada notifikasi baharu.';
 IconData notificationIcon(AppNotification n) {
   switch (n.type) {
     case 'post_like':
+    case 'comment_like':
       return Icons.favorite;
     case 'post_comment':
       return Icons.mode_comment_outlined;
@@ -48,6 +49,7 @@ Color notificationColor(BuildContext context, AppNotification n) {
   final scheme = Theme.of(context).colorScheme;
   switch (n.type) {
     case 'post_like':
+    case 'comment_like':
     case 'member_rejected':
     case 'activity_cancelled':
       return scheme.error;
@@ -68,6 +70,12 @@ String notificationTitle(AppNotification n) {
   switch (n.type) {
     case 'post_like':
       return 'Seseorang menyukai post anda';
+    // `comment_like` ditambah 2026-08-22 (backend L35). Ia membawa
+    // `post_id` DAN `comment_id`, jadi `notificationDestination` sudah
+    // menghalakannya ke post yang betul tanpa perubahan — cuma teks,
+    // ikon dan warna yang perlu dipetakan di sini.
+    case 'comment_like':
+      return 'Seseorang menyukai komen anda';
     case 'post_comment':
       return 'Seseorang comment pada post anda';
     case 'member_pending':

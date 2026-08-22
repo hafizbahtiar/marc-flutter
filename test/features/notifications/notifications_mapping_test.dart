@@ -9,14 +9,26 @@ import 'package:marc/features/posts/post_models.dart';
 /// kontrak — ujian di bawah menuntut setiap satunya dipetakan secara
 /// eksplisit, jadi jenis server yang baharu akan menjeritkan `assert` di
 /// sini dan bukan mewarisi ayat orang lain secara senyap.
+/// Sumber kebenaran: kekangan `notifications_type_check` dalam
+/// `../marc_go/internal/db/migrations`. Bila migration meluaskan
+/// kekangan itu, senarai ni MESTI diluaskan sama — kalau tidak jenis
+/// baharu mendarat di `default`, `assert` menembak dalam binaan debug,
+/// dan pengguna release nampak ayat neutral.
+///
+/// Dua terlepas sebelum ni dan ditangkap 2026-08-22: `activity_reminder`
+/// (backend 2026-08-15) dan `comment_like` (backend L35, 2026-08-22).
+/// Kedua-duanya sudah dipetakan dalam switch; senarai kontrak ni yang
+/// ketinggalan.
 const _jenisServer = <String>[
   'post_like',
+  'comment_like',
   'post_comment',
   'member_pending',
   'member_approved',
   'member_rejected',
   'activity_published',
   'activity_cancelled',
+  'activity_reminder',
   'certificate_ready',
 ];
 

@@ -77,16 +77,64 @@ class ActivityPaymentEntry {
   }
 }
 
-/// Sejarah bayaran seorang ahli (`GET /me/payments`) — dua senarai
+/// Satu derma milik ahli log masuk (`donations`).
+///
+/// Derma TANPA NAMA (`user_id` null di backend) tak pernah muncul di sini
+/// — penderma itu tiada akaun untuk menuntutnya, dan emel resit semasa
+/// webhook ialah satu-satunya jejak mereka ada, mengikut reka bentuk.
+///
+/// SENGAJA tiada `donorName`/`donorEmail`: ahli boleh menderma dgn nama
+/// atau emel yang berbeza daripada akaunnya, dan senarai ni cuma perlu
+/// menjawab "apa yang saya derma, dan mana resitnya". Nilai itu tetap
+/// dicetak pada resit PDF.
+class DonationPaymentEntry {
+  const DonationPaymentEntry({
+    required this.id,
+    required this.amountCents,
+    required this.currency,
+    required this.gateway,
+    required this.status,
+    required this.createdAt,
+  });
+
+  final String id;
+  final int amountCents;
+  final String currency;
+  final String gateway;
+
+  /// "pending" / "succeeded" / "failed".
+  final String status;
+  final DateTime createdAt;
+
+  factory DonationPaymentEntry.fromJson(Map<String, dynamic> json) {
+    return DonationPaymentEntry(
+      id: json['id'] as String,
+      amountCents: (json['amount_cents'] as num).toInt(),
+      currency: json['currency'] as String,
+      gateway: json['gateway'] as String,
+      status: json['status'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
+    );
+  }
+}
+
+/// Sejarah bayaran seorang ahli (`GET /me/payments`) — TIGA senarai
 /// berasingan, padanan bentuk respons backend.
+///
+/// `donations` ditambah 2026-08-22 (backend L33). Sebelum ni
+/// `PaymentReceiptRepository.donation()` wujud dan berfungsi tapi tiada
+/// pemanggil yang boleh sampai kepadanya: ia perlukan `donations.id`, dan
+/// tiada permukaan API yang pernah mendedahkan id itu kepada pemiliknya.
 class MyPaymentHistory {
   const MyPaymentHistory({
     required this.registrationFee,
     required this.activityFees,
+    required this.donations,
   });
 
   final List<RegistrationPaymentEntry> registrationFee;
   final List<ActivityPaymentEntry> activityFees;
+  final List<DonationPaymentEntry> donations;
 
   factory MyPaymentHistory.fromJson(Map<String, dynamic> json) {
     return MyPaymentHistory(
@@ -97,6 +145,13 @@ class MyPaymentHistory {
           .toList(),
       activityFees: (json['activity_fees'] as List)
           .map((e) => ActivityPaymentEntry.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      // `?? const []` — bukan kemasan: app yang dikeluarkan SEBELUM L33
+      // bercakap dgn backend yang tak menghantar kunci ni, dan sebaliknya
+      // app baharu boleh mencapai backend lama semasa deploy berperingkat.
+      // Kedua-dua arah mesti tak terhempas.
+      donations: ((json['donations'] as List?) ?? const [])
+          .map((e) => DonationPaymentEntry.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }

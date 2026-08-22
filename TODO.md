@@ -380,7 +380,62 @@ sebagai penemuan baharu — semua enam sudah dibaiki dan disahkan
       ahli sebelumnya. Dibaiki: `clearMemoryImageCache()` +
       `clearDiskCachedImages()` dalam `signOut()`.
 
-## Perubahan backend 2026-08-22 — kesan pada Flutter: TIADA kod perlu diubah
+## Backend L33 (2026-08-22) — derma dalam "Bayaran Saya" ✅
+
+`GET /me/payments` kini memulangkan senarai KETIGA, `donations`
+(`../marc_go/TODO.md` **L33**). Sebelum ni
+`PaymentReceiptRepository.donation()` sudah wujud dan berfungsi — tapi
+tiada pemanggil boleh sampai kepadanya, sebab ia perlukan `donations.id`
+dan tiada permukaan API yang pernah mendedahkan id itu kepada pemiliknya.
+Endpoint resit tak pernah rosak; senarainya yang tiada.
+
+Dibuat:
+- `DonationPaymentEntry` + medan `donations` pada `MyPaymentHistory`
+- Seksyen "Sokongan" dalam `payment_history_page.dart` (diletak AKHIR:
+  dua di atas kewajipan keahlian, ini sokongan sukarela)
+- `_DonationTile` — bentuk padan `_RegistrationFeeTile` (jumlah sebagai
+  tajuk), bukan `_ActivityFeeTile` (yang tajuknya nama aktiviti)
+- Butang resit digate `status == 'succeeded'`, corak sama dua seksyen lain
+
+⚠️ **`donations` dinyahsiri dengan `?? const []`** — bukan kemasan.
+Semasa deploy berperingkat, app baharu boleh mencapai backend lama yang
+belum menghantar kunci itu. Tanpa fallback, skrin "Bayaran Saya" mati
+sepenuhnya sepanjang tetingkap tu. Dikunci oleh ujian
+`test/features/payments/payment_models_test.dart`.
+
+Derma TANPA NAMA tak muncul — penderma tiada akaun untuk menuntutnya,
+dan emel resit semasa webhook satu-satunya jejak mereka, ikut reka bentuk.
+
+## Backend L35 (2026-08-22) — jenis notifikasi baharu `comment_like` ✅
+
+Backend kini menghantar `comment_like` bila seseorang menyukai komen ahli
+(keputusan produk 2026-08-22, `../marc_go/TODO.md` **L35**). Ini **memang**
+memerlukan perubahan Flutter — tak macam batch sebelumnya.
+
+Kenapa ia tak boleh dibiarkan: `notifications_page.dart` memetakan jenis
+secara EKSPLISIT dan jenis tak dikenali mendarat di `default`, yang
+memanggil `assert(false, ...)`. Dalam binaan **debug/profile** itu
+**crash** pada halaman notifikasi; dalam release pengguna nampak "Anda ada
+notifikasi baharu." dan bukan ayat sebenar.
+
+Dibuat:
+- `notificationIcon` → `Icons.favorite` (kongsi cabang dgn `post_like`)
+- `notificationColor` → `scheme.error` (kongsi cabang dgn `post_like`)
+- `notificationTitle` → "Seseorang menyukai komen anda"
+- `notificationDestination` **tidak** disentuh — ia berasaskan ID bukan
+  jenis, dan `comment_like` membawa `post_id`, jadi ketukan sudah
+  menghala ke post yang betul.
+
+Turut ditangkap semasa itu: senarai kontrak `_jenisServer` dalam
+`test/features/notifications/notifications_mapping_test.dart` sudah
+terpesong — ia tertinggal **`activity_reminder`** (backend 2026-08-15)
+walaupun switch memetakannya. Kedua-dua jenis ditambah ke senarai.
+
+⚠️ Senarai itu ialah kontrak silang-repo dengan kekangan
+`notifications_type_check` dalam migration `marc_go`. Bila migration
+meluaskan kekangan, senarai ni MESTI diluaskan sama.
+
+## Perubahan backend 2026-08-22 (batch terdahulu) — kesan pada Flutter: TIADA kod perlu diubah
 
 Audit `marc_go` (`queries/`, `internal/`, `cmd/` — laporan penuh:
 `../marc_go/docs/audits/2026-08-22-queries-internal-cmd.md`) menghasilkan

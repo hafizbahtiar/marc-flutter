@@ -92,7 +92,9 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
             ),
           ),
           data: (data) {
-            if (data.registrationFee.isEmpty && data.activityFees.isEmpty) {
+            if (data.registrationFee.isEmpty &&
+                data.activityFees.isEmpty &&
+                data.donations.isEmpty) {
               return RefreshIndicator.adaptive(
                 onRefresh: () => ref.refresh(myPaymentHistoryProvider.future),
                 child: ListView(
@@ -137,6 +139,21 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
                                 e.registrationId,
                                 receipts.activityFee,
                               )
+                            : null,
+                      ),
+                  ],
+                  // Derma (backend L33, 2026-08-22). Diletak AKHIR
+                  // sengaja: dua yang di atas ialah kewajipan keahlian,
+                  // ini sokongan sukarela — turutan tu memadankan cara
+                  // ahli memikirkannya.
+                  if (data.donations.isNotEmpty) ...[
+                    const _SectionHeader('Sokongan'),
+                    for (final e in data.donations)
+                      _DonationTile(
+                        entry: e,
+                        busy: _busy.contains(e.id),
+                        onDownload: e.status == 'succeeded'
+                            ? () => _downloadReceipt(e.id, receipts.donation)
                             : null,
                       ),
                   ],
@@ -253,6 +270,39 @@ class _RegistrationFeeTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
       leading: const Icon(Icons.card_membership_outlined),
+      title: Text(_formatAmount(entry.amountCents, entry.currency)),
+      subtitle: Text(relativeTime(entry.createdAt)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StatusBadge(status: entry.status),
+          _ReceiptButton(busy: busy, onDownload: onDownload),
+        ],
+      ),
+    );
+  }
+}
+
+/// Satu derma. Bentuknya sengaja padan `_RegistrationFeeTile` (jumlah
+/// sebagai tajuk, masa sebagai subtajuk) — kedua-duanya bayaran sekali
+/// tanpa entiti berkaitan untuk dinamakan, tak macam yuran aktiviti yang
+/// tajuknya ialah nama aktiviti.
+class _DonationTile extends StatelessWidget {
+  const _DonationTile({
+    required this.entry,
+    required this.busy,
+    required this.onDownload,
+  });
+
+  final DonationPaymentEntry entry;
+  final bool busy;
+  final VoidCallback? onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      leading: const Icon(Icons.favorite_outline),
       title: Text(_formatAmount(entry.amountCents, entry.currency)),
       subtitle: Text(relativeTime(entry.createdAt)),
       trailing: Row(

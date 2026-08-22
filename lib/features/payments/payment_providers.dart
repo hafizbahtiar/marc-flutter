@@ -6,16 +6,20 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/payments/payment_models.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
-/// Sejarah bayaran SENDIRI (`GET /me/payments`) — yuran pendaftaran + yuran
-/// aktiviti. Set kecil per ahli (bukan log peristiwa yang bertambah tanpa
-/// had), jadi tiada pagination di sini — beza drpd `paymentLogsProvider`
-/// di bawah.
+/// Sejarah bayaran SENDIRI (`GET /me/payments`) — yuran pendaftaran +
+/// yuran aktiviti + derma. Set kecil per ahli (bukan log peristiwa yang
+/// bertambah tanpa had), jadi tiada pagination di sini — beza drpd
+/// `paymentLogsProvider` di bawah.
 final myPaymentHistoryProvider = FutureProvider<MyPaymentHistory>((ref) async {
   final isLoggedIn = ref.watch(
     authNotifierProvider.select((s) => s.isLoggedIn),
   );
   if (!isLoggedIn) {
-    return const MyPaymentHistory(registrationFee: [], activityFees: []);
+    return const MyPaymentHistory(
+      registrationFee: [],
+      activityFees: [],
+      donations: [],
+    );
   }
 
   final res = await ref.watch(dioProvider).get('/me/payments');
