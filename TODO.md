@@ -391,6 +391,34 @@ emel membuka pelayar).
 sama ada akaun wujud atau tidak, dan mesej yang berkata "Pautan dihantar!"
 akan membocorkan apa yang backend sengaja sembunyikan. Dikunci oleh ujian.
 
+## Backend Integrasi Telegram Fasa 1 (2026-08-22) — binding akaun ✅
+
+Bukan penemuan audit (tiada label `L##`) — ciri baharu dari brainstorm
+berasingan. Spec: `../marc_go/docs/superpowers/specs/2026-08-22-telegram-binding-design.md`.
+Fasa pertama drpd tiga (binding → notifikasi → 2FA); dua yg terakhir
+BELUM dibina.
+
+Dibuat:
+- `Profile` (`profile_providers.dart`) tambah `telegramLinked`
+  (required) + `telegramUsername` (nullable), dihurai drpd `/me`
+- `telegram_link_page.dart` — skrin baharu, papar keadaan
+  Sambung/Disambungkan + `@username` kalau ada, butang nyahikat
+- `ListTile` "Telegram" dlm seksyen **Tetapan** `profile_page.dart`
+  (BUKAN `about_page.dart` — itu laman rasmi/penafian)
+- `AuthService.requestTelegramLinkToken()` /
+  `AuthService.deleteTelegramLink()` — dua kaedah baharu
+- Route `/telegram-link` dlm `router.dart`
+
+⚠️ `telegramLinked` jadi param `required` baharu pd `Profile` —
+kalau tambah tapak pembinaan `Profile(...)` baharu (test atau
+production), WAJIB sertakan field ni, kalau tidak `flutter analyze`
+gagal serta-merta (5 tapak ujian sedia ada dibetulkan semasa
+laksana ciri ni).
+
+Ciri ni MATI di backend (503) sehingga `TELEGRAM_BOT_TOKEN` diset
+production/staging — belum diset lagi. Butang "Sambung Telegram"
+akan papar mesej ralat sehingga itu, bukan crash.
+
 ## Backend L33 (2026-08-22) — derma dalam "Bayaran Saya" ✅
 
 `GET /me/payments` kini memulangkan senarai KETIGA, `donations`
