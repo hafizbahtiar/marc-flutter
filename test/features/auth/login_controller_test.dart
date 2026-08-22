@@ -15,6 +15,12 @@ class _FakeAuthService implements AuthService {
   Future<void> signOut() async {}
   @override
   Future<AuthResult> requestPasswordReset(String email) async => _result;
+  @override
+  Future<({bool success, String? deepLink, String? error})>
+  requestTelegramLinkToken() async =>
+      (success: _result.success, deepLink: null, error: _result.error);
+  @override
+  Future<AuthResult> deleteTelegramLink() async => _result;
 }
 
 ProviderContainer _containerWith(AuthResult result) {

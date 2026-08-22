@@ -25,6 +25,7 @@ const _profile = Profile(
   roleName: 'Ahli',
   roleRank: 10,
   category: 'ahli',
+  telegramLinked: false,
 );
 
 Widget _host(Profile? profile) => ProviderScope(

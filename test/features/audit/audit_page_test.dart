@@ -20,6 +20,7 @@ Profile _profile({required bool management}) => Profile(
   roleName: management ? 'Manager' : 'Ahli',
   roleRank: management ? 60 : 10,
   category: management ? 'management' : 'ahli',
+  telegramLinked: false,
 );
 
 /// Dio palsu yang merekod query param setiap permintaan, supaya ujian

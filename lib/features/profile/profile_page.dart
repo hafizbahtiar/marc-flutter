@@ -217,6 +217,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   onChanged: (isDark) =>
                       ref.read(themeModeProvider.notifier).setDark(isDark),
                 ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.send_outlined),
+                  title: const Text('Telegram'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/telegram-link'),
+                ),
               ],
             ),
             const SizedBox(height: 20),

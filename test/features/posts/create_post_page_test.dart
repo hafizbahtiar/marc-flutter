@@ -17,6 +17,7 @@ Profile _profile({required bool management}) => Profile(
   roleName: management ? 'Manager' : 'Ahli',
   roleRank: management ? 60 : 10,
   category: management ? 'management' : 'ahli',
+  telegramLinked: false,
 );
 
 Widget _host({required bool management}) => ProviderScope(

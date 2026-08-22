@@ -33,6 +33,7 @@ const _me = Profile(
   roleName: 'Ahli',
   roleRank: 10,
   category: 'ahli',
+  telegramLinked: false,
 );
 
 Widget _wrap(Widget child) => ProviderScope(

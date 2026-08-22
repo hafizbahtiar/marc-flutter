@@ -99,6 +99,44 @@ class AuthService {
     }
   }
 
+  /// Jana deep-link binding Telegram. Backend pulang 503 kalau ciri
+  /// belum dikonfigur (TELEGRAM_BOT_TOKEN kosong) -- error itu
+  /// diteruskan terus, BUKAN dineutralkan spt reset kata laluan (tiada
+  /// isu enumerasi di sini -- binding perlukan auth, bukan endpoint awam).
+  Future<({bool success, String? deepLink, String? error})>
+  requestTelegramLinkToken() async {
+    try {
+      final res = await _dio.post('/me/telegram-link/token');
+      return (
+        success: true,
+        deepLink: res.data['deep_link'] as String,
+        error: null,
+      );
+    } on DioException catch (e) {
+      return (success: false, deepLink: null, error: extractErrorMessage(e));
+    } catch (_) {
+      return (
+        success: false,
+        deepLink: null,
+        error: 'Ralat tidak dijangka. Cuba lagi.',
+      );
+    }
+  }
+
+  Future<AuthResult> deleteTelegramLink() async {
+    try {
+      await _dio.delete('/me/telegram-link');
+      return const AuthResult(success: true);
+    } on DioException catch (e) {
+      return AuthResult(success: false, error: extractErrorMessage(e));
+    } catch (_) {
+      return const AuthResult(
+        success: false,
+        error: 'Ralat tidak dijangka. Cuba lagi.',
+      );
+    }
+  }
+
   /// Simpan token, tapi kalau secure storage rosak (cth: PlatformException
   /// sebab Keystore invalid lepas restore backup Android — lihat
   /// TokenStorage) buang SEMUA entri lama sekali sahaja dan cuba simpan

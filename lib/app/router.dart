@@ -32,6 +32,7 @@ import 'package:marc/features/profile/about_page.dart';
 import 'package:marc/features/profile/edit_profile_page.dart';
 import 'package:marc/features/profile/faq_page.dart';
 import 'package:marc/features/profile/profile_page.dart';
+import 'package:marc/features/profile/telegram_link_page.dart';
 import 'package:marc/shared/widgets/web_view_page.dart';
 
 /// Adapter: dengar perubahan authNotifierProvider, notify GoRouter untuk
@@ -98,6 +99,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(path: '/donate', builder: (_, _) => const DonationPage()),
+      GoRoute(
+        path: '/telegram-link',
+        builder: (_, _) => const TelegramLinkPage(),
+      ),
       GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
       GoRoute(path: '/audit-logs', builder: (_, _) => const AuditPage()),
       GoRoute(

@@ -16,6 +16,8 @@ class Profile {
     required this.category,
     this.avatarUrl,
     this.registrationPaymentStatus,
+    required this.telegramLinked,
+    this.telegramUsername,
   });
 
   final String memberId;
@@ -37,6 +39,9 @@ class Profile {
   /// `status != 'approved'` (lihat `profile.go` Me).
   final String? registrationPaymentStatus;
 
+  final bool telegramLinked;
+  final String? telegramUsername;
+
   bool get isManagement => category == 'management';
 
   bool get registrationPaymentFailed => registrationPaymentStatus == 'failed';
@@ -44,7 +49,11 @@ class Profile {
       registrationPaymentStatus == 'succeeded';
   bool get registrationPaymentPending => registrationPaymentStatus == 'pending';
 
-  Profile copyWith({Object? avatarUrl = _sentinel}) {
+  Profile copyWith({
+    Object? avatarUrl = _sentinel,
+    bool? telegramLinked,
+    Object? telegramUsername = _sentinel,
+  }) {
     return Profile(
       memberId: memberId,
       email: email,
@@ -58,6 +67,10 @@ class Profile {
       category: category,
       avatarUrl: avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
       registrationPaymentStatus: registrationPaymentStatus,
+      telegramLinked: telegramLinked ?? this.telegramLinked,
+      telegramUsername: telegramUsername == _sentinel
+          ? this.telegramUsername
+          : telegramUsername as String?,
     );
   }
 
@@ -77,6 +90,8 @@ class Profile {
       category: (json['category'] as String?) ?? 'ahli',
       avatarUrl: json['avatar_url'] as String?,
       registrationPaymentStatus: json['registration_payment_status'] as String?,
+      telegramLinked: (json['telegram_linked'] as bool?) ?? false,
+      telegramUsername: json['telegram_username'] as String?,
     );
   }
 }

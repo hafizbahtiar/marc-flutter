@@ -55,6 +55,7 @@ const _management = Profile(
   roleName: 'Manager',
   roleRank: 3,
   category: 'management',
+  telegramLinked: false,
 );
 
 Map<String, dynamic> _activityJson() => {
