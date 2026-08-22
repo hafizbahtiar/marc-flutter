@@ -105,10 +105,10 @@ flutter_launcher_icons:
 
 # Splash screen native (jana: dart run flutter_native_splash:create)
 flutter_native_splash:
-  color: "#2F6B4F"
+  color: "#FFFFFF"
   image: assets/splash/full_logo.png
   android_12:
-    color: "#2F6B4F"
+    color: "#FFFFFF"
     # full_logo.png (bbox 1000x854 atas kanvas 1052x1054) penuh sampai
     # tepi macam logo.png lama — Android 12+ splash mask ikon dalam
     # bulatan 768px atas kanvas 1152x1152, jadi tanpa padding tepi/penjuru

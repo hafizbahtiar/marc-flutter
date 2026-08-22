@@ -7,7 +7,8 @@
         {
             "name": "marc",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "args": ["--flavor", "staging"]
         },
         {
             "name": "marc (profile mode)",
