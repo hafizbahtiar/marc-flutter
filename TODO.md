@@ -807,6 +807,101 @@ ketat.
 - [ ] Pas UI visual menyeluruh pada peranti. Aliran donation, upload gambar,
       grid + pemapar dah disahkan pada Infinix X6833B; selebihnya belum.
 
+## Resit — R2 dibuang, buka via `printing` (2026-08-24)
+
+Sambungan perubahan backend (`marc_go/TODO.md` "Resit — R2 dibuang,
+stream terus"): resit PDF tak lagi disimpan R2, backend stream bait
+PDF terus. Client kena tukar cara terima + buka resit.
+
+- `payment_providers.dart`: `ReceiptLinkResult` (URL) →
+  `ReceiptBytesResult` (bait). `_fetch` guna `responseType: bytes`.
+  Ralat 409 kekal mesej sedia (`receiptNotReadyMessage`); ralat LAIN
+  guna helper baharu `_extractBytesError` — badan ralat backend sampai
+  sebagai `List<int>` mentah (bukan Map ter-nyahsiri) sebab
+  `responseType: bytes` dipaksa utk terima PDF, jadi nyahsiri JSON
+  manual dahulu sebelum jatuh balik ke `extractErrorMessage`.
+- `payment_history_page.dart`: buang `launchUrl` pada URL R2 luaran,
+  guna pakej BAHARU `printing` (`Printing.layoutPdf`) — dialog
+  preview/simpan/kongsi/cetak native terus drpd bait PDF, elak perlu
+  `path_provider`+`open_filex`+`share_plus` berasingan cuma utk "buka
+  satu PDF".
+- **`printing` bawa kod native (Android/iOS)** — projek ni ada siling
+  `compileSdk 35` ketat (lihat nota `mobile_scanner`/
+  `permission_handler` di `pubspec.yaml`). DISAHKAN `flutter build apk
+  --debug` lulus (APK prod+staging dihasilkan, tiada ralat AGP/
+  compileSdk, tiada plugin KGP baharu) SEBELUM commit — sama disiplin
+  yang dipakai utk `mobile_scanner` dulu.
+
+`flutter analyze` bersih, 258/258 ujian lulus.
+
+**Naming fail lebih baik, 2026-08-24** — nama fail resit dulu generik
+(`resit-yuran-pendaftaran.pdf`, sama untuk SEMUA muat turun jenis tu,
+tak boleh dibezakan kalau ahli simpan >1). Backend kini hantar nama
+sebenar via header `Content-Disposition`
+(`Resit-{Pendaftaran,Aktiviti,Sokongan}-MARC-{gateway_ref}.pdf` — padan
+PERSIS konvensyen lampiran emel resit donation sedia ada). Flutter
+`_parseContentDispositionFilename` (`payment_providers.dart`) hurai
+header tu, `payment_history_page.dart` hantar terus ke
+`Printing.layoutPdf(name: ...)` — fallback `'resit.pdf'` kalau header
+tiada/tak dpt dihurai.
+
+- [ ] **Belum disahkan pada peranti sebenar.** Dialog `Printing.
+      layoutPdf` (preview/simpan/kongsi/cetak) untuk ketiga-tiga jenis
+      resit (pendaftaran/aktiviti/donation) belum pernah dilihat mata.
+- [ ] **Tiada widget test baharu** untuk `_downloadReceipt`/
+      `Printing.layoutPdf` — jurang sedia ada (`PaymentHistoryPage`
+      tiada widget test sebelum ni pun).
+
+### Pertanyaan pengguna 2026-08-24 (rate limit/cache/local DB) — jawapan direkod
+
+- **Rate limit**: dah wujud, tak tersentuh oleh perubahan R2 di atas
+  (`payment-receipt`, 6s/5 setiap IP, ketiga-tiga endpoint resit —
+  `marc_go/internal/http/router.go`).
+- **Cache backend**: TAK disyorkan. Jana PDF murah (CPU sahaja, tiada
+  panggilan luar, <10ms), traffic resit rendah — cache backend tambah
+  kerumitan tanpa faedah ketara pada skala kelab ni.
+- [ ] **Local DB/cache di Flutter untuk resit — BELUM dibina, idea
+      disahkan berbaloi.** Resit IMMUTABLE lepas `succeeded`/`paid`
+      (kandungan tak pernah berubah lepas dijana) — selamat cache
+      SELAMA-LAMANYA tanpa isu "basi". Cadangan: simpan BAIT PDF terus
+      (bukan re-derive metadata) dlm storan lokal (`path_provider`),
+      keyed ikut payment ID. Kali kedua ahli nak resit sama → terus
+      dari cakera, tiada round-trip network — jimat bandwidth/edge
+      cost, app rasa laju. Keputusan pakej (`sqflite`/`Hive`/fail
+      terus via `path_provider`) belum dibuat — perlu brainstorm
+      berasingan bila nak proceed.
+- [x] **Tak perlu hash/signature untuk cache ni — rasional direkod.**
+      Resit BUKAN token pengesahan yang disemak sistem/pihak LAIN
+      (bandingkan `activity_certificates` yang ADA endpoint pengesahan
+      awam org lain scan QR — situasi tu MEMANG perlukan integrity
+      check sisi server). Resit cuma dokumen maklumat rekod ahli
+      sendiri. Kalau ahli "hack" cache lokal telefon dia sendiri utk
+      papar jumlah palsu: (1) cuma DIA sendiri tertipu — tiada orang
+      lain nampak, (2) rekod SEBENAR (`registration_payments`/
+      `payment_logs` Postgres) langsung tak terjejas — itu tetap
+      sumber kebenaran tunggal, (3) tiada laluan "upload semula" resit
+      yang di-cache balik ke server — app ni read-only untuk resit.
+      Access control sebenar (`user_id = caller` pada query DB) dah
+      cukup; lepas ahli fetch resit DIA SENDIRI sekali, apa dia buat
+      dgn salinan tu di device dia sendiri bukan risiko keselamatan
+      MARC.
+
+### Pertanyaan pengguna 2026-08-24 — emel resit yuran ✅ DIBINA (backend sahaja)
+
+- [x] **Yuran pendaftaran/aktiviti (ToyyibPay) kini hantar emel resit
+      — DIBINA 2026-08-24, sepenuhnya sisi `marc_go`.** Package baharu
+      `internal/receiptmail` (`FeeReceipt` struct + `Send`, loosely
+      coupled — dipanggil dua webhook, `registration_payment.go`/
+      `activity_registration_payment.go`, tanpa mereka import satu
+      sama lain). Butiran penuh: `marc_go/TODO.md` bahagian "Yuran
+      pendaftaran/aktiviti kini hantar emel resit".
+      **Tiada kerja Flutter** — ni sepenuhnya backend (webhook →
+      Resend terus), tak sentuh app langsung. Ahli akan mula terima
+      emel resit automatik sebaik bayaran disahkan, sama macam
+      donation sedia ada.
+      - [ ] Belum dihantar/dilihat pada inbox sebenar (Gmail/Outlook)
+            — disahkan setakat payload dijana betul secara lokal.
+
 ## Terma & Syarat / Dasar Privasi dalam-app (2026-08-16)
 
 Dua butang baharu di `about_page.dart` ("Terma & Syarat" / "Dasar Privasi")

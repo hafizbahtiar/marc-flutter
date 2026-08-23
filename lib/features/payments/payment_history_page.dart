@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:printing/printing.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/payments/payment_models.dart';
 import 'package:marc/features/payments/payment_providers.dart';
@@ -35,7 +35,7 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
 
   Future<void> _downloadReceipt(
     String id,
-    Future<ReceiptLinkResult> Function(String) fetch,
+    Future<ReceiptBytesResult> Function(String) fetch,
   ) async {
     if (_busy.contains(id)) return;
     setState(() => _busy.add(id));
@@ -48,15 +48,14 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
         return;
       }
 
-      final uri = Uri.tryParse(result.url!);
-      final opened =
-          uri != null &&
-          uri.scheme == 'https' &&
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!mounted) return;
-      if (!opened) {
-        MySnackBar.error(context, 'Tiada aplikasi untuk membuka resit.');
-      }
+      // Bait PDF terus dari backend (tiada URL R2 lagi, 2026-08-24) —
+      // `Printing.layoutPdf` papar dialog preview native dgn pilihan
+      // simpan/kongsi/cetak terbina, elak perlu path_provider+
+      // open_filex+share_plus berasingan cuma utk "buka satu PDF".
+      await Printing.layoutPdf(
+        onLayout: (_) async => result.bytes!,
+        name: result.filename ?? 'resit.pdf',
+      );
     } catch (_) {
       if (mounted) MySnackBar.error(context, 'Gagal muat turun resit.');
     } finally {

@@ -77,6 +77,14 @@ dependencies:
   # ini bukan pertukaran yang berbaloi.
   mobile_scanner: ^7.4.0
   webview_flutter: ^4.13.0
+  # Resit PDF (yuran pendaftaran/aktiviti/donation) kini di-stream TERUS
+  # dari backend (bukan URL R2 lagi, 2026-08-24) — `printing` buka
+  # dialog preview/simpan/kongsi/cetak native drpd bait PDF terus,
+  # elak perlu path_provider+open_filex+share_plus berasingan. Disahkan
+  # `flutter build apk --debug` lulus pada compileSdk 35 (lihat nota
+  # mobile_scanner/permission_handler di atas utk sebab siling ni
+  # penting).
+  printing: ^5.14.3
 
 dev_dependencies:
   flutter_test:
