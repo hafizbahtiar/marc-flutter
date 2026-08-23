@@ -4,7 +4,7 @@ import 'package:marc/core/token_storage.dart';
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
 /// Status log masuk & access token semasa. Ini gantian
-/// `Supabase.instance.client.auth` punya session/state stream — tapi
+/// `Supabase.instance.client.auth` punya session/state stream - tapi
 /// sumber kebenaran kita sekarang ialah token yang kita simpan sendiri.
 class AuthState {
   const AuthState({this.isLoggedIn = false, this.accessToken});
@@ -19,7 +19,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final TokenStorage _storage;
 
   /// Baca token tersimpan (dipanggil sekali di startup, sebelum
-  /// `runApp`, supaya redirect pertama GoRouter betul — elak "flicker"
+  /// `runApp`, supaya redirect pertama GoRouter betul - elak "flicker"
   /// ke /login sebelum sempat tahu ada sesi tersimpan).
   Future<void> hydrate() async {
     final access = await _storage.readAccessToken();

@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 /// gambar dalam post yang sama, leret ke bawah untuk tutup.
 ///
 /// Dibuka melalui [open] dan bukan `GoRouter`: laluan ni MESTI legap-palsu
-/// (`opaque: false`) supaya latar boleh pudar mengikut leretan tutup —
+/// (`opaque: false`) supaya latar boleh pudar mengikut leretan tutup -
 /// itulah keseluruhan kesan "tarik untuk tutup". Laluan GoRouter biasa
 /// legap dan akan memaparkan kotak hitam di belakang, bukan feed.
 class ImageViewerPage extends StatefulWidget {
@@ -26,10 +26,10 @@ class ImageViewerPage extends StatefulWidget {
   }) {
     // rootNavigator: true WAJIB. `/feed` tinggal dalam StatefulShellRoute
     // (shell dengan bottom navigation bar), manakala `/posts/:id` ialah
-    // route peringkat atas — jadi `Navigator.of(context)` tanpa flag ni
+    // route peringkat atas - jadi `Navigator.of(context)` tanpa flag ni
     // menyelesai ke navigator YANG BERBEZA bergantung dari mana pemapar
     // dibuka. Dari feed ia ditolak DALAM shell: bar navigasi bawah kekal
-    // kelihatan, tinggi yang ada mengecil, dan SafeArea beralih — sebab
+    // kelihatan, tinggi yang ada mengecil, dan SafeArea beralih - sebab
     // tu kaunter/butang tutup duduk di tempat berlainan berbanding bila
     // dibuka dari post detail. Root navigator = skrin penuh sebenar,
     // sama di kedua-dua tempat.
@@ -48,7 +48,7 @@ class ImageViewerPage extends StatefulWidget {
 }
 
 class _ImageViewerPageState extends State<ImageViewerPage> {
-  // ExtendedPageController (bukan PageController biasa) — itu yang
+  // ExtendedPageController (bukan PageController biasa) - itu yang
   // ExtendedImageGesturePageView terima, dan ia yang menyelaraskan
   // leretan halaman dengan pan semasa dizum.
   late final ExtendedPageController _controller = ExtendedPageController(
@@ -64,7 +64,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Pemapar sentiasa berlatar gelap, jadi ikon bar status MESTI cerah —
+    // Pemapar sentiasa berlatar gelap, jadi ikon bar status MESTI cerah -
     // kalau tidak ia hilang terus dalam mod terang (ikon gelap atas
     // latar hitam). AnnotatedRegion pulihkan gaya asal sendiri bila
     // laluan ni ditutup.
@@ -82,7 +82,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
     return ExtendedImageSlidePage(
       slideAxis: SlideAxis.vertical,
       slideType: SlideType.onlyImage,
-      // Latar pudar mengikut jarak leretan — maklum balas yang buat gerak
+      // Latar pudar mengikut jarak leretan - maklum balas yang buat gerak
       // isyarat tutup terasa langsung dan bukan bertukar tiba-tiba.
       slidePageBackgroundHandler: (offset, size) {
         final progress = (offset.dy.abs() / (size.height * 0.5)).clamp(
@@ -92,7 +92,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
         return Colors.black.withValues(alpha: 1 - progress);
       },
       // Material (lut sinar) WAJIB. Laluan ni PageRouteBuilder mentah
-      // tanpa Scaffold, jadi tiada moyang Material — dan `Text` tanpa
+      // tanpa Scaffold, jadi tiada moyang Material - dan `Text` tanpa
       // Material mewarisi DefaultTextStyle fallback Flutter, yang membawa
       // garis bawah BERGANDA KUNING. Menetapkan `color` pada TextStyle tak
       // membuangnya: `decoration` diwarisi berasingan. MaterialType
@@ -111,7 +111,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                   widget.urls[i],
                   fit: BoxFit.contain,
                   cache: true,
-                  // Tiada cacheWidth di sini — zum memerlukan piksel sebenar,
+                  // Tiada cacheWidth di sini - zum memerlukan piksel sebenar,
                   // dan cuma satu gambar aktif pada satu masa (berbeza dgn
                   // feed yang boleh pegang berpuluh).
                   enableSlideOutPage: true,
@@ -151,7 +151,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
               },
             ),
             // Skrim kecerunan. Kawalan putih di atas gambar sembarangan tak
-            // boleh dibaca sebaik gambar itu cerah — skrim ni jaminan
+            // boleh dibaca sebaik gambar itu cerah - skrim ni jaminan
             // kontras tanpa menggelapkan gambar keseluruhan. IgnorePointer
             // supaya ia tak makan gerak isyarat zum/leret.
             const IgnorePointer(child: _TopScrim()),
@@ -226,7 +226,7 @@ class _TopScrim extends StatelessWidget {
   }
 }
 
-/// Butang bulat separa lut sinar — sasaran sentuh 40dp dan kekal nampak
+/// Butang bulat separa lut sinar - sasaran sentuh 40dp dan kekal nampak
 /// atas gambar cerah mahupun gelap.
 class _GlassButton extends StatelessWidget {
   const _GlassButton({

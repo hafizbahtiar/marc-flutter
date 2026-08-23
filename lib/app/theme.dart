@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Token warna semantik tambahan yang tiada slot dalam `ColorScheme`
 /// standard Material (warning, warningBg, accentDark). Guna
-/// `Theme.of(context).extension<AppSemanticColors>()!` — JANGAN rujuk
+/// `Theme.of(context).extension<AppSemanticColors>()!` - JANGAN rujuk
 /// warna mentah terus, supaya ia bertukar automatik antara light/dark.
 @immutable
 class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
@@ -56,13 +56,13 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
 class AppTheme {
   static const _seed = Color(0xFF2F6B4F);
 
-  // `static final` (BUKAN `static get`) — SENGAJA. Skema/tema ni tak
+  // `static final` (BUKAN `static get`) - SENGAJA. Skema/tema ni tak
   // pernah berubah secara dinamik (seed warna tetap), tapi setiap
   // `AppTheme.light`/`.dark` DULU dikira semula dari kosong pada setiap
   // panggilan (~15 panggilan GoogleFonts.* + ColorScheme.fromSeed penuh
   // setiap satu). `MaterialApp.router` (main.dart) perlukan KEDUA-DUA
   // `theme:` DAN `darkTheme:` pada SETIAP rebuild `MyApp`, dan `MyApp`
-  // rebuild TEPAT bila `themeModeProvider` berubah — jadi suis tema
+  // rebuild TEPAT bila `themeModeProvider` berubah - jadi suis tema
   // (satu-satunya sebab MyApp rebuild) mencetuskan KERJA PALING BERAT di
   // fail ni dua kali, serentak dengan animasi peralihan tema cuba mula,
   // punca sebenar "slow/clunky/stutter" yang dilaporkan. `late final`

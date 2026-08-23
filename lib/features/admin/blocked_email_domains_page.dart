@@ -10,13 +10,13 @@ import 'package:marc/shared/widgets/app_dialog.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
-/// Skrin urus domain emel pelupusan (`blocked_email_domains`) —
+/// Skrin urus domain emel pelupusan (`blocked_email_domains`) -
 /// superadmin SAHAJA (bukan management umum): jadual ni kawal SIAPA
 /// BOLEH DAFTAR langsung, root-level config yang kesan seluruh sistem
 /// (padanan gate backend `authz.IsAtLeastRole(..., "superadmin")`,
 /// `internal/http/handlers/blocked_email_domains.go`).
 ///
-/// Ni PELENGKAP sahaja — pertahanan UTAMA ialah senarai statik terbenam
+/// Ni PELENGKAP sahaja - pertahanan UTAMA ialah senarai statik terbenam
 /// (`internal/disposableemail`, ~8,200 domain) yang tak boleh diurus
 /// dari sini langsung (perlu deploy kod). Skrin ni untuk domain BAHARU
 /// yang senarai statik terlepas.
@@ -30,7 +30,7 @@ class BlockedEmailDomainsPage extends ConsumerWidget {
       child: Consumer(
         builder: (context, ref, _) {
           // rolesProvider (sumber isSuperAdminProvider) ialah panggilan
-          // API BERASINGAN drpd /me — semak keadaan dia SENDIRI di sini
+          // API BERASINGAN drpd /me - semak keadaan dia SENDIRI di sini
           // (bukan cuma isSuperAdminProvider == false), kalau tidak
           // superadmin sebenar nampak "akses ditolak" sepanjang /roles
           // perlahan/gagal, jalan mati tanpa cuba semula (Opus verify

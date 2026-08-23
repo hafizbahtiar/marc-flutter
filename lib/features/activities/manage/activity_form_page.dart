@@ -103,7 +103,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
   late final TextEditingController _capacity;
   late final TextEditingController _threshold;
 
-  /// Ambang seperti yang DIMUATKAN — nilai yang medan kosong bermakna.
+  /// Ambang seperti yang DIMUATKAN - nilai yang medan kosong bermakna.
   /// Dalam mod cipta ia 100, iaitu lalai backend.
   late final int _initialThreshold;
 
@@ -112,7 +112,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
   DateTime? _closesAt;
   List<SessionDraft> _sessions = [];
 
-  /// Keadaan SEPERTI YANG DIMUATKAN. Inilah asas diff PATCH — tanpa
+  /// Keadaan SEPERTI YANG DIMUATKAN. Inilah asas diff PATCH - tanpa
   /// snapshot ini, "hanya hantar apa yang berubah" tiada makna.
   ActivityDraft? _loadedDraft;
   List<SessionDraft> _loadedSessions = const [];
@@ -172,7 +172,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
 
   /// Kapasiti kosong = TIADA had (lajur nullable), bukan sifar slot.
   /// `_capacityInvalid` membezakan "kosong" daripada "taip benda bukan
-  /// nombor" — yang kedua ralat, yang pertama tidak.
+  /// nombor" - yang kedua ralat, yang pertama tidak.
   int? get _capacityValue => int.tryParse(_capacity.text.trim());
   bool get _capacityInvalid =>
       _capacity.text.trim().isNotEmpty && _capacityValue == null;
@@ -188,7 +188,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
     capacity: _capacityValue,
     // Medan KOSONG bermakna "biarkan" dan bukan "tetapkan 100". Jatuh ke
     // 100 di sini akan menghantar `attendance_threshold_pct: 100` sebagai
-    // perubahan yang pengurus tidak pernah taip — pada aktiviti yang
+    // perubahan yang pengurus tidak pernah taip - pada aktiviti yang
     // ambangnya 80, mengosongkan medan secara tidak sengaja akan menaikkan
     // syarat sijil untuk semua orang.
     attendanceThresholdPct:
@@ -240,7 +240,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
   /// Dua permintaan, dan hanya yang PERLU dihantar.
   ///
   /// PATCH kosong dilangkau sepenuhnya, dan PUT sesi hanya berlaku bila set
-  /// sesi benar-benar berubah — kerana PUT itu ditolak 409 sebaik ada
+  /// sesi benar-benar berubah - kerana PUT itu ditolak 409 sebaik ada
   /// kehadiran direkod, dan menghantarnya "sekadar untuk selamat" akan
   /// menggagalkan suntingan tajuk yang tiada kaitan.
   Future<bool> _saveEdit() async {
@@ -256,7 +256,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
         return false;
       }
       // Asas diff bergerak ke hadapan. Kalau PUT sesi di bawah gagal 409,
-      // pengurus kekal di skrin ini — dan tekanan Simpan seterusnya tidak
+      // pengurus kekal di skrin ini - dan tekanan Simpan seterusnya tidak
       // patut menghantar semula medan yang SUDAH tersimpan.
       _loadedDraft = _currentDraft();
     }
@@ -275,7 +275,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
     final sessionResult = await repo.replaceSessions(id, _sessions);
     if (!mounted) return false;
     if (!sessionResult.isOk) {
-      // Medan aktiviti mungkin SUDAH tersimpan — pengurus perlu tahu itu,
+      // Medan aktiviti mungkin SUDAH tersimpan - pengurus perlu tahu itu,
       // jika tidak dia akan menyunting semula perkara yang sudah berjaya.
       MySnackBar.error(
         context,
@@ -370,7 +370,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
     setState(() => s.endsAt = picked);
   }
 
-  /// Bottom sheet (bukan dropdown) — padanan pemilih role di
+  /// Bottom sheet (bukan dropdown) - padanan pemilih role di
   /// `members_page.dart`, guna semula `showAppActionSheet`.
   Future<void> _pickCategory(List<ActivityCategory> rows) async {
     if (rows.isEmpty) return;
@@ -466,7 +466,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
             InkWell(
               onTap: () => _pickCategory(rows),
               child: InputDecorator(
-                // isEmpty MESTI ditetapkan — lalai InputDecorator ialah
+                // isEmpty MESTI ditetapkan - lalai InputDecorator ialah
                 // false, jadi hintText tak pernah dipapar langsung tanpanya
                 // (medan nampak kosong-kosong sahaja walaupun belum pilih).
                 isEmpty: _categoryId == null,
@@ -625,7 +625,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
               ],
             ),
             Text(
-              'Tarikh aktiviti dikira daripada sesi — sesi pertama hingga '
+              'Tarikh aktiviti dikira daripada sesi - sesi pertama hingga '
               'sesi terakhir.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -697,7 +697,7 @@ Future<DateTime?> _pickDateTime(BuildContext context, DateTime? initial) async {
 
 /// Dialog yang memaksa sebab bukan kosong sebelum butang sah aktif.
 ///
-/// Dipakai oleh pembatalan aktiviti DAN pindaan kehadiran — kedua-duanya
+/// Dipakai oleh pembatalan aktiviti DAN pindaan kehadiran - kedua-duanya
 /// tindakan yang backend tolak 400 tanpa sebab, dan kedua-duanya masuk ke
 /// jejak audit sebagai sebab yang ditaip manusia.
 Future<String?> showReasonDialog(
@@ -811,7 +811,7 @@ class _StatusBanner extends StatelessWidget {
     final theme = Theme.of(context);
     final (String text, Color color) = switch (activity.status) {
       'draft' => (
-        'Draf — belum kelihatan kepada ahli. Terbitkan dari menu di atas.',
+        'Draf - belum kelihatan kepada ahli. Terbitkan dari menu di atas.',
         theme.colorScheme.tertiary,
       ),
       'cancelled' => (

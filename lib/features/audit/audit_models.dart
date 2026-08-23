@@ -18,7 +18,7 @@ class AuditLog {
   final String entityId;
   final String action;
 
-  /// Snapshot pada masa tindakan — bukan role semasa pelaku.
+  /// Snapshot pada masa tindakan - bukan role semasa pelaku.
   final String? actorMemberId;
   final String? actorRoleKey;
 

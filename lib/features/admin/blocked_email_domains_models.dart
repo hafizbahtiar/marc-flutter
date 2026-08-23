@@ -1,4 +1,4 @@
-/// Satu domain emel disekat (`blocked_email_domains`) — pelengkap kpd
+/// Satu domain emel disekat (`blocked_email_domains`) - pelengkap kpd
 /// senarai statik disposable-email terbenam di backend
 /// (`internal/disposableemail`), tambahan management/superadmin.
 class BlockedEmailDomain {

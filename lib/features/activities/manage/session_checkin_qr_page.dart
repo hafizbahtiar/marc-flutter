@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
 
-/// QR PAPAR DI VENUE — ahli imbas QR ini SENDIRI (`SelfCheckinScannerPage`)
+/// QR PAPAR DI VENUE - ahli imbas QR ini SENDIRI (`SelfCheckinScannerPage`)
 /// utk daftar hadir tanpa pengurusan perlu buat apa-apa. Kandungan QR
-/// cuma "sesi mana" (`marc-checkin:{activityId}:{sessionId}`) — data
+/// cuma "sesi mana" (`marc-checkin:{activityId}:{sessionId}`) - data
 /// AWAM venue, BUKAN kelayakan peribadi sesiapa. Identiti ahli yang
 /// mengimbas datang drpd akaun log masuk MEREKA sendiri di sisi
-/// pelayan — tangkapan skrin QR ni tidak berguna kepada sesiapa selain
+/// pelayan - tangkapan skrin QR ni tidak berguna kepada sesiapa selain
 /// "sesi apa nak daftar hadir", jadi ia selamat dipaparkan/dicetak
 /// terbuka tanpa risiko kelayakan pembawa (lihat komen penuh
 /// `activity_attendance.go` Mark).
@@ -36,7 +36,7 @@ class SessionCheckinQrPage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Putih tegar — sama rasional dgn CheckinQr (QR
+                  // Putih tegar - sama rasional dgn CheckinQr (QR
                   // peribadi ahli): modul QR hitam di atas latar gelap
                   // mod gelap tak terbaca kamera.
                   Container(
@@ -64,7 +64,7 @@ class SessionCheckinQrPage extends StatelessWidget {
                   const SizedBox(height: 20),
                   Text(
                     'Paparkan QR ini di venue. Ahli imbas sendiri untuk '
-                    'daftar hadir — tak perlu pengurusan imbas satu-satu.',
+                    'daftar hadir - tak perlu pengurusan imbas satu-satu.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),

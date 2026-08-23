@@ -72,7 +72,7 @@ class _DonationPageState extends ConsumerState<DonationPage> {
       if (!mounted) return;
       // Stripe (PaymentSheet) papar sheet nativenya sendiri; gateway
       // hosted-redirect (ToyyibPay/SociaBuzz, akan datang) buka browser
-      // luar — dua-dua tak perlukan borang tambahan dalam app ni,
+      // luar - dua-dua tak perlukan borang tambahan dalam app ni,
       // `handle()` uruskan semuanya.
       final result = await handler.handle(context, response);
       if (!mounted) return;
@@ -102,17 +102,17 @@ class _DonationPageState extends ConsumerState<DonationPage> {
   @override
   Widget build(BuildContext context) {
     // `authNotifierProvider.isLoggedIn` sentiasa sedia sejurus (hydrated
-    // sebelum `runApp`, lihat main.dart) — TIADA loading window. Guna
+    // sebelum `runApp`, lihat main.dart) - TIADA loading window. Guna
     // `myProfileProvider.valueOrNull` (async) untuk ni sebelum ni punca
     // bug: provider tu `null` sejurus page dibuka (masih loading), jadi
     // `requireEmail` sekejap jadi `true` (field emel muncul), pastu
-    // bertukar `false` bila profil siap load (field hilang balik) —
+    // bertukar `false` bila profil siap load (field hilang balik) -
     // nampak macam "emel dikosongkan" walhal cuma race loading-state.
     final isLoggedIn = ref.watch(
       authNotifierProvider.select((s) => s.isLoggedIn),
     );
 
-    // Prefill nama/emel drpd profil SEKALI sahaja bila data sampai —
+    // Prefill nama/emel drpd profil SEKALI sahaja bila data sampai -
     // bukan setiap rebuild (elak overwrite apa yang user dah taip/edit
     // sendiri). Jawapan terus untuk "tak auto isi sendiri": sekarang ya.
     final profile = ref.watch(myProfileProvider).valueOrNull;
@@ -150,7 +150,7 @@ class _DonationPageState extends ConsumerState<DonationPage> {
 /// Kisah ringkas pembangun + apa sebenarnya sumbangan ni pergi.
 ///
 /// Sengaja dinyatakan terus yang duit ni pergi kepada PEMBANGUN, bukan
-/// kepada MAIWP — jangan sesekali biarkan orang tersalah anggap mereka
+/// kepada MAIWP - jangan sesekali biarkan orang tersalah anggap mereka
 /// menderma kepada organisasi. Ayat yang sama diulang dalam emel resit
 /// dan PDF (marc_go/internal/receipt).
 class _DeveloperStory extends StatelessWidget {
@@ -254,7 +254,7 @@ class _AmountForm extends StatelessWidget {
           // yang perlukan resit.
           //
           // JANGAN sebut FPX di sini. Ia `available: false` pada akaun
-          // Stripe kita (perlukan BRN/SSM — lihat PAYMENT-STRIPE.md), jadi
+          // Stripe kita (perlukan BRN/SSM - lihat PAYMENT-STRIPE.md), jadi
           // PaymentSheet tak pernah paparkannya. Menyenaraikannya sebagai
           // pilihan yang wujud, atau sebagai "akan datang", ialah janji yang
           // bergantung pada pendaftaran perniagaan yang belum dibuat.
@@ -287,7 +287,7 @@ class _AmountForm extends StatelessWidget {
           ),
           // Ahli yang log masuk backend kaitkan user_id automatik
           // (OptionalAuth) dan boleh trace balik ke emel akaun terus,
-          // jadi emel TAK wajib untuk mereka — tapi field ni tetap
+          // jadi emel TAK wajib untuk mereka - tapi field ni tetap
           // dipapar & pre-fill drpd profil (bukan disorok), sebab kalau
           // disorok terus nampak macam borang "kosong"/pelik. Guest
           // (tak log masuk) wajib isi, sebab itu satu-satunya jejak yang

@@ -16,6 +16,7 @@ class Profile {
     required this.category,
     this.avatarUrl,
     this.registrationPaymentStatus,
+    this.registrationFeeCents,
     required this.telegramLinked,
     this.telegramUsername,
   });
@@ -38,6 +39,13 @@ class Profile {
   /// cuba bayar yuran pendaftaran langsung. Backend cuma isi bila
   /// `status != 'approved'` (lihat `profile.go` Me).
   final String? registrationPaymentStatus;
+
+  /// Jumlah (sen) yuran pendaftaran SEMASA - cuma diisi bila
+  /// `status != 'approved'` (lihat `profile.go` Me), padan skop
+  /// [registrationPaymentStatus]. Papar ni SEBELUM ahli tekan bayar -
+  /// checkout ToyyibPay sendiri tak dedah jumlah dalam app, cuma
+  /// redirect ke halaman ToyyibPay.
+  final int? registrationFeeCents;
 
   final bool telegramLinked;
   final String? telegramUsername;
@@ -67,6 +75,7 @@ class Profile {
       category: category,
       avatarUrl: avatarUrl == _sentinel ? this.avatarUrl : avatarUrl as String?,
       registrationPaymentStatus: registrationPaymentStatus,
+      registrationFeeCents: registrationFeeCents,
       telegramLinked: telegramLinked ?? this.telegramLinked,
       telegramUsername: telegramUsername == _sentinel
           ? this.telegramUsername
@@ -90,13 +99,14 @@ class Profile {
       category: (json['category'] as String?) ?? 'ahli',
       avatarUrl: json['avatar_url'] as String?,
       registrationPaymentStatus: json['registration_payment_status'] as String?,
+      registrationFeeCents: (json['registration_fee_cents'] as num?)?.toInt(),
       telegramLinked: (json['telegram_linked'] as bool?) ?? false,
       telegramUsername: json['telegram_username'] as String?,
     );
   }
 }
 
-/// Profil user semasa. Reaktif pada status log masuk — jadi ia re-fetch
+/// Profil user semasa. Reaktif pada status log masuk - jadi ia re-fetch
 /// sebaik sahaja sesi wujud (tak perlu hot restart).
 final myProfileProvider = FutureProvider<Profile?>((ref) async {
   final isLoggedIn = ref.watch(
@@ -126,13 +136,13 @@ class ProfileRepository {
     await dio.patch('/me', data: {'display_name': displayName, 'phone': phone});
 
     _ref.invalidate(myProfileProvider);
-    // membersProvider papar display_name yang sama — tanpa invalidate ni,
+    // membersProvider papar display_name yang sama - tanpa invalidate ni,
     // tab Ahli kekal papar nama lama sampai logout/restart (non-autoDispose,
     // cuma recompute bila isLoggedIn berubah).
     _ref.invalidate(membersProvider);
   }
 
-  /// Luluskan pendaftaran ahli (Stage 11) — management sahaja, backend
+  /// Luluskan pendaftaran ahli (Stage 11) - management sahaja, backend
   /// tolak 403 kalau bukan.
   Future<void> approveMember(String userId) async {
     final dio = _ref.read(dioProvider);
@@ -141,7 +151,7 @@ class ProfileRepository {
     _ref.invalidate(pendingMembersProvider);
   }
 
-  /// Tolak pendaftaran ahli (Stage 11) — row KEKAL di backend (bukan
+  /// Tolak pendaftaran ahli (Stage 11) - row KEKAL di backend (bukan
   /// padam), boleh diluluskan semula lain kali.
   Future<void> rejectMember(String userId) async {
     final dio = _ref.read(dioProvider);
@@ -150,7 +160,7 @@ class ProfileRepository {
     _ref.invalidate(pendingMembersProvider);
   }
 
-  /// Tukar role ahli (Stage 12) — backend kuatkuasakan hierarki rank,
+  /// Tukar role ahli (Stage 12) - backend kuatkuasakan hierarki rank,
   /// client cuma hantar niat.
   Future<void> updateMemberRole(String userId, String roleKey) async {
     final dio = _ref.read(dioProvider);
@@ -179,7 +189,7 @@ class MemberRow {
   final String? displayName;
 
   /// `null` = backend sembunyikan (emel ahli lain cuma didedahkan kepada
-  /// management). BUKAN bermakna ahli tu tiada emel — bezakan dua-dua,
+  /// management). BUKAN bermakna ahli tu tiada emel - bezakan dua-dua,
   /// jangan papar ruang kosong.
   final String? email;
   final String roleKey;
@@ -193,7 +203,7 @@ class MemberRow {
 
   /// "pending"/"succeeded"/"failed", atau null. Backend cuma isi nilai
   /// sebenar untuk management (lihat `registration_payment_status` di
-  /// `ListVisibleProfiles`) — ahli biasa dapat null, sama pola dengan
+  /// `ListVisibleProfiles`) - ahli biasa dapat null, sama pola dengan
   /// [email]. Ditambah 2026-08-15 supaya senarai kelulusan papar status
   /// bayaran sebelum management tekan Luluskan.
   final String? registrationPaymentStatus;
@@ -231,7 +241,7 @@ class RoleOption {
   }
 }
 
-/// Senarai role tersedia (Stage 12) — untuk UI edit role management.
+/// Senarai role tersedia (Stage 12) - untuk UI edit role management.
 final rolesProvider = FutureProvider<List<RoleOption>>((ref) async {
   final isManagement =
       ref.watch(myProfileProvider).valueOrNull?.isManagement ?? false;
@@ -244,14 +254,14 @@ final rolesProvider = FutureProvider<List<RoleOption>>((ref) async {
       .toList();
 });
 
-/// Siling "superadmin sahaja" — dikira secara DINAMIK drpd `rolesProvider`
+/// Siling "superadmin sahaja" - dikira secara DINAMIK drpd `rolesProvider`
 /// (bukan nombor rank digodam keras), padanan `isManagerOrAboveProvider`
-/// (`manage_providers.dart`). Kemudahan UI SAHAJA — backend kuatkuasakan
+/// (`manage_providers.dart`). Kemudahan UI SAHAJA - backend kuatkuasakan
 /// sekatan sebenar sendiri (cth `authz.IsAtLeastRole(..., "superadmin")`
 /// pada GET /admin/payments dan skrin domain disekat).
 ///
 /// Diletak di sini (bukan feature-scoped macam `payment_providers.dart`
-/// asalnya) — beberapa ciri "root system" (donation admin, domain emel
+/// asalnya) - beberapa ciri "root system" (donation admin, domain emel
 /// disekat) semua perlukan siling yang SAMA, jadi ia kekal satu tempat.
 final isSuperAdminProvider = Provider<bool>((ref) {
   final profile = ref.watch(myProfileProvider).valueOrNull;
@@ -260,7 +270,7 @@ final isSuperAdminProvider = Provider<bool>((ref) {
   // `/roles` (rolesProvider) SENGAJA tolak mana-mana role dengan rank
   // >= rank caller sendiri (backend `ListRoles`, skop utk pemilih "tukar
   // role"). superadmin ialah rank TERTINGGI, jadi ia TAK PERNAH muncul
-  // dalam senarai SESIAPA (termasuk superadmin sendiri) — carian dinamik
+  // dalam senarai SESIAPA (termasuk superadmin sendiri) - carian dinamik
   // di bawah sentiasa gagal jumpa (Opus verify 2026-08-15). Jalan pintas
   // kes ni sebelum cuba dinamik.
   if (profile.roleKey == 'superadmin') return true;
@@ -295,9 +305,9 @@ final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
       .toList();
 });
 
-/// Ahli status=pending sahaja (Stage 11) — untuk skrin approve/reject
+/// Ahli status=pending sahaja (Stage 11) - untuk skrin approve/reject
 /// management. Endpoint list ni sendiri TAK 403 untuk non-management
-/// (backend pulangkan profil caller sendiri je) — access sebenar
+/// (backend pulangkan profil caller sendiri je) - access sebenar
 /// dikawal di client (lihat guard `isManagement` dalam
 /// PendingMembersPage) dan di backend pada endpoint approve/reject
 /// (yang memang 403 kalau caller bukan management).

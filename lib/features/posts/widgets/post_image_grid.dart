@@ -6,11 +6,11 @@ import 'package:marc/shared/widgets/image_grid_layout.dart';
 /// Grid gambar post gaya Twitter (lama).
 ///
 /// Susun atur datang daripada [ImageGridLayout], yang dikongsi dengan
-/// penggubah post — jadi pratonton semasa mengarang padan dengan hasil.
+/// penggubah post - jadi pratonton semasa mengarang padan dengan hasil.
 ///
 /// Ketuk mana-mana jubin membuka pemapar skrin penuh pada gambar itu
 /// (leret kiri/kanan antara gambar post yang sama, leret bawah untuk
-/// tutup) — lihat [ImageViewerPage].
+/// tutup) - lihat [ImageViewerPage].
 class PostImageGrid extends StatelessWidget {
   const PostImageGrid({super.key, required this.urls});
 
@@ -25,7 +25,7 @@ class PostImageGrid extends StatelessWidget {
 
   Widget _tile(BuildContext context, int index) {
     // Jubin tak pernah lebih lebar drpd lebar skrin, dan kebanyakannya
-    // separuh daripada itu — nyahkod pada saiz tu, bukan pada 4608px
+    // separuh daripada itu - nyahkod pada saiz tu, bukan pada 4608px
     // sumber. Ini yang mengekang penggunaan memori feed.
     final screenWidth = MediaQuery.sizeOf(context).width;
     final dpr = MediaQuery.devicePixelRatioOf(context);

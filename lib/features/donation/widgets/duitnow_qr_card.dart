@@ -5,10 +5,10 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 
 const _qrAsset = 'assets/donation/maybank_hafiz.jpeg';
 
-/// DuitNow QR peribadi — jalan sokongan tanpa yuran.
+/// DuitNow QR peribadi - jalan sokongan tanpa yuran.
 ///
 /// Kenapa ia wujud di sebelah Stripe: **Stripe tak menyokong DuitNow
-/// langsung** (Malaysia dapat FPX, GrabPay dan kad sahaja — dan FPX pun
+/// langsung** (Malaysia dapat FPX, GrabPay dan kad sahaja - dan FPX pun
 /// perlukan BRN/SSM yang kita belum ada), sedangkan
 /// DuitNow ialah cara paling biasa orang Malaysia hantar duit sesama
 /// sendiri. Gateway tempatan yang menyokong DuitNow QR (Billplz) perlukan
@@ -144,7 +144,7 @@ class _DuitNowQrCardState extends State<DuitNowQrCard> {
             ),
           ),
           const SizedBox(height: 12),
-          // Perbezaan ni MESTI dinyatakan — pengguna yang menjangka resit
+          // Perbezaan ni MESTI dinyatakan - pengguna yang menjangka resit
           // dan tak menerimanya akan fikir sumbangan mereka hilang.
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,

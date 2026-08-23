@@ -103,7 +103,7 @@ class _TelegramLinkPageState extends ConsumerState<TelegramLinkPage>
               children: [
                 Text(
                   'Sambungkan akaun Telegram anda ke akaun MARC. Ini asas '
-                  'untuk ciri akan datang — notifikasi tambahan terus ke '
+                  'untuk ciri akan datang - notifikasi tambahan terus ke '
                   'Telegram, dan pengesahan dua langkah (2FA) semasa log '
                   'masuk. Buat masa ini binding sahaja belum menghantar '
                   'notifikasi apa-apa.',
@@ -113,7 +113,7 @@ class _TelegramLinkPageState extends ConsumerState<TelegramLinkPage>
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Material (bukan Container+BoxDecoration) — padanan
+                // Material (bukan Container+BoxDecoration) - padanan
                 // _InfoCard di profile_page.dart, elak splash ink
                 // tersorok bawah decoration.
                 Material(

@@ -38,7 +38,7 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
 
   @override
   Future<FeedState> build() async {
-    // Reaktif pada status log masuk — sama macam `membersProvider` — supaya
+    // Reaktif pada status log masuk - sama macam `membersProvider` - supaya
     // feed user lama tak kekal terpapar untuk user seterusnya pada peranti
     // sama (ProviderContainer dicipta sekali sahaja dalam main.dart).
     _generation++;
@@ -101,7 +101,7 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     }
   }
 
-  /// Optimistic toggle — UI update serta-merta, revert kalau API gagal.
+  /// Optimistic toggle - UI update serta-merta, revert kalau API gagal.
   Future<void> toggleLike(Post post) async {
     final current = state.valueOrNull;
     if (current == null) return;
@@ -127,7 +127,7 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
         await dio.post('/posts/${post.id}/like');
       }
       // postDetailProvider (FutureProvider.family, bukan autoDispose)
-      // cache per post id tanpa had masa — kalau detail page post ni
+      // cache per post id tanpa had masa - kalau detail page post ni
       // pernah dibuka sebelum ni, cache lama tak refetch sendiri bila
       // like berubah dari list. Invalidate supaya lawatan detail
       // seterusnya fetch fresh (bukan force refetch serta-merta kalau
@@ -160,7 +160,7 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     );
   }
 
-  /// Ganti satu post dalam feed dengan versi terkini — dipanggil lepas
+  /// Ganti satu post dalam feed dengan versi terkini - dipanggil lepas
   /// mutation (like/edit/comment) dari post detail page berjaya, supaya
   /// feed sync balik tanpa perlu pull-to-refresh manual.
   void patchPost(Post updated) {
@@ -180,7 +180,7 @@ final feedProvider = AsyncNotifierProvider<FeedNotifier, FeedState>(
   FeedNotifier.new,
 );
 
-/// Post tunggal (halaman detail). Reaktif pada status log masuk — bukan
+/// Post tunggal (halaman detail). Reaktif pada status log masuk - bukan
 /// senarai, jadi takde "empty state" semula jadi macam `feedProvider`; kita
 /// throw supaya `PostDetailPage` papar error state sedia ada ("Gagal memuat
 /// post.") dan bukan cache post user lama. Route ni sepatutnya tak boleh
@@ -194,7 +194,7 @@ final postDetailProvider = FutureProvider.family<Post, String>((
     authNotifierProvider.select((s) => s.isLoggedIn),
   );
   if (!isLoggedIn) {
-    throw StateError('Sesi tamat — sila log masuk semula.');
+    throw StateError('Sesi tamat - sila log masuk semula.');
   }
 
   final dio = ref.watch(dioProvider);
@@ -203,7 +203,7 @@ final postDetailProvider = FutureProvider.family<Post, String>((
 });
 
 /// Comment untuk satu post. Sama rasional dengan `postDetailProvider` di
-/// atas — throw bila logout supaya `PostDetailPage` guna error state
+/// atas - throw bila logout supaya `PostDetailPage` guna error state
 /// sedia ada ("Gagal memuat comment.") dan bukan papar comment user lama.
 final commentsProvider = FutureProvider.family<List<Comment>, String>((
   ref,
@@ -213,7 +213,7 @@ final commentsProvider = FutureProvider.family<List<Comment>, String>((
     authNotifierProvider.select((s) => s.isLoggedIn),
   );
   if (!isLoggedIn) {
-    throw StateError('Sesi tamat — sila log masuk semula.');
+    throw StateError('Sesi tamat - sila log masuk semula.');
   }
 
   final dio = ref.watch(dioProvider);
@@ -232,7 +232,7 @@ class PostRepository {
   PostRepository(this._ref);
   final Ref _ref;
 
-  /// Sniff bait sebenar fail untuk tentukan content-type — TIDAK boleh
+  /// Sniff bait sebenar fail untuk tentukan content-type - TIDAK boleh
   /// percaya extension nama fail sebab image_picker (imageQuality: 85)
   /// boleh re-encode gambar ke JPEG walaupun fail asal .png/.webp. Simetri
   /// dengan magic-byte check backend.
@@ -268,7 +268,7 @@ class PostRepository {
         bytes[11] == 0x50) {
       return 'image/webp';
     }
-    return 'image/jpeg'; // fallback — sepadan default picker app ini
+    return 'image/jpeg'; // fallback - sepadan default picker app ini
   }
 
   /// Minta presigned URL dari backend, upload gambar TERUS ke R2 (bukan
@@ -276,7 +276,7 @@ class PostRepository {
   /// Upload satu gambar: presign (backend kita) → PUT terus ke R2.
   ///
   /// Dua peringkat, dua HOST berbeza, dua punca kegagalan yang berbeza
-  /// sepenuhnya — sebab tu setiap peringkat dilog berasingan. "Post biasa
+  /// sepenuhnya - sebab tu setiap peringkat dilog berasingan. "Post biasa
   /// jadi, post bergambar gagal" hampir sentiasa bermaksud peringkat R2
   /// yang putus, bukan backend.
   Future<String> uploadImage(XFile file) async {
@@ -306,7 +306,7 @@ class PostRepository {
     appLog('upload', 'PUT R2 mula (${bytes.length} bait)');
 
     try {
-      // Dio baru (bukan yang ada auth interceptor) — presigned URL R2 bukan
+      // Dio baru (bukan yang ada auth interceptor) - presigned URL R2 bukan
       // endpoint backend kita, tak perlu/patut Bearer token. Timeout
       // ditetapkan eksplisit: Dio() kosong TIADA timeout langsung, jadi
       // upload yang tersekat akan tergantung selamanya dan bukan gagal
@@ -350,7 +350,7 @@ class PostRepository {
     await _ref.read(dioProvider).delete('/posts/$id');
   }
 
-  /// Untuk halaman detail (bukan feed list) — feed guna
+  /// Untuk halaman detail (bukan feed list) - feed guna
   /// `FeedNotifier.toggleLike` (optimistic + revert dalam FeedState terus).
   Future<void> togglePostLike(String id, bool currentlyLiked) async {
     final dio = _ref.read(dioProvider);
@@ -394,7 +394,7 @@ class PostRepository {
     await _syncPostToFeed(postId);
   }
 
-  /// Refetch post terkini dari server dan patch ke dalam feed cache — best
+  /// Refetch post terkini dari server dan patch ke dalam feed cache - best
   /// effort, tak boleh gagalkan mutation utama (like/edit/comment) yang dah
   /// pun berjaya.
   Future<void> _syncPostToFeed(String postId) async {
@@ -402,7 +402,7 @@ class PostRepository {
       final updated = await _ref.read(postDetailProvider(postId).future);
       _ref.read(feedProvider.notifier).patchPost(updated);
     } catch (_) {
-      // Feed cuma tak sync sehingga pull-to-refresh seterusnya — bukan
+      // Feed cuma tak sync sehingga pull-to-refresh seterusnya - bukan
       // kritikal, mutation utama (like/edit/comment) dah pun berjaya.
     }
   }

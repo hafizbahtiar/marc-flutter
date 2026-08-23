@@ -7,19 +7,19 @@ import 'package:marc/features/payments/payment_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
-// .toUpperCase() — backend tak konsisten kes currency antara modul
+// .toUpperCase() - backend tak konsisten kes currency antara modul
 // (yuran pendaftaran simpan "myr", yuran aktiviti simpan "MYR"), jadi
 // tanpa ni dua seksyen skrin ni papar kod currency berbeza kes untuk
 // mata wang yang SAMA (Opus verify 2026-08-15).
 String _formatAmount(int cents, String currency) =>
     '${currency.toUpperCase()} ${(cents / 100).toStringAsFixed(2)}';
 
-/// Sejarah bayaran SENDIRI — yuran pendaftaran + yuran aktiviti. Terbuka
+/// Sejarah bayaran SENDIRI - yuran pendaftaran + yuran aktiviti. Terbuka
 /// kepada semua ahli log masuk (bukan management-gated): setiap ahli boleh
 /// tengok bayaran sendiri, backend (`GET /me/payments`) skop terus kepada
 /// `middleware.UserID(c)`.
 ///
-/// ConsumerStatefulWidget (bukan ConsumerWidget) — perlu `_busy` set utk
+/// ConsumerStatefulWidget (bukan ConsumerWidget) - perlu `_busy` set utk
 /// butang muat turun resit (padanan `MyCertificatesPage`): ketukan
 /// berulang pada baris yang sama semasa panggilan pertama masih
 /// berjalan tak sepatutnya hantar permintaan bertindih.
@@ -144,7 +144,7 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
                   ],
                   // Derma (backend L33, 2026-08-22). Diletak AKHIR
                   // sengaja: dua yang di atas ialah kewajipan keahlian,
-                  // ini sokongan sukarela — turutan tu memadankan cara
+                  // ini sokongan sukarela - turutan tu memadankan cara
                   // ahli memikirkannya.
                   if (data.donations.isNotEmpty) ...[
                     const _SectionHeader('Sokongan'),
@@ -187,7 +187,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// Isyarat visual status bayaran — padanan `_PaymentStatusBadge` di
+/// Isyarat visual status bayaran - padanan `_PaymentStatusBadge` di
 /// `pending_members_page.dart`, disalin (bukan dikongsi) sebab kedua-dua
 /// widget itu private kepada fail masing-masing.
 class _StatusBadge extends StatelessWidget {
@@ -227,7 +227,7 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-/// Butang muat turun resit — `null` [onDownload] bermakna belum
+/// Butang muat turun resit - `null` [onDownload] bermakna belum
 /// tersedia (bayaran belum berjaya), jadi ikon disembunyikan terus
 /// (bukan dipapar dimatikan) supaya baris tak sesak dengan butang yang
 /// tak boleh diketuk.
@@ -284,7 +284,7 @@ class _RegistrationFeeTile extends StatelessWidget {
 }
 
 /// Satu derma. Bentuknya sengaja padan `_RegistrationFeeTile` (jumlah
-/// sebagai tajuk, masa sebagai subtajuk) — kedua-duanya bayaran sekali
+/// sebagai tajuk, masa sebagai subtajuk) - kedua-duanya bayaran sekali
 /// tanpa entiti berkaitan untuk dinamakan, tak macam yuran aktiviti yang
 /// tajuknya ialah nama aktiviti.
 class _DonationTile extends StatelessWidget {

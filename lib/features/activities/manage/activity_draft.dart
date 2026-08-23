@@ -1,4 +1,4 @@
-/// Draf borang aktiviti — model TULEN (tiada Flutter, tiada dio) yang
+/// Draf borang aktiviti - model TULEN (tiada Flutter, tiada dio) yang
 /// memegang apa yang pengurus taip, dan yang membina badan permintaan.
 ///
 /// Dipisahkan daripada halaman borang dengan SENGAJA: bahagian yang paling
@@ -10,7 +10,7 @@ library;
 import 'package:marc/features/activities/activity_models.dart';
 
 /// Satu sesi dalam editor. Boleh ubah (`mutable`) kerana borang menulis
-/// terus ke atasnya; `seq` TIADA di sini — ia diterbitkan daripada
+/// terus ke atasnya; `seq` TIADA di sini - ia diterbitkan daripada
 /// kedudukan dalam senarai semasa dihantar, jadi nombor urutan mustahil
 /// berulang atau berlubang.
 class SessionDraft {
@@ -28,7 +28,7 @@ class SessionDraft {
   SessionDraft copy() =>
       SessionDraft(title: title, startsAt: startsAt, endsAt: endsAt);
 
-  /// Sama isi (bukan sama objek) — asas bagi keputusan "perlukah PUT
+  /// Sama isi (bukan sama objek) - asas bagi keputusan "perlukah PUT
   /// sesi dihantar langsung".
   bool sameAs(SessionDraft other) =>
       title == other.title &&
@@ -71,7 +71,7 @@ class ActivityDraft {
   /// null = tiada tarikh buka eksplisit (lajur nullable).
   DateTime? registrationOpensAt;
 
-  /// null hanya semasa mencipta sebelum pengurus memilih tarikh — WAJIB
+  /// null hanya semasa mencipta sebelum pengurus memilih tarikh - WAJIB
   /// sebelum hantar.
   DateTime? registrationClosesAt;
 
@@ -107,7 +107,7 @@ class ActivityDraft {
 
 /// Ralat pengesahan pertama, atau null bila draf boleh dihantar.
 ///
-/// Mengulang semakan backend dengan sengaja — bukan untuk menggantikannya
+/// Mengulang semakan backend dengan sengaja - bukan untuk menggantikannya
 /// (server tetap hakim), tetapi supaya pengurus nampak masalahnya sebelum
 /// menunggu perjalanan pergi-balik rangkaian.
 String? validateDraft(ActivityDraft draft, List<SessionDraft> sessions) {
@@ -133,7 +133,7 @@ String? validateDraft(ActivityDraft draft, List<SessionDraft> sessions) {
   return null;
 }
 
-/// Badan `POST /activities` — LENGKAP, termasuk sesi. Cipta bukan gabungan:
+/// Badan `POST /activities` - LENGKAP, termasuk sesi. Cipta bukan gabungan:
 /// backend memerlukan sekurang-kurangnya satu sesi dalam badan yang sama.
 Map<String, dynamic> buildCreateBody(
   ActivityDraft draft,
@@ -152,14 +152,14 @@ Map<String, dynamic> buildCreateBody(
   'sessions': buildSessionsList(sessions),
 };
 
-/// Badan `PUT /activities/:id/sessions` — set PENUH, sentiasa.
+/// Badan `PUT /activities/:id/sessions` - set PENUH, sentiasa.
 Map<String, dynamic> buildSessionsBody(List<SessionDraft> sessions) => {
   'sessions': buildSessionsList(sessions),
 };
 
 /// `seq` diberi mengikut KRONOLOGI, bukan urutan taip.
 ///
-/// Server tidak peduli — ia hanya menuntut `seq` unik — tetapi skrin
+/// Server tidak peduli - ia hanya menuntut `seq` unik - tetapi skrin
 /// kehadiran melabel pemilihnya "Sesi ${seq}", jadi sesi yang ditambah
 /// selepas yang lain tetapi berlaku lebih awal akan dibaca sebagai "Sesi 3"
 /// pada pagi pertama kursus. Disusun di sini supaya jaminan itu dipegang
@@ -170,17 +170,17 @@ List<Map<String, dynamic>> buildSessionsList(List<SessionDraft> sessions) {
   return [for (var i = 0; i < ordered.length; i++) ordered[i].toJson(i + 1)];
 }
 
-/// Badan `PATCH /activities/:id` — HANYA medan yang benar-benar berubah.
+/// Badan `PATCH /activities/:id` - HANYA medan yang benar-benar berubah.
 ///
 /// Ini bukan pengoptimuman. Backend menggabungkan medan yang hadir sahaja
 /// (lihat `optional[T]` dalam activities.go); menghantar semula keseluruhan
 /// objek yang dimuatkan tadi akan menulis ganti suntingan pengurus lain
-/// yang mendarat antara muatan dan simpan — dengan nilai yang pengurus INI
+/// yang mendarat antara muatan dan simpan - dengan nilai yang pengurus INI
 /// tidak pernah menaipnya.
 ///
 /// Dua lajur nullable membawa makna pada `null` EKSPLISIT: `capacity` null
 /// membuang had, `registration_opens_at` null membuang tarikh buka. Jadi
-/// kunci itu dimasukkan dengan nilai null bila ia berubah kepada null —
+/// kunci itu dimasukkan dengan nilai null bila ia berubah kepada null -
 /// bukan ditinggalkan, yang bermakna "jangan sentuh".
 Map<String, dynamic> buildActivityPatch(
   ActivityDraft before,
@@ -208,7 +208,7 @@ Map<String, dynamic> buildActivityPatch(
     body['registration_opens_at'] = opens == null ? null : _iso(opens);
   }
   if (!_sameInstant(before.registrationClosesAt, after.registrationClosesAt)) {
-    // Lajur NOT NULL — null di sini ditolak 400 oleh backend, jadi ia
+    // Lajur NOT NULL - null di sini ditolak 400 oleh backend, jadi ia
     // tidak pernah dihantar. validateDraft sudah menghalang draf tanpa
     // tarikh tutup daripada sampai ke sini.
     final closes = after.registrationClosesAt;
@@ -229,13 +229,13 @@ Map<String, dynamic> buildActivityPatch(
 /// `PUT` sesi memadam dan memasukkan semula SEMUA baris, dan ia ditolak
 /// 409 sebaik ada kehadiran direkod. Menghantarnya bila tiada apa yang
 /// berubah bermakna suntingan tajuk yang tidak berkaitan gagal dengan
-/// "sesi sudah ada kehadiran" — jadi perbandingan ini yang menentukan
+/// "sesi sudah ada kehadiran" - jadi perbandingan ini yang menentukan
 /// sama ada permintaan itu dibuat langsung.
-/// Kedua-dua belah disusun ikut masa mula sebelum dibandingkan — susunan
+/// Kedua-dua belah disusun ikut masa mula sebelum dibandingkan - susunan
 /// yang SAMA yang `buildSessionsList` gunakan untuk memberi `seq`. Tanpa
 /// itu, aktiviti lama yang `seq`-nya tidak mengikut kronologi akan
 /// kelihatan "berubah" sebaik dibuka, dan borang akan menghantar PUT yang
-/// tidak diminta — yang ditolak 409 sebaik ada kehadiran.
+/// tidak diminta - yang ditolak 409 sebaik ada kehadiran.
 bool sessionsChanged(List<SessionDraft> before, List<SessionDraft> after) {
   if (before.length != after.length) return true;
 
@@ -252,5 +252,5 @@ bool _sameInstant(DateTime? a, DateTime? b) {
   return a.isAtSameMomentAs(b);
 }
 
-/// RFC3339 UTC — bentuk yang `time.Time` Go hurai tanpa teka zon waktu.
+/// RFC3339 UTC - bentuk yang `time.Time` Go hurai tanpa teka zon waktu.
 String _iso(DateTime dt) => dt.toUtc().toIso8601String();

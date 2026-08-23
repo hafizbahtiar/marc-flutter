@@ -3,7 +3,7 @@ import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/posts/post_models.dart';
 
-/// State notifikasi: senarai + cursor untuk load-more (infinite scroll) —
+/// State notifikasi: senarai + cursor untuk load-more (infinite scroll) -
 /// sama struktur macam `FeedState`.
 class NotificationsState {
   const NotificationsState({
@@ -31,7 +31,7 @@ class NotificationsState {
   }
 }
 
-/// Reaktif pada status log masuk — sama macam `FeedNotifier` — supaya
+/// Reaktif pada status log masuk - sama macam `FeedNotifier` - supaya
 /// notifikasi user lama tak kekal terpapar untuk user seterusnya pada
 /// peranti sama. Generation counter guard sama sebab (race loadMore vs
 /// refresh) macam FeedNotifier.
@@ -97,7 +97,7 @@ class NotificationsNotifier extends AsyncNotifier<NotificationsState> {
     }
   }
 
-  /// Patch satu notification jadi `read` secara lokal — dipanggil lepas
+  /// Patch satu notification jadi `read` secara lokal - dipanggil lepas
   /// `NotificationRepository.markRead` berjaya, elak full refetch (yang
   /// akan reset kedudukan scroll pengguna).
   void patchRead(String id) {
@@ -112,7 +112,7 @@ class NotificationsNotifier extends AsyncNotifier<NotificationsState> {
     );
   }
 
-  /// Patch SEMUA notification jadi `read` secara lokal — lepas
+  /// Patch SEMUA notification jadi `read` secara lokal - lepas
   /// `markAllRead` berjaya.
   void patchAllRead() {
     final current = state.valueOrNull;

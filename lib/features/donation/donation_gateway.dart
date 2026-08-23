@@ -6,16 +6,16 @@ import '../../app/stripe.dart';
 import 'donation_models.dart';
 
 /// Kontrak sepunya setiap cara "selesaikan" donation lepas
-/// `/donations/checkout` — cerminan `payment.Gateway` (interface) di
+/// `/donations/checkout` - cerminan `payment.Gateway` (interface) di
 /// backend (`marc_go/internal/payment/payment.go`). Tambah gateway baru
 /// (ToyyibPay/SociaBuzz, Stage 12) = implement class ni + daftar dalam
 /// `donationCheckoutHandlersProvider`, `donation_page.dart` TAK perlu
-/// ubah — ia cuma lookup handler ikut `response.gateway`.
+/// ubah - ia cuma lookup handler ikut `response.gateway`.
 abstract class DonationCheckoutHandler {
   const DonationCheckoutHandler();
 
   /// `context` diperlukan untuk baca `Theme.of(context)` semasa (light/
-  /// dark ikut `themeModeProvider`) — gateway yang papar UI native
+  /// dark ikut `themeModeProvider`) - gateway yang papar UI native
   /// sendiri (Stripe `PaymentSheet`) guna ni untuk padankan appearance,
   /// gateway redirect (`RedirectCheckoutHandler`) abaikan sahaja.
   Future<DonationResult> handle(
@@ -24,13 +24,13 @@ abstract class DonationCheckoutHandler {
   );
 }
 
-/// Gateway client-side confirm (Stripe `PaymentSheet`) — satu sheet
+/// Gateway client-side confirm (Stripe `PaymentSheet`) - satu sheet
 /// native Stripe yang auto-papar SEMUA payment method aktif di dashboard
 /// (kad, GrabPay, FPX kalau akaun layak), termasuk uruskan round-trip
 /// redirect (`Stripe.urlScheme`, lihat `app/stripe.dart`) sendiri.
 /// `returnURL` di bawah WAJIB: tanpanya PaymentSheet tapis SEMUA kaedah
 /// berasaskan redirect (GrabPay, FPX) secara senyap. Gantikan
-/// `CardFormField` manual (kad sahaja) — appearance dikawal
+/// `CardFormField` manual (kad sahaja) - appearance dikawal
 /// terus dari Dart (`PaymentSheetAppearance`), tak perlu native theme
 /// hack macam `CardFormField` punya dropdown negara dulu.
 class StripeCheckoutHandler extends DonationCheckoutHandler {
@@ -47,7 +47,7 @@ class StripeCheckoutHandler extends DonationCheckoutHandler {
     }
 
     // Baca tema SEBELUM sebarang await (context masih pasti valid di
-    // sini — `donation_page.dart` dah `mounted` guard sebelum panggil).
+    // sini - `donation_page.dart` dah `mounted` guard sebelum panggil).
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -61,7 +61,7 @@ class StripeCheckoutHandler extends DonationCheckoutHandler {
     // baseline sistem: user yang set app ke Mod Gelap sedangkan OS masih
     // light akan dapat `componentText`/`placeholderText`/`icon` versi
     // light (teks hitam + placeholder kelabu) atas `componentBackground`
-    // gelap — persis isu "sheet nampak light mode, teks tak nampak".
+    // gelap - persis isu "sheet nampak light mode, teks tak nampak".
     // Isi semua = baseline sistem jadi tak relevan langsung.
     final appearanceColors = PaymentSheetAppearanceColors(
       primary: scheme.primary,
@@ -78,7 +78,7 @@ class StripeCheckoutHandler extends DonationCheckoutHandler {
     );
 
     // Butang "Pay" ada set warna SENDIRI di native (bukan diturunkan
-    // drpd `colors.primary`) — defaultnya teks PUTIH atas background
+    // drpd `colors.primary`) - defaultnya teks PUTIH atas background
     // primary. Dalam mod gelap `scheme.primary` ialah hijau mint cerah
     // (#7FC79E), putih atasnya hampir tak terbaca. `light`/`dark`
     // kedua-duanya diisi dengan nilai yang sama (a) sebab pilihan
@@ -96,7 +96,7 @@ class StripeCheckoutHandler extends DonationCheckoutHandler {
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: 'MARC',
           returnURL: stripeReturnUrl,
-          // iOS sahaja — paksa userInterfaceStyle sheet ikut tema app
+          // iOS sahaja - paksa userInterfaceStyle sheet ikut tema app
           // supaya chrome yang dilukis sistem (keyboard, nav bar) tak
           // tercabut drpd warna yang kita set di atas.
           style: isDark ? ThemeMode.dark : ThemeMode.light,
@@ -127,10 +127,10 @@ class StripeCheckoutHandler extends DonationCheckoutHandler {
   }
 }
 
-/// Gateway hosted-redirect (ToyyibPay, SociaBuzz — akan datang) — buka
+/// Gateway hosted-redirect (ToyyibPay, SociaBuzz - akan datang) - buka
 /// `redirectUrl` dalam browser luar. Status pembayaran sebenar
 /// ditentukan webhook backend (bukan client), jadi "success" di sini
-/// cuma bermaksud redirect berjaya dibuka — TAK sama dengan pembayaran
+/// cuma bermaksud redirect berjaya dibuka - TAK sama dengan pembayaran
 /// berjaya.
 class RedirectCheckoutHandler extends DonationCheckoutHandler {
   const RedirectCheckoutHandler();
@@ -145,9 +145,9 @@ class RedirectCheckoutHandler extends DonationCheckoutHandler {
       return const DonationResult.failure('Pautan pembayaran tidak sah.');
     }
 
-    // `Uri.tryParse` (bukan `Uri.parse`) — elak `FormatException` tak
+    // `Uri.tryParse` (bukan `Uri.parse`) - elak `FormatException` tak
     // ditangkap kalau backend/gateway pulangkan URL cacat. Skim
-    // dihadkan `https` sahaja — `redirectUrl` ini akan lebih terdedah
+    // dihadkan `https` sahaja - `redirectUrl` ini akan lebih terdedah
     // kepada pengaruh gateway luar (ToyyibPay) berbanding Stripe
     // sekarang, jadi jangan benarkan skim lain (`javascript:`, custom
     // scheme, dsb.) dilancarkan terus.

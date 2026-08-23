@@ -7,24 +7,24 @@ import 'package:marc/features/activities/scan_result.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-/// Kandungan QR venue — lihat komen keselamatan penuh di
+/// Kandungan QR venue - lihat komen keselamatan penuh di
 /// `activity_attendance.go` Mark. Awalan ni SENGAJA supaya skrin ni
 /// (dan bukan pengimbas pengurusan) yang cuba baca kod, mengelak
 /// kekeliruan kalau seseorang imbas QR peribadi (checkin_token) di sini
-/// secara silap — mesej ralat jelas nampak "bukan QR sesi", bukan
+/// secara silap - mesej ralat jelas nampak "bukan QR sesi", bukan
 /// gagal senyap cuba panggil endpoint yang salah.
 const _venueQrPrefix = 'marc-checkin:';
 
-/// Pengimbas QR daftar hadir SENDIRI (`self_scan`) — utk AHLI BIASA,
+/// Pengimbas QR daftar hadir SENDIRI (`self_scan`) - utk AHLI BIASA,
 /// bukan pengurusan. Beza penting drpd `CheckinScannerPage`
 /// (pengurusan): skrin tu imbas QR PERIBADI ahli lain (checkin_token,
 /// kelayakan pembawa); skrin ni imbas QR VENUE (data awam "sesi apa",
 /// lihat `SessionCheckinQrPage`) dan hantar identiti PENGIMBAS SENDIRI
-/// (drpd token JWT log masuk) ke server — tiada kelayakan pembawa
+/// (drpd token JWT log masuk) ke server - tiada kelayakan pembawa
 /// terlibat langsung, jadi tiada keperluan token berputar (rujuk
 /// TODO.md sebelum ni).
 ///
-/// Tiada parameter aktiviti/sesi — kedua-duanya datang drpd KANDUNGAN
+/// Tiada parameter aktiviti/sesi - kedua-duanya datang drpd KANDUNGAN
 /// QR yang diimbas, bukan konteks skrin. Backend tolak (409) kalau
 /// pengimbas tak berdaftar utk aktiviti dlm QR tu.
 class SelfCheckinScannerPage extends ConsumerStatefulWidget {

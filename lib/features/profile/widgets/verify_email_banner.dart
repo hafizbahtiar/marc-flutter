@@ -9,7 +9,7 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 
 /// Banner "email belum disahkan". Papar hanya bila profil dimuat dan
 /// `email_verified == false`. Butang "Sahkan" panggil
-/// `POST /auth/verify-email/request` — backend hantar link pengesahan
+/// `POST /auth/verify-email/request` - backend hantar link pengesahan
 /// melalui email (Resend).
 class VerifyEmailBanner extends ConsumerStatefulWidget {
   const VerifyEmailBanner({super.key});

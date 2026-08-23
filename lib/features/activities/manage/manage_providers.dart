@@ -4,7 +4,7 @@
 /// .dart`: semua yang di sini memerlukan role pengurusan, dan senarai
 /// pendaftaran membawa nama sebenar dan `member_id` ahli lain. Sempadan
 /// fail menjadikan "siapa boleh sentuh data ini" boleh dibaca dalam senarai
-/// import — halaman ahli biasa tidak pernah mengimport fail ini.
+/// import - halaman ahli biasa tidak pernah mengimport fail ini.
 library;
 
 import 'package:dio/dio.dart';
@@ -25,11 +25,11 @@ final isManagementProvider = Provider<bool>((ref) {
   return profile.valueOrNull?.isManagement ?? false;
 });
 
-/// Siling "manager ke atas sahaja" — lebih ketat drpd [isManagementProvider]
+/// Siling "manager ke atas sahaja" - lebih ketat drpd [isManagementProvider]
 /// (yang termasuk supervisor). Dikira secara DINAMIK drpd `rolesProvider`
 /// (bukan nombor rank digodam keras di klien) supaya siling ini terus betul
 /// kalau rank role diubah di backend suatu hari nanti. Sama macam provider
-/// di atas — kemudahan UI sahaja, backend menyemak `authz.IsAtLeastRole`
+/// di atas - kemudahan UI sahaja, backend menyemak `authz.IsAtLeastRole`
 /// sendiri (lihat CRUD kategori aktiviti).
 final isManagerOrAboveProvider = Provider<bool>((ref) {
   final profile = ref.watch(myProfileProvider).valueOrNull;
@@ -37,7 +37,7 @@ final isManagerOrAboveProvider = Provider<bool>((ref) {
 
   // `/roles` (rolesProvider) SENGAJA tolak mana-mana role dengan rank
   // >= rank caller sendiri (backend `ListRoles`, skop utk pemilih
-  // "tukar role" — hanya boleh assign ke bawah) — jadi carian dinamik di
+  // "tukar role" - hanya boleh assign ke bawah) - jadi carian dinamik di
   // bawah GAGAL tepat utk kes caller SENDIRI 'manager' (rank == rank,
   // ditapis keluar drpd senarai dia sendiri). Bug sebenar dijumpai Opus
   // verify 2026-08-15: manager tulen nampak provider ni `false`.
@@ -59,7 +59,7 @@ final isManagerOrAboveProvider = Provider<bool>((ref) {
   return profile.roleRank >= managerRank;
 });
 
-/// SEMUA kategori aktiviti (termasuk tidak aktif) — utk skrin CRUD
+/// SEMUA kategori aktiviti (termasuk tidak aktif) - utk skrin CRUD
 /// pengurusan. `activityCategoriesProvider` (activity_providers.dart) kekal
 /// aktif-sahaja utk borang cipta aktiviti; provider ini sengaja fail senyap
 /// (list kosong) kalau bukan manager ke atas, elak panggilan 403 yang
@@ -98,7 +98,7 @@ class ActivityRegistrant {
     required this.attendedSessionIds,
   });
 
-  /// id PENDAFTARAN — inilah `registration_id` yang dihantar semasa
+  /// id PENDAFTARAN - inilah `registration_id` yang dihantar semasa
   /// menanda kehadiran, bukan `user_id`.
   final String id;
   final String userId;
@@ -109,12 +109,12 @@ class ActivityRegistrant {
   final String displayName;
   final DateTime registeredAt;
 
-  /// Id SESI yang pendaftaran ini sudah ditanda hadir — disusun ikut `seq`,
+  /// Id SESI yang pendaftaran ini sudah ditanda hadir - disusun ikut `seq`,
   /// dan hanya sesi milik aktiviti yang sama.
   ///
   /// Ini yang membenarkan skrin kehadiran menyemai suisnya daripada SATU
   /// permintaan dan bukan meneka. Backend menjaminnya sentiasa hadir dan
-  /// sentiasa array (`[]` bila tiada), jadi tiada laluan null di sini —
+  /// sentiasa array (`[]` bila tiada), jadi tiada laluan null di sini -
   /// tetapi lalai kosong dikekalkan supaya klien lama tidak pecah kalau
   /// medan itu hilang.
   final List<String> attendedSessionIds;
@@ -188,13 +188,13 @@ class OpResult {
 /// 409 daripada `PUT /activities/:id/sessions`.
 ///
 /// Backend menolak penggantian set sesi sebaik SEBARANG kehadiran direkod
-/// untuk aktiviti itu — bukan hanya bagi sesi yang dibuang, kerana
+/// untuk aktiviti itu - bukan hanya bagi sesi yang dibuang, kerana
 /// `activity_attendances.session_id` ialah `on delete cascade` dan padam
 /// itu akan memusnahkan bukti sijil secara senyap. Mesej generik "gagal
 /// simpan" di sini akan menyuruh pengurus mencuba lagi selama-lamanya.
 const sessionsAttendanceConflictMessage =
     'Sesi tidak boleh diganti kerana kehadiran sudah direkod untuk aktiviti '
-    'ini. Kehadiran yang sudah ditanda ialah bukti sijil — buang kehadiran '
+    'ini. Kehadiran yang sudah ditanda ialah bukti sijil - buang kehadiran '
     'berkenaan dahulu sebelum menukar sesi.';
 
 /// 422 daripada `POST .../attendance` tanpa `amend`.
@@ -216,7 +216,7 @@ const certificatesPartialMessage =
 /// Lalai global 12 saat tidak sesuai di sini: fasa 2 server menjana dan
 /// memuat naik setiap PDF secara berjujukan (diukur ~0.7s sesijil, had 30s
 /// bagi satu muat naik). Dengan lalai itu, mana-mana kohort melebihi ~15
-/// sijil akan dibatalkan dio pada 12 saat — gin membatalkan konteks
+/// sijil akan dibatalkan dio pada 12 saat - gin membatalkan konteks
 /// request, gelung muat naik mati separuh jalan, dan pengurus tidak pernah
 /// nampak kad 202 walaupun untuk saiz aktiviti yang paling memerlukannya.
 ///
@@ -248,7 +248,7 @@ class AttendanceResult {
   const AttendanceResult.ok({required bool created})
     : this._(ok: true, outsideWindow: false, created: created);
 
-  /// 422 — perlu laluan pindaan (`amend` + `reason`).
+  /// 422 - perlu laluan pindaan (`amend` + `reason`).
   const AttendanceResult.outsideWindow()
     : this._(
         ok: false,
@@ -276,13 +276,13 @@ class IssueCertificatesResult {
     this.message,
   });
 
-  /// 200 — semua fail siap.
+  /// 200 - semua fail siap.
   const IssueCertificatesResult.done({
     required int issued,
     required int filesReady,
   }) : this._(ok: true, partial: false, issued: issued, filesReady: filesReady);
 
-  /// 202 — baris dicipta, sebahagian fail belum siap. BERJAYA, bukan ralat.
+  /// 202 - baris dicipta, sebahagian fail belum siap. BERJAYA, bukan ralat.
   const IssueCertificatesResult.partial({
     required int issued,
     required int filesReady,
@@ -294,7 +294,7 @@ class IssueCertificatesResult {
          message: certificatesPartialMessage,
        );
 
-  /// Dio tamat masa menunggu — server masih bekerja. Dilayan seperti 202
+  /// Dio tamat masa menunggu - server masih bekerja. Dilayan seperti 202
   /// (berjaya separuh jalan), cuma tanpa kiraan: tiada respons dibaca, jadi
   /// memapar 0/0 akan menipu.
   const IssueCertificatesResult.timedOut()
@@ -326,7 +326,7 @@ class IssueCertificatesResult {
   /// Berapa baris sijil BARU dicipta panggilan ini.
   final int issued;
 
-  /// Berapa sijil aktiviti ini yang failnya sudah ada — SELURUH aktiviti,
+  /// Berapa sijil aktiviti ini yang failnya sudah ada - SELURUH aktiviti,
   /// bukan delta panggilan semasa (lihat `countFilesReady` di backend).
   final int filesReady;
   final String? message;
@@ -362,11 +362,11 @@ class ActivityManageRepository {
 
   /// Selepas kehadiran ditanda atau dibuang.
   ///
-  /// `activityRegistrantsProvider` ialah `FutureProvider.family` biasa —
+  /// `activityRegistrantsProvider` ialah `FutureProvider.family` biasa -
   /// keep-alive seumur hayat `ProviderContainer`, mengikut konvensyen repo
   /// ini (tiada satu pun provider `autoDispose` dalam `lib/`). Tanpa
   /// pembatalan di sini, cache itu HIDUP LEBIH LAMA daripada skrin: pengurus
-  /// menanda 30 orang, tekan kembali, buka semula — `State` baharu bermula
+  /// menanda 30 orang, tekan kembali, buka semula - `State` baharu bermula
   /// dengan tindihan kosong dan provider memainkan semula respons SEBELUM
   /// tanda, jadi 30 suis dipapar OFF untuk orang yang hadir.
   ///
@@ -384,7 +384,7 @@ class ActivityManageRepository {
     _ref.invalidate(activityRegistrantsProvider(activityId));
   }
 
-  /// `POST /activities` — status kekal `draft` sehingga diterbitkan.
+  /// `POST /activities` - status kekal `draft` sehingga diterbitkan.
   Future<ActivityResult> create(
     ActivityDraft draft,
     List<SessionDraft> sessions,
@@ -405,7 +405,7 @@ class ActivityManageRepository {
     }
   }
 
-  /// `PATCH /activities/:id` — [patch] mesti sudah menjadi diff (lihat
+  /// `PATCH /activities/:id` - [patch] mesti sudah menjadi diff (lihat
   /// `buildActivityPatch`). Repository tidak membinanya sendiri supaya
   /// tiada laluan yang boleh menghantar objek penuh "buat sementara".
   Future<ActivityResult> update(
@@ -425,7 +425,7 @@ class ActivityManageRepository {
     }
   }
 
-  /// `PUT /activities/:id/sessions` — set PENUH.
+  /// `PUT /activities/:id/sessions` - set PENUH.
   Future<OpResult> replaceSessions(
     String activityId,
     List<SessionDraft> sessions,
@@ -450,7 +450,7 @@ class ActivityManageRepository {
   Future<ActivityResult> publish(String activityId) =>
       _statusChange('/activities/$activityId/publish', activityId, null);
 
-  /// `POST /activities/:id/cancel` — sebab WAJIB, dan ia sampai kepada
+  /// `POST /activities/:id/cancel` - sebab WAJIB, dan ia sampai kepada
   /// setiap ahli berdaftar melalui notifikasi.
   Future<ActivityResult> cancel(String activityId, String reason) {
     final trimmed = reason.trim();
@@ -487,8 +487,8 @@ class ActivityManageRepository {
   /// Dua skrin memanggilnya: senarai peserta ([markAttendance], dengan
   /// `registration_id` + `method:'manual'`) dan pengimbas QR
   /// ([checkInByToken], dengan `checkin_token` + `method:'scan'`). Handler
-  /// backend, baris pangkalan data dan jejak audit adalah SAMA — hanya
-  /// bentuk pengenalan berbeza — jadi menyalin permintaan ini ke dalam
+  /// backend, baris pangkalan data dan jejak audit adalah SAMA - hanya
+  /// bentuk pengenalan berbeza - jadi menyalin permintaan ini ke dalam
   /// skrin scanner bermakna dua tempat untuk pembatalan cache dan dua
   /// tempat untuk terlupa `_invalidateRegistrants`.
   ///
@@ -609,7 +609,7 @@ class ActivityManageRepository {
       return const OpResult.ok();
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        // Sudah tiada di server — cache tempatan mungkin masih menyimpan
+        // Sudah tiada di server - cache tempatan mungkin masih menyimpan
         // baris itu sebagai hadir, jadi ia tetap perlu dibaca semula.
         _invalidateRegistrants(activityId);
         return const OpResult.ok();
@@ -622,7 +622,7 @@ class ActivityManageRepository {
 
   /// `POST /activities/:id/certificates`.
   ///
-  /// 202 ialah KEJAYAAN separuh jalan, bukan kegagalan — lihat
+  /// 202 ialah KEJAYAAN separuh jalan, bukan kegagalan - lihat
   /// [certificatesPartialMessage].
   Future<IssueCertificatesResult> issueCertificates(String activityId) async {
     try {
@@ -671,7 +671,7 @@ class ActivityManageRepository {
     _ref.invalidate(activityCategoriesProvider);
   }
 
-  /// `POST /activity-categories` — manager ke atas sahaja (backend
+  /// `POST /activity-categories` - manager ke atas sahaja (backend
   /// kuatkuasakan `authz.IsAtLeastRole`).
   Future<CategoryResult> createCategory({
     required String key,
@@ -694,7 +694,7 @@ class ActivityManageRepository {
     }
   }
 
-  /// `PATCH /activity-categories/:id` — hanya medan bukan-null dihantar.
+  /// `PATCH /activity-categories/:id` - hanya medan bukan-null dihantar.
   /// `key` sengaja TIDAK boleh diubah (padanan backend) jadi tiada
   /// parameter untuknya di sini.
   Future<CategoryResult> updateCategory(

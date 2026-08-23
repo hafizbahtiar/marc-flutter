@@ -18,7 +18,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Pastikan trace PENUH sentiasa masuk console, bukan cuma ringkasan
-  // mesej — susulan ralat "Looking up a deactivated widget's ancestor"
+  // mesej - susulan ralat "Looking up a deactivated widget's ancestor"
   // yang dilaporkan tanpa trace. `FlutterError.dumpErrorToConsole` default
   // pun buat ni, tapi eksplisit di sini elak kehilangan bila `onError`
   // lain (cth. Crashlytics kemudian) menggantikannya tanpa forward.
@@ -41,7 +41,7 @@ Future<void> main() async {
   try {
     await dotenv.load(fileName: envFile);
   } catch (_) {
-    // .env belum diisi — salin .env.example ke .env dan isi kredential.
+    // .env belum diisi - salin .env.example ke .env dan isi kredential.
   }
   await initOneSignal();
   await initStripe();
@@ -54,7 +54,7 @@ Future<void> main() async {
     await container.read(authNotifierProvider.notifier).hydrate();
   } catch (_) {
     // Secure storage tak boleh diakses (cth: keystore rosak lepas
-    // upgrade OS) — anggap logged out, biar user login semula.
+    // upgrade OS) - anggap logged out, biar user login semula.
   }
 
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
@@ -71,7 +71,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    // Fire-and-forget — prompt OS boleh block indefinitely kalau user
+    // Fire-and-forget - prompt OS boleh block indefinitely kalau user
     // backgroundkan app sebelum jawab, jadi jangan await sebelum UI
     // pertama render (lihat komen initOneSignal()).
     unawaited(requestNotificationPermission());

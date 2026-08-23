@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 /// Satu pilihan dalam [showAppActionSheet].
 ///
-/// `value` ialah apa yang dipulangkan bila pilihan ditekan — biasanya
+/// `value` ialah apa yang dipulangkan bila pilihan ditekan - biasanya
 /// enum, supaya switch di pemanggil exhaustive.
 class AppSheetAction<T> {
   const AppSheetAction({
@@ -19,7 +19,7 @@ class AppSheetAction<T> {
   final T value;
   final String label;
 
-  /// Diabaikan di Cupertino — action sheet iOS tak guna ikon.
+  /// Diabaikan di Cupertino - action sheet iOS tak guna ikon.
   final IconData? icon;
 
   /// Baris kedua yang lebih perlahan. Material sahaja.
@@ -27,7 +27,7 @@ class AppSheetAction<T> {
 
   final bool isDestructive;
 
-  /// Papar tanda semak — untuk sheet yang berfungsi sebagai pemilih
+  /// Papar tanda semak - untuk sheet yang berfungsi sebagai pemilih
   /// (cth pilih role ahli), bukan senarai tindakan.
   final bool isSelected;
 
@@ -110,9 +110,9 @@ Future<T?> showAppActionSheet<T>(
 /// Saiz [DraggableScrollableSheet] untuk action sheet Material.
 ///
 /// Dua mode:
-/// * **compact** — semua item muat di bawah [defaultInitial]; tinggi ikut
+/// * **compact** - semua item muat di bawah [defaultInitial]; tinggi ikut
 ///   kandungan, tak boleh dileret naik.
-/// * **scroll** — item lebih dari itu. Kalau lebih sikit (dalam slack 2
+/// * **scroll** - item lebih dari itu. Kalau lebih sikit (dalam slack 2
 ///   jubin), [initial] ikut kandungan. Kalau banyak, buka pada
 ///   [defaultInitial] dan boleh dileret ke [maxSize].
 @visibleForTesting

@@ -19,6 +19,7 @@ import 'package:marc/features/activities/manage/registrations_page.dart';
 import 'package:marc/features/activities/manage/session_checkin_qr_page.dart';
 import 'package:marc/features/activities/self_checkin_scanner_page.dart';
 import 'package:marc/features/audit/audit_page.dart';
+import 'package:marc/features/checkout/checkout_page.dart';
 import 'package:marc/features/donation/donation_page.dart';
 import 'package:marc/features/members/members_page.dart';
 import 'package:marc/features/members/pending_members_page.dart';
@@ -100,6 +101,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/donate', builder: (_, _) => const DonationPage()),
       GoRoute(
+        path: '/checkout',
+        // `extra` (bukan path param) sebab `CheckoutRequest.onCheckout`
+        // ialah closure - tak boleh diserialize ke URL. Ni bermakna
+        // route ni BOLEH dicapai dengan `extra` null/salah jenis kalau
+        // deep-link `marc://...` cetuskan navigasi terus ke `/checkout`
+        // (skim `marc` didaftar utk Stripe redirect,
+        // `flutter_deeplinking_enabled` lalai ON) - redirect (bukan `!`
+        // yang crash) ke `/feed` untuk kes tu, Opus verify 2026-08-24.
+        redirect: (_, state) =>
+            state.extra is CheckoutRequest ? null : '/feed',
+        builder: (_, state) =>
+            CheckoutPage(request: state.extra! as CheckoutRequest),
+      ),
+      GoRoute(
         path: '/telegram-link',
         builder: (_, _) => const TelegramLinkPage(),
       ),
@@ -139,14 +154,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const MyCertificatesPage(),
       ),
       // Skrin PENGURUSAN. '/activities/new' MESTI didahulukan daripada
-      // '/activities/:id' — go_router memadan mengikut urutan, jadi
+      // '/activities/:id' - go_router memadan mengikut urutan, jadi
       // pertukaran susunan akan menghantar "new" ke halaman detail
       // sebagai id.
       GoRoute(
         path: '/activities/new',
         builder: (_, _) => const ActivityFormPage(),
       ),
-      // MESTI didahulukan drpd '/activities/:id' — sama sebab dengan
+      // MESTI didahulukan drpd '/activities/:id' - sama sebab dengan
       // '/activities/new' di atas.
       GoRoute(
         path: '/activities/categories',
@@ -162,7 +177,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) =>
             RegistrationsPage(activityId: state.pathParameters['id']!),
       ),
-      // Sesi dipilih pada skrin Senarai Peserta dan dikunci pada route —
+      // Sesi dipilih pada skrin Senarai Peserta dan dikunci pada route -
       // pengimbas tidak mempunyai pemilih sesi sendiri, kerana satu
       // ketukan tersilap di sana menanda barisan penuh pada sesi salah.
       GoRoute(
@@ -179,7 +194,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           sessionId: state.pathParameters['sid']!,
         ),
       ),
-      // Tiada parameter — sesi/aktiviti datang drpd kandungan QR yang
+      // Tiada parameter - sesi/aktiviti datang drpd kandungan QR yang
       // diimbas, bukan route (lihat komen SelfCheckinScannerPage).
       GoRoute(
         path: '/checkin',

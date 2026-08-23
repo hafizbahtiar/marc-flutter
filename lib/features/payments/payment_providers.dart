@@ -6,9 +6,9 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/payments/payment_models.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
-/// Sejarah bayaran SENDIRI (`GET /me/payments`) — yuran pendaftaran +
+/// Sejarah bayaran SENDIRI (`GET /me/payments`) - yuran pendaftaran +
 /// yuran aktiviti + derma. Set kecil per ahli (bukan log peristiwa yang
-/// bertambah tanpa had), jadi tiada pagination di sini — beza drpd
+/// bertambah tanpa had), jadi tiada pagination di sini - beza drpd
 /// `paymentLogsProvider` di bawah.
 final myPaymentHistoryProvider = FutureProvider<MyPaymentHistory>((ref) async {
   final isLoggedIn = ref.watch(
@@ -29,7 +29,7 @@ final myPaymentHistoryProvider = FutureProvider<MyPaymentHistory>((ref) async {
 const _pageSize = 50;
 
 /// Penapis skrin "Semua Bayaran" (pengurusan). Sebahagian daripada kunci
-/// provider — tukar penapis bina semula notifier & muat semula dari mula
+/// provider - tukar penapis bina semula notifier & muat semula dari mula
 /// (padanan AuditFilter/auditLogsProvider).
 class PaymentLogFilter {
   const PaymentLogFilter({this.module});
@@ -78,15 +78,15 @@ class PaymentLogState {
 }
 
 /// Tinjauan bayaran merentas modul untuk pengurusan (`GET /admin/payments`)
-/// — pagination keyset `before_id`, padanan corak `AuditLogNotifier`.
+/// - pagination keyset `before_id`, padanan corak `AuditLogNotifier`.
 class PaymentLogNotifier
     extends FamilyAsyncNotifier<PaymentLogState, PaymentLogFilter> {
   @override
   Future<PaymentLogState> build(PaymentLogFilter arg) async {
-    // Reaktif pada status log masuk DAN kebenaran management — provider ni
+    // Reaktif pada status log masuk DAN kebenaran management - provider ni
     // BUKAN autoDispose (konvensyen repo), jadi tanpa watch di sini jejak
     // bayaran yang dah dimuat kekal dalam memori selepas logout/downgrade
-    // role. Data kewangan merentas SEMUA ahli — kena ikut guard sekeras
+    // role. Data kewangan merentas SEMUA ahli - kena ikut guard sekeras
     // audit logs.
     final isLoggedIn = ref.watch(
       authNotifierProvider.select((s) => s.isLoggedIn),
@@ -168,7 +168,7 @@ class ReceiptLinkResult {
   bool get isOk => url != null;
 }
 
-/// 409 daripada endpoint resit bukan kegagalan — bayaran tu sendiri
+/// 409 daripada endpoint resit bukan kegagalan - bayaran tu sendiri
 /// masih 'pending'/'failed', backend tolak jana resit sengaja (tiada apa
 /// nak diresitkan lagi).
 const receiptNotReadyMessage = 'Bayaran belum berjaya, resit belum tersedia.';
@@ -177,7 +177,7 @@ final paymentReceiptRepositoryProvider = Provider<PaymentReceiptRepository>(
   (ref) => PaymentReceiptRepository(ref),
 );
 
-/// Minta URL bertandatangan bagi PDF resit — endpoint pulangkan
+/// Minta URL bertandatangan bagi PDF resit - endpoint pulangkan
 /// `{"url": "..."}` (R2 yang sampaikan fail, bukan bait terus), padanan
 /// corak `CertificateRepository.fileUrl`. Pemanggil membuka URL dengan
 /// `url_launcher`; tiada apa-apa ditulis ke storan peranti.

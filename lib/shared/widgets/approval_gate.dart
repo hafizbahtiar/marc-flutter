@@ -5,15 +5,15 @@ import 'package:marc/app/theme.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
 /// Bungkus skrin yang perlukan `profile.status == 'approved'` (dan
-/// pilihan email disahkan) — papar mesej JELAS + pautan ke tab Utama,
+/// pilihan email disahkan) - papar mesej JELAS + pautan ke tab Utama,
 /// bukan biar tab tu panggil API terus dan 403 jatuh sebagai ralat
 /// generik "gagal memuat" yang tak terangkan sebab (isu sebenar 2026-08-15
-/// selepas Notifikasi/Aktiviti jadi tab bottom nav — boleh dicapai
+/// selepas Notifikasi/Aktiviti jadi tab bottom nav - boleh dicapai
 /// SEBELUM approve, tak macam dulu bila ia terkurung dalam Feed yang
 /// dah ada gate sendiri).
 ///
 /// Versi RINGAN drpd gate dalam `feed_page.dart`
-/// (`_PendingStatusView`/`_EmailNotVerifiedView`) — TIADA butang bayar
+/// (`_PendingStatusView`/`_EmailNotVerifiedView`) - TIADA butang bayar
 /// (Feed kekal tempat kanonik urusan pendaftaran/bayaran), cuma arahan
 /// pergi ke situ.
 class ApprovalGate extends ConsumerWidget {
@@ -24,7 +24,7 @@ class ApprovalGate extends ConsumerWidget {
     this.requireVerifiedEmail = false,
   });
 
-  /// Tajuk AppBar skrin ni (cth "Notifikasi", "Aktiviti") — gate
+  /// Tajuk AppBar skrin ni (cth "Notifikasi", "Aktiviti") - gate
   /// menggantikan SELURUH skrin (Scaffold sendiri) bila tak lulus,
   /// padanan pola `feed_page.dart`, jadi tajuk perlu dihantar terus.
   final String title;
@@ -32,7 +32,7 @@ class ApprovalGate extends ConsumerWidget {
   final Widget child;
 
   /// Sesetengah skrin (Notifikasi) perlukan email disahkan JUGA (bukan
-  /// setakat approved) — padanan `RequireVerifiedEmail` backend. Skrin
+  /// setakat approved) - padanan `RequireVerifiedEmail` backend. Skrin
   /// lain (Aktiviti) tak perlu.
   final bool requireVerifiedEmail;
 
@@ -59,7 +59,7 @@ class ApprovalGate extends ConsumerWidget {
         message: isRejected
             ? 'Pendaftaran anda tidak diluluskan. Sila hubungi pihak pengurusan MARC.'
             : 'Skrin ini akan tersedia sebaik pendaftaran anda diluluskan pengurusan.',
-        // Ahli pending mungkin masih kena bayar/semak status — Feed
+        // Ahli pending mungkin masih kena bayar/semak status - Feed
         // (tab Utama) ada gate penuh dgn butang bayar + "Semak semula".
         showGoToFeed: !isRejected,
       );
@@ -71,7 +71,7 @@ class ApprovalGate extends ConsumerWidget {
         icon: Icons.mark_email_unread_outlined,
         iconColor: (theme) => theme.extension<AppSemanticColors>()!.warning,
         message:
-            'Sila sahkan email anda dahulu untuk akses skrin ini — pergi ke tab Utama.',
+            'Sila sahkan email anda dahulu untuk akses skrin ini - pergi ke tab Utama.',
         showGoToFeed: true,
       );
     }

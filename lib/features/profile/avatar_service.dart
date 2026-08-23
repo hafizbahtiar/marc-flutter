@@ -10,11 +10,11 @@ import 'package:marc/core/app_log.dart';
 ///
 /// Jauh lebih kecil drpd gambar post (2048) sebab avatar dipapar dalam
 /// bulatan 28–88dp. Backend kuatkuasakan semula pada 1024
-/// (`MaxAvatarDimension`) — presigned URL benarkan client naikkan apa-apa
+/// (`MaxAvatarDimension`) - presigned URL benarkan client naikkan apa-apa
 /// terus ke R2, jadi had di sini kemudahan, bukan sempadan keselamatan.
 const avatarMaxDimension = 512.0;
 
-/// Kualiti JPEG. Tinggi sengaja — matlamatnya kecilkan DIMENSI, bukan
+/// Kualiti JPEG. Tinggi sengaja - matlamatnya kecilkan DIMENSI, bukan
 /// hancurkan kualiti. Muka manusia menunjukkan artifak lebih ketara drpd
 /// gambar biasa.
 const avatarQuality = 95;
@@ -34,7 +34,7 @@ class AvatarService {
 
   /// Pilih gambar dari galeri. `null` kalau pengguna batal.
   ///
-  /// Mengecilkan waktu pilih — bukan selepas — supaya bitmap resolusi
+  /// Mengecilkan waktu pilih - bukan selepas - supaya bitmap resolusi
   /// penuh tak pernah masuk memori Dart.
   Future<XFile?> pick() {
     return _picker.pickImage(
@@ -61,7 +61,7 @@ class AvatarService {
 
     try {
       // Dio berasingan: URL presigned R2 bukan endpoint backend kita, jadi
-      // ia tak sepatutnya bawa Bearer token kita. Timeout eksplisit —
+      // ia tak sepatutnya bawa Bearer token kita. Timeout eksplisit -
       // Dio() kosong tiada timeout langsung.
       await Dio(
         BaseOptions(

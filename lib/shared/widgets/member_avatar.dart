@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:marc/shared/widgets/app_network_image.dart';
 
-/// Avatar ahli — gambar profil kalau ada, huruf pertama nama kalau tiada.
+/// Avatar ahli - gambar profil kalau ada, huruf pertama nama kalau tiada.
 ///
 /// SATU tempat untuk setiap avatar dalam app. Sebelum ni tujuh skrin
 /// membina `CircleAvatar` sendiri-sendiri dengan radius, warna dan gaya
 /// huruf yang berbeza-beza; menambah gambar profil pada tujuh salinan
 /// bermakna tujuh peluang untuk terpesong.
 ///
-/// `radius` bukan sekadar saiz lukisan — ia juga menentukan lebar nyahkod
+/// `radius` bukan sekadar saiz lukisan - ia juga menentukan lebar nyahkod
 /// gambar. Avatar comment (14) dan avatar header profil (44) beza empat
 /// kali ganda dalam luas piksel; menyahkod kedua-duanya pada saiz sama
 /// membazir memori pada senarai yang panjang.
@@ -21,7 +21,7 @@ class MemberAvatar extends StatelessWidget {
     this.onTap,
   });
 
-  /// Nama paparan (atau member id) — huruf pertama jadi fallback.
+  /// Nama paparan (atau member id) - huruf pertama jadi fallback.
   final String label;
 
   final String? avatarUrl;

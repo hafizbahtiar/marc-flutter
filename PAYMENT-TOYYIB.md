@@ -192,14 +192,11 @@ tepat sebelum guna produksi.
       `GET /registration-payments/return/toyyibpay` (awam). Butiran
       penuh: `../marc_go/TODO.md` bahagian Payment. `go build`/`go vet`/
       `go test ./...`/`gofmt -l .` semua lulus.
-- [ ] **`marc_flutter`: TIADA UI lagi.** Backend `Checkout` sedia (pulang
-      `{"redirect_url": ...}`), tapi tiada skrin dalam aliran daftar/
-      skrin pending yang panggil ia. `RedirectCheckoutHandler` sedia ada
-      (https-only sejak audit 2026-08-15) sepatutnya boleh terus pakai
-      untuk buka `redirect_url` ni — perlu skrin baharu (cadangan: dalam
-      `_PendingStatusView`, `feed_page.dart`, papar butang "Bayar Yuran
-      Pendaftaran" kalau belum bayar) yang panggil endpoint checkout
-      lepas tu.
+- [x] **`marc_flutter`: UI DIBINA DAN DIWIRING** (disahkan 2026-08-24,
+      lihat `TODO.md` untuk butiran fail). Butang bayar dalam
+      `_PendingStatusView` (`feed_page.dart`) untuk yuran pendaftaran,
+      dan kad pendaftaran (`my_activities_page.dart`) untuk yuran
+      aktiviti.
 - [ ] Selesaikan SATU pembayaran ujian sebenar (simulator bank sandbox)
       untuk sahkan bentuk respons `getBillTransactions` bila
       `billpaymentStatus="1"` (berjaya) — satu-satunya kes API yang

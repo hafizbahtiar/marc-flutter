@@ -18,7 +18,7 @@ import 'package:permission_handler/permission_handler.dart';
 /// ketukan tersilap menanda 40 orang pada sesi yang salah, dan kehadiran
 /// per-sesi ialah asas kiraan kelayakan sijil.
 ///
-/// Check-in memerlukan rangkaian DENGAN SENGAJA — tiada baris gilir luar
+/// Check-in memerlukan rangkaian DENGAN SENGAJA - tiada baris gilir luar
 /// talian. Tetingkap check-in dikuatkuasakan oleh jam SERVER; gilir pada
 /// peranti boleh dimanipulasi dengan menukar jam telefon, dan kehadiran
 /// ialah bukti yang menentukan siapa menerima sijil.
@@ -64,7 +64,7 @@ class _ScannerBodyState extends ConsumerState<_ScannerBody> {
 
   ScanResult? _last;
 
-  /// Bilangan permintaan dalam penerbangan — sepanduk menunjukkan pemutar
+  /// Bilangan permintaan dalam penerbangan - sepanduk menunjukkan pemutar
   /// supaya pengurus tahu imbasan itu SEDANG dihantar dan tidak mengulang
   /// tanda secara manual di atasnya.
   int _inFlight = 0;
@@ -105,7 +105,7 @@ class _ScannerBodyState extends ConsumerState<_ScannerBody> {
     if (!mounted) return;
 
     if (result.kind == ScanResultKind.network) {
-      // Permintaan gagal — nyahlantun tidak patut menyekat percubaan
+      // Permintaan gagal - nyahlantun tidak patut menyekat percubaan
       // semula bagi kod yang SAMA dalam tetingkap ini. Lihat dokumentasi
       // `ScanDebouncer.evict`.
       _debouncer.evict(code);
@@ -114,7 +114,7 @@ class _ScannerBodyState extends ConsumerState<_ScannerBody> {
     setState(() {
       _inFlight--;
       // Hasil LAMA yang mendarat lewat tidak menindih hasil imbasan yang
-      // lebih baharu — kalau tidak, sepanduk akan mengesahkan orang yang
+      // lebih baharu - kalau tidak, sepanduk akan mengesahkan orang yang
       // sudah beredar dari hadapan kamera.
       //
       // KEGAGALAN dikecualikan: ia sentiasa dipapar. Kegagalan yang
@@ -144,7 +144,7 @@ class _ScannerBodyState extends ConsumerState<_ScannerBody> {
             ?.sessions ??
         const <ActivitySession>[];
     // Detail aktiviti mungkin belum dimuat (masuk terus melalui pautan
-    // dalam) — sesi null hanya menyembunyikan bar tajuk, ia TIDAK
+    // dalam) - sesi null hanya menyembunyikan bar tajuk, ia TIDAK
     // menghalang imbasan: id sesi datang dari route dan sudah pasti.
     ActivitySession? session;
     for (final s in sessions) {
@@ -221,7 +221,7 @@ class _SessionBar extends StatelessWidget {
       color: theme.colorScheme.surfaceContainerHighest,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Text(
-        '$label — ${formatDateTime(session.startsAt)}',
+        '$label - ${formatDateTime(session.startsAt)}',
         style: theme.textTheme.bodyMedium,
         textAlign: TextAlign.center,
       ),
@@ -229,7 +229,7 @@ class _SessionBar extends StatelessWidget {
   }
 }
 
-/// Sepanduk hasil — enam keadaan, dua daripadanya HIJAU.
+/// Sepanduk hasil - enam keadaan, dua daripadanya HIJAU.
 ///
 /// "Sudah ditanda hadir" hijau kerana imbasan berulang ialah kelakuan
 /// biasa: QR yang sama dipegang semula, atau dua pengurus mengimbas orang
@@ -332,11 +332,11 @@ class _ResultBanner extends StatelessWidget {
   }
 }
 
-/// Kamera tidak boleh dimulakan — hampir selalunya kebenaran ditolak.
+/// Kamera tidak boleh dimulakan - hampir selalunya kebenaran ditolak.
 ///
 /// `mobile_scanner` meminta kebenaran kamera sendiri semasa `start()`;
 /// tiada permintaan berasingan di sini. Yang tinggal ialah keadaan
-/// "ditolak selamanya", di mana satu-satunya jalan keluar ialah Tetapan —
+/// "ditolak selamanya", di mana satu-satunya jalan keluar ialah Tetapan -
 /// dan skrin yang hanya memaparkan ikon ralat hitam ialah jalan mati.
 class _CameraError extends StatelessWidget {
   const _CameraError({required this.error, required this.controller});

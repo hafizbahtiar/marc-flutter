@@ -6,7 +6,7 @@ import 'package:marc/features/profile/profile_providers.dart';
 /// Menyembunyikan skrin pengurusan daripada ahli biasa.
 ///
 /// KEMUDAHAN UI SAHAJA. Setiap route di belakang skrin ini menyemak
-/// `authz.IsManagement` sendiri di backend dan memulangkan 403 — semakan di
+/// `authz.IsManagement` sendiri di backend dan memulangkan 403 - semakan di
 /// sini hanya mengelak daripada menunjukkan pintu yang terkunci, dan tidak
 /// boleh dipercayai sebagai sempadan keselamatan.
 ///
@@ -17,7 +17,7 @@ import 'package:marc/features/profile/profile_providers.dart';
 /// Profil yang GAGAL dimuat juga tidak. `/me` yang 500 atau tumbang kerana
 /// talian terputus bukan bukti bahawa orang ini bukan pengurus, dan
 /// "Skrin ini untuk pengurusan sahaja" ialah jawapan yang salah DAN jalan
-/// mati — ia tidak menawarkan apa-apa untuk dicuba semula.
+/// mati - ia tidak menawarkan apa-apa untuk dicuba semula.
 class ManagementGate extends ConsumerWidget {
   const ManagementGate({super.key, required this.title, required this.child});
 

@@ -21,7 +21,7 @@ class MyCertificatesPage extends ConsumerStatefulWidget {
 }
 
 class _MyCertificatesPageState extends ConsumerState<MyCertificatesPage> {
-  /// Id sijil yang sedang menunggu pautan — supaya ketukan berulang pada
+  /// Id sijil yang sedang menunggu pautan - supaya ketukan berulang pada
   /// baris yang sama tidak menghantar permintaan bertindih.
   final _busy = <String>{};
 
@@ -34,7 +34,7 @@ class _MyCertificatesPageState extends ConsumerState<MyCertificatesPage> {
     if (_busy.contains(cert.id)) return;
     setState(() => _busy.add(cert.id));
     try {
-      // Server yang menentukan sama ada fail sudah ada — `file_ready`
+      // Server yang menentukan sama ada fail sudah ada - `file_ready`
       // dalam senarai boleh sudah basi (fasa 2 mungkin siap selepas
       // senarai dimuatkan), jadi ketukan sentiasa bertanya.
       final result = await ref

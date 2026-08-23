@@ -8,13 +8,13 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/app_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
-/// Skrin CRUD kategori aktiviti — manager ke atas SAHAJA (bukan sekadar
+/// Skrin CRUD kategori aktiviti - manager ke atas SAHAJA (bukan sekadar
 /// pengurusan). Kategori ialah infrastruktur dikongsi SEMUA aktiviti, bukan
 /// tindakan pengurusan harian (cth luluskan ahli/terbit aktiviti) yang
-/// supervisor pun boleh buat — lihat `isManagerOrAboveProvider`.
+/// supervisor pun boleh buat - lihat `isManagerOrAboveProvider`.
 ///
 /// Kategori TIDAK PERNAH dipadam terus (`category_id` di `activities` ialah
-/// `on delete restrict`) — "padam" di sini bermakna nyahaktifkan
+/// `on delete restrict`) - "padam" di sini bermakna nyahaktifkan
 /// (`is_active = false`), yang menyembunyikannya drpd borang cipta aktiviti
 /// tanpa memecahkan aktiviti sedia ada yang masih memetiknya.
 class ActivityCategoriesPage extends ConsumerWidget {
@@ -27,7 +27,7 @@ class ActivityCategoriesPage extends ConsumerWidget {
       child: Consumer(
         builder: (context, ref, _) {
           // `isManagerOrAboveProvider` bergantung pada `rolesProvider`
-          // (panggilan `/roles` berasingan drpd `/me`) — ia jadi `false`
+          // (panggilan `/roles` berasingan drpd `/me`) - ia jadi `false`
           // sama ada betul-betul bukan manager ATAU sekadar masih memuat/
           // gagal. `ManagementGate` cuma jaga keadaan `myProfileProvider`,
           // jadi keadaan `rolesProvider` mesti disemak SENDIRI di sini,
@@ -255,7 +255,7 @@ class _CategoriesBody extends ConsumerWidget {
   }
 }
 
-/// Nilai borang cipta/sunting kategori. [key] hanya relevan semasa cipta —
+/// Nilai borang cipta/sunting kategori. [key] hanya relevan semasa cipta -
 /// medan itu dibekukan (disabled) semasa sunting kerana backend tolak
 /// perubahannya.
 class _CategoryFormResult {
@@ -270,7 +270,7 @@ class _CategoryFormResult {
   final int sortOrder;
 }
 
-/// Kandungan dialog cipta/sunting — [existing] null bermakna mod cipta.
+/// Kandungan dialog cipta/sunting - [existing] null bermakna mod cipta.
 ///
 /// StatefulWidget memegang controller sendiri (padanan `_EditTextDialog`):
 /// dialog Material/Cupertino animasi keluar beberapa frame selepas
@@ -365,7 +365,7 @@ class _CategoryFormState extends State<_CategoryForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // `key` dibekukan semasa sunting — padanan backend (lihat komen di
+        // `key` dibekukan semasa sunting - padanan backend (lihat komen di
         // atas class), bukan cuma UI: PATCH tidak menghantar medan ini
         // langsung dalam mod sunting.
         field(_key, 'Kunci (cth: badminton)', enabled: !_isEdit),

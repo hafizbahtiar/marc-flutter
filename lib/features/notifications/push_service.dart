@@ -11,7 +11,7 @@ final pushServiceProvider = Provider<PushService>((ref) => PushService(ref));
 /// Segerakkan identiti OneSignal dengan sesi backend, dan simpan
 /// subscription id setiap peranti ke `POST /device-tokens`.
 ///
-/// Semua operasi dibalut try/catch — kalau OneSignal tak di-init
+/// Semua operasi dibalut try/catch - kalau OneSignal tak di-init
 /// (`ONESIGNAL_APP_ID` kosong), ia jadi no-op senyap.
 class PushService {
   PushService(this._ref);
@@ -24,15 +24,15 @@ class PushService {
       OneSignal.login(userId);
       await _upsertCurrent();
     } catch (_) {
-      // OneSignal belum init — abaikan.
+      // OneSignal belum init - abaikan.
     }
   }
 
   /// Buang pautan device token daripada user semasa di server, guna
-  /// access token yang DAH DITANGKAP awal (sebelum sesi di-clear) —
+  /// access token yang DAH DITANGKAP awal (sebelum sesi di-clear) -
   /// benarkan panggilan ni jalan unawaited SELEPAS clear() tanpa
   /// bergantung pada token tersimpan yang dah tiada. Tak kritikal kalau
-  /// gagal — token lama akan di-overwrite lagipun bila user seterusnya
+  /// gagal - token lama akan di-overwrite lagipun bila user seterusnya
   /// upsert dengan onesignal_id yang sama.
   Future<void> unlinkDevice(String accessToken) async {
     final id = OneSignal.User.pushSubscription.id;
@@ -48,7 +48,7 @@ class PushService {
     } catch (_) {}
   }
 
-  /// Dipanggil bila log keluar (reaktif, selepas sesi clear) — OneSignal
+  /// Dipanggil bila log keluar (reaktif, selepas sesi clear) - OneSignal
   /// SDK logout je; unlink server kena dah siap awal via
   /// [unlinkDevice] (dipanggil unawaited dalam `AuthService.signOut`).
   Future<void> onSignedOut() async {
@@ -60,10 +60,10 @@ class PushService {
   /// Dengar perubahan subscription id. Selepas permission diberi, id
   /// selalunya belum sedia serta-merta; observer ini tangkap bila ia masuk.
   ///
-  /// Dengar juga bila push notification DITAP (dari tray OS) — navigate
+  /// Dengar juga bila push notification DITAP (dari tray OS) - navigate
   /// ke skrin Notifikasi dalam app. Backend belum hantar `additionalData`
   /// (cuma title/message) jadi tak boleh deep-link terus ke post/ahli
-  /// berkenaan setakat ni — itu perlu perubahan backend berasingan
+  /// berkenaan setakat ni - itu perlu perubahan backend berasingan
   /// (tambah additionalData pada OneSignal send), catat sebagai
   /// follow-up, bukan skop fix ni.
   void startObserving() {
@@ -75,7 +75,7 @@ class PushService {
       });
       OneSignal.Notifications.addClickListener((event) {
         if (_ref.read(authNotifierProvider).isLoggedIn) {
-          // `.go`, BUKAN `.push` — `/notifications` kini akar cabang
+          // `.go`, BUKAN `.push` - `/notifications` kini akar cabang
           // `StatefulShellBranch` (tab bottom nav), bukan route push
           // biasa. `.push` atas route cabang shell akan buka Navigator
           // bersarang tambahan di atas shell (nampak macam skrin baharu
@@ -99,7 +99,7 @@ class PushService {
             data: {'onesignal_id': id, 'platform': defaultTargetPlatform.name},
           );
     } catch (_) {
-      // Gagal simpan token — tak kritikal, cuba lagi bila observer trigger semula.
+      // Gagal simpan token - tak kritikal, cuba lagi bila observer trigger semula.
     }
   }
 }

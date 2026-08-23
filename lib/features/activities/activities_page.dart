@@ -9,7 +9,7 @@ import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/shared/widgets/approval_gate.dart';
 
-/// Baris hantu untuk Skeletonizer semasa memuat — corak sama dengan
+/// Baris hantu untuk Skeletonizer semasa memuat - corak sama dengan
 /// `_placeholderRow` dalam members_page.dart.
 final _placeholderActivity = Activity(
   id: '00000000-0000-0000-0000-000000000000',
@@ -30,7 +30,7 @@ final _placeholderActivity = Activity(
 );
 
 /// Gate `approved` (padanan `approved.GET("/activities")` backend) diletak
-/// DI LUAR isi kandungan sebenar — sama rasional dengan
+/// DI LUAR isi kandungan sebenar - sama rasional dengan
 /// `NotificationsPage` (lihat komen di sana): provider aktiviti hanya
 /// di-watch bila `_ActivitiesContent` betul-betul dibina, elak panggilan
 /// 403 langsung untuk ahli `pending`.
@@ -77,14 +77,14 @@ class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
   Widget build(BuildContext context) {
     final filter = ref.watch(activityFilterProvider);
     final activities = ref.watch(activitiesProvider);
-    // Kemudahan UI sahaja — backend menolak `status=draft` dan setiap
+    // Kemudahan UI sahaja - backend menolak `status=draft` dan setiap
     // route pengurusan dengan 403 untuk bukan-pengurusan.
     final isManagement = ref.watch(isManagementProvider);
 
     return Scaffold(
       floatingActionButton: isManagement
           ? FloatingActionButton.extended(
-              // heroTag unik — lihat komen padanan di feed_page.dart.
+              // heroTag unik - lihat komen padanan di feed_page.dart.
               heroTag: 'activities-fab',
               onPressed: () => context.push('/activities/new'),
               icon: const Icon(Icons.add),
@@ -211,7 +211,7 @@ class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
 
 /// Toggle Akan Datang/Lepas dengan pil animasi meluncur di belakang.
 ///
-/// GANTIKAN `SegmentedButton` Material — widget tu tiada penunjuk
+/// GANTIKAN `SegmentedButton` Material - widget tu tiada penunjuk
 /// meluncur terbina-dalam, setiap segmen tukar warna SENDIRI-SENDIRI
 /// bila dipilih, jadi peralihan nampak "terpisah/flip" dan bukan
 /// "meluncur" macam segmented control iOS asli. Susun atur di sini
@@ -320,7 +320,7 @@ class _CategoryChips extends ConsumerWidget {
     final categories = ref.watch(activityCategoriesProvider);
     final filter = ref.watch(activityFilterProvider);
 
-    // Kategori gagal dimuat bukan sebab untuk mematikan seluruh halaman —
+    // Kategori gagal dimuat bukan sebab untuk mematikan seluruh halaman -
     // senarai aktiviti masih berfungsi tanpa cip penapis.
     final rows = categories.valueOrNull ?? const <ActivityCategory>[];
     if (rows.isEmpty) return const SizedBox(height: 48);
@@ -477,7 +477,7 @@ class _Tag extends StatelessWidget {
   }
 }
 
-/// Kiraan slot. `capacity == null` bermakna TIADA had — bukan sifar slot,
+/// Kiraan slot. `capacity == null` bermakna TIADA had - bukan sifar slot,
 /// jadi ia dipapar sebagai "Terbuka" dan bukan "0 slot".
 class _SlotsBadge extends StatelessWidget {
   const _SlotsBadge({required this.activity});

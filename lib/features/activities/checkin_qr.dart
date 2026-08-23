@@ -3,7 +3,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 /// Kod QR check-in bagi satu pendaftaran.
 ///
-/// [token] datang daripada `GET /me/activities` yang SUDAH dimuatkan —
+/// [token] datang daripada `GET /me/activities` yang SUDAH dimuatkan -
 /// widget ini tidak membuat sebarang panggilan rangkaian. Itu sengaja:
 /// liputan di dewan/gelanggang selalunya teruk, dan ahli yang membuka
 /// skrin sebelum sampai mesti tetap boleh menunjukkan kodnya di pintu.
@@ -21,7 +21,7 @@ class CheckinQr extends StatelessWidget {
         // Putih TEGAR, bukan warna daripada tema.
         //
         // Dalam mod gelap, permukaan tema adalah gelap dan modul QR hitam
-        // di atasnya menjadi tidak dapat dibaca — pengimbas tidak nampak
+        // di atasnya menjadi tidak dapat dibaca - pengimbas tidak nampak
         // apa-apa dan ahli dihalau di pintu. Latar dan modul dikunci di
         // sini supaya kontras tidak bergantung pada tetapan peranti.
         Container(

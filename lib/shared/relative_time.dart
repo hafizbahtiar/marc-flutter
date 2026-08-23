@@ -1,4 +1,4 @@
-/// Format masa relatif ringkas (macam Twitter: "5m", "3j", "2h") — bukan
+/// Format masa relatif ringkas (macam Twitter: "5m", "3j", "2h") - bukan
 /// full timestamp, untuk feed yang padat.
 String relativeTime(DateTime dateTime) {
   final diff = DateTime.now().difference(dateTime);

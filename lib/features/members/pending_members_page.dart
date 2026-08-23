@@ -26,7 +26,7 @@ class PendingMembersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Lihat komen sama dalam audit_page.dart — jangan tuduh pengguna
+    // Lihat komen sama dalam audit_page.dart - jangan tuduh pengguna
     // tiada akses sedangkan profil dia belum siap dimuat.
     final profileAsync = ref.watch(myProfileProvider);
     if (profileAsync.isLoading) {
@@ -253,7 +253,7 @@ class _PendingTileState extends State<_PendingTile> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 // Skrin ni management-sahaja, jadi emel sepatutnya sentiasa
-                // ada — tapi jangan crash/papar "null" kalau backend
+                // ada - tapi jangan crash/papar "null" kalau backend
                 // sembunyikannya.
                 if (widget.row.email != null)
                   Text(
@@ -285,10 +285,10 @@ class _PendingTileState extends State<_PendingTile> {
   }
 }
 
-/// Badge padat status yuran pendaftaran — versi ringkas
+/// Badge padat status yuran pendaftaran - versi ringkas
 /// `_PaymentStatusChip` (feed_page.dart) untuk senarai, bukan skrin penuh.
 /// Ditambah 2026-08-15 supaya management nampak siapa dah bayar SEBELUM
-/// tekan Luluskan (server kekal hakim akhir — badge cuma isyarat, gate
+/// tekan Luluskan (server kekal hakim akhir - badge cuma isyarat, gate
 /// `ApproveMember` sedia ada di backend).
 class _PaymentStatusBadge extends StatelessWidget {
   const _PaymentStatusBadge({required this.status});

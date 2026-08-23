@@ -8,7 +8,7 @@ class TokenStorage {
           storage ??
           const FlutterSecureStorage(
             // encryptedSharedPreferences: true guna EncryptedSharedPreferences
-            // (bukan FlutterSecureStorage.xml biasa) — tanpa ni, Android Auto
+            // (bukan FlutterSecureStorage.xml biasa) - tanpa ni, Android Auto
             // Backup upload fail XML terenkripsi tu ke cloud tapi BUKAN kunci
             // Keystore yang bungkus dia, jadi restore pada peranti baru bawa
             // blob yang tak boleh dinyahsulit langsung. resetOnError: true
@@ -44,7 +44,7 @@ class TokenStorage {
   }
 
   /// Buang SEMUA entri secure storage app ni (bukan sekadar access/refresh
-  /// token) — dipanggil bila storage sendiri rosak (cth: PlatformException
+  /// token) - dipanggil bila storage sendiri rosak (cth: PlatformException
   /// lepas Keystore invalid) supaya save berikutnya mula dari keadaan
   /// bersih, bukan cuba tulis atas entri yang dah corrupt.
   Future<void> deleteAll() => _storage.deleteAll();

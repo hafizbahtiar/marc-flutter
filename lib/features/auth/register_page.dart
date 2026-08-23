@@ -43,7 +43,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    // Form validator (validatePhone) dah sahkan format — normalizeMY
+    // Form validator (validatePhone) dah sahkan format - normalizeMY
     // takkan pulang null di sini. Hantar bentuk TERNORMAL (bukan input
     // mentah pengguna) supaya backend/ToyyibPay terima bentuk konsisten
     // tak kira +60/60/0/dash/space yang ditaip.
@@ -56,7 +56,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         );
     if (!mounted) return;
     if (ok) {
-      // Tak perlu context.pop() — signUp() dah setTokens(), authNotifier
+      // Tak perlu context.pop() - signUp() dah setTokens(), authNotifier
       // punya isLoggedIn jadi true, router punya redirect auto navigate
       // ke /home terus. pop() manual di sini boleh clash dengan redirect
       // tu (dua-dua cuba navigate serentak lepas state auth berubah).

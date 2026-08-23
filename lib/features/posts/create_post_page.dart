@@ -28,7 +28,7 @@ const _maxImageSizeBytes = 5 * 1024 * 1024;
 /// Dimensi maksimum yang dinaikkan, dalam piksel (sisi panjang).
 ///
 /// Kamera telefon keluarkan 3456x4608 ke atas. Kita TAK PERNAH papar pada
-/// saiz tu — jubin grid feed lebih kurang separuh lebar skrin, dan pemapar
+/// saiz tu - jubin grid feed lebih kurang separuh lebar skrin, dan pemapar
 /// skrin penuh pun cuma perlukan piksel setinggi skrin darab faktor zum.
 /// Menyimpan asal cuma membakar storan R2 dan kuota r2.dev.
 ///
@@ -36,7 +36,7 @@ const _maxImageSizeBytes = 5 * 1024 * 1024;
 /// sebenar untuk dipaparkan, bukan hasil regangan.
 const _maxUploadDimension = 2048.0;
 
-/// Kualiti JPEG semasa re-encode. 95 sengaja tinggi — matlamatnya ialah
+/// Kualiti JPEG semasa re-encode. 95 sengaja tinggi - matlamatnya ialah
 /// mengecilkan DIMENSI, bukan menghancurkan kualiti. Turun ke ~85 mula
 /// nampak artifak pada gambar berbutir halus (teks, gradien).
 const _uploadQuality = 95;
@@ -94,7 +94,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   ///
   /// Tiada semakan permission_handler di sini: pada Android, image_picker
   /// melancarkan app kamera sistem melalui intent, yang uruskan
-  /// kebenarannya sendiri — mengisytiharkan CAMERA dalam manifest kita
+  /// kebenarannya sendiri - mengisytiharkan CAMERA dalam manifest kita
   /// SEBALIKNYA akan memaksa permintaan runtime yang kita tak perlukan.
   /// Pada iOS, sistem yang minta, guna NSCameraUsageDescription.
   Future<void> _takePhoto() async {
@@ -136,10 +136,10 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     if (!await _ensurePhotoPermission()) return;
     if (!mounted) return;
 
-    // pickMultiImage(limit: 1) throws — kena guna pickImage() tunggal bila
+    // pickMultiImage(limit: 1) throws - kena guna pickImage() tunggal bila
     // baki slot cuma 1.
     // maxWidth/maxHeight buat image_picker mengecilkan gambar SEBELUM ia
-    // sampai ke Dart — jadi kita tak pernah pegang bitmap penuh dalam
+    // sampai ke Dart - jadi kita tak pernah pegang bitmap penuh dalam
     // memori, dan bait yang dinaikkan pun dah kecil. `imageQuality`
     // sahaja TAK cukup: ia cuma kualiti re-encode JPEG, dimensi kekal.
     final picked = remaining == 1
@@ -197,7 +197,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
       );
       // Retry-safe: kalau submit gagal separuh jalan lepas sesetengah
       // gambar dah berjaya upload, jangan re-upload gambar yang dah
-      // berjaya tu bila user cuba "Hantar" semula — elak orphan R2
+      // berjaya tu bila user cuba "Hantar" semula - elak orphan R2
       // object bertambah setiap kali retry.
       while (_uploadedKeys.length < _images.length) {
         final index = _uploadedKeys.length;
@@ -239,7 +239,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   void _removeImage(int i) {
     setState(() {
       _images.removeAt(i);
-      // Kunci yang dah diupload sejajar dgn _images ikut indeks — buang
+      // Kunci yang dah diupload sejajar dgn _images ikut indeks - buang
       // yang sepadan supaya retry tak melekatkan gambar yang salah.
       if (i < _uploadedKeys.length) _uploadedKeys.removeAt(i);
     });
@@ -275,7 +275,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar penulis di sebelah penggubah — corak yang sama
+                // Avatar penulis di sebelah penggubah - corak yang sama
                 // macam kad post, jadi mengarang terasa seperti melihat
                 // pratonton post kau sendiri.
                 MemberAvatar(
@@ -312,7 +312,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                             ),
                         decoration: InputDecoration(
                           hintText: 'Apa yang berlaku?',
-                          // filled: false MESTI eksplisit —
+                          // filled: false MESTI eksplisit -
                           // inputDecorationTheme global set `filled: true`
                           // dgn surfaceContainerHighest, jadi `border:
                           // none` sahaja tinggalkan kotak kelabu. Penggubah
@@ -335,7 +335,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                       ),
                       if (_images.isNotEmpty) ...[
                         const SizedBox(height: 14),
-                        // Susun atur SAMA dengan feed — penulis nampak
+                        // Susun atur SAMA dengan feed - penulis nampak
                         // betul-betul rupa post nanti.
                         ImageGridLayout(
                           tiles: [
@@ -437,7 +437,7 @@ class _ComposerBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     // bottomNavigationBar tak ikut viewInsets keyboard secara automatik
-    // (lain dengan `body`) — kena tambah padding sendiri, guna paras
+    // (lain dengan `body`) - kena tambah padding sendiri, guna paras
     // keyboard bila terbuka, fallback ke safe-area device (home
     // indicator) bila keyboard tertutup.
     final bottomInset = mediaQuery.viewInsets.bottom > 0
@@ -454,7 +454,7 @@ class _ComposerBar extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(8, 4, 12, 4 + bottomInset),
       child: Row(
         children: [
-          // Galeri dan kamera berasingan, macam Twitter — menyorokkan
+          // Galeri dan kamera berasingan, macam Twitter - menyorokkan
           // kamera di belakang satu ikon "media" menambah satu ketukan
           // pada tindakan yang paling kerap dibuat di telefon.
           IconButton(
@@ -469,7 +469,7 @@ class _ComposerBar extends StatelessWidget {
             color: scheme.primary,
             tooltip: 'Ambil gambar',
           ),
-          // Kiraan hanya muncul selepas gambar pertama — "0/4" pada
+          // Kiraan hanya muncul selepas gambar pertama - "0/4" pada
           // penggubah kosong ialah bunyi bising.
           if (imageCount > 0)
             Text(
@@ -486,7 +486,7 @@ class _ComposerBar extends StatelessWidget {
             style: FilledButton.styleFrom(
               // Pil, bukan segi empat lebar penuh: filledButtonTheme
               // global set minimumSize Size.fromHeight(54), iaitu LEBAR
-              // TAK TERHINGGA — dalam Row ia meletup tanpa had eksplisit.
+              // TAK TERHINGGA - dalam Row ia meletup tanpa had eksplisit.
               minimumSize: const Size(84, 40),
               padding: const EdgeInsets.symmetric(horizontal: 20),
               shape: const StadiumBorder(),
@@ -525,7 +525,7 @@ class _ImageThumbState extends State<_ImageThumb> {
 
   @override
   Widget build(BuildContext context) {
-    // Isi jubin yang diberi ImageGridLayout, bukan segi empat tetap —
+    // Isi jubin yang diberi ImageGridLayout, bukan segi empat tetap -
     // itu yang membuatkan pratonton padan dengan susunan feed sebenar.
     return Stack(
       fit: StackFit.expand,

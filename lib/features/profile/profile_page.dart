@@ -15,6 +15,7 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/profile/widgets/verify_email_banner.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/widgets/pending_status_view.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -30,7 +31,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   /// Tukar/buang gambar profil.
   ///
   /// Selepas berjaya, `myProfileProvider` di-refresh dan DITUNGGU sebelum
-  /// penunjuk sibuk dimatikan — jadi avatar baharu dah ada sebelum
+  /// penunjuk sibuk dimatikan - jadi avatar baharu dah ada sebelum
   /// spinner hilang, bukan muncul selepas satu kelipan avatar lama.
   Future<void> _changeAvatar() async {
     if (_avatarBusy) return;
@@ -99,7 +100,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Future<void> _refreshAvatar() async {
     ref.invalidate(myProfileProvider);
     await ref.read(myProfileProvider.future);
-    // Senarai ahli papar avatar sama — tanpa ni ia kekal lama sehingga
+    // Senarai ahli papar avatar sama - tanpa ni ia kekal lama sehingga
     // logout/restart (provider bukan autoDispose).
     ref.invalidate(membersProvider);
   }
@@ -130,6 +131,56 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final email = p?.email ?? '';
 
     final verified = p?.emailVerified ?? false;
+
+    // Muat pertama (belum PERNAH ada nilai) - jangan fail-open ke
+    // Scaffold penuh (butang "Edit Profil" di AppBar boleh ditekan
+    // walau ahli belum diluluskan) sebelum status SEBENAR diketahui.
+    // Ditemui 2026-08-24: hot restart sebagai ahli pending, `p == null`
+    // semasa loading pertama buat gate di bawah (`p != null && ...`)
+    // gagal terbuka, jadi Scaffold biasa terpapar SEKEJAP sebelum
+    // profil sampai. Beza dgn `profile.hasError` (rangkaian gagal
+    // SELEPAS cubaan pertama) - itu kekal fail-open sengaja, papar
+    // kandungan biasa dgn `_ProfileFetchErrorCard` di bawah, bukan
+    // diblok di sini.
+    if (profile.isLoading && !profile.hasValue) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator.adaptive()),
+      );
+    }
+
+    // Ahli `pending`/`rejected` diblok macam skrin lain (Feed) - 2026-08-24
+    // "kalau tak bayar yuran, profile page pun tak boleh access macam
+    // page lain". `footer` WAJIB di sini (tak macam Feed): tanpa butang
+    // log keluar, ahli yang semua tab diblok terperangkap dlm akaun
+    // tanpa jalan keluar - Profile skrin SATU-SATUNYA tempat logout
+    // tinggal sebelum ni.
+    if (p != null && p.status != 'approved') {
+      return PendingStatusView(
+        status: p.status,
+        registrationPaymentStatus: p.registrationPaymentStatus,
+        registrationFeeCents: p.registrationFeeCents,
+        onRefresh: () async {
+          try {
+            final _ = await ref.refresh(myProfileProvider.future);
+          } catch (_) {
+            if (context.mounted) {
+              MySnackBar.error(context, 'Gagal semak status. Cuba lagi.');
+            }
+          }
+        },
+        footer: OutlinedButton.icon(
+          onPressed: _signingOut ? null : _handleLogout,
+          icon: _signingOut
+              ? const SizedBox(
+                  height: 14,
+                  width: 14,
+                  child: CircularProgressIndicator.adaptive(),
+                )
+              : const Icon(Icons.logout, size: 18),
+          label: const Text('Log Keluar'),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -266,14 +317,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
               ],
             ),
-            // Management sahaja — backend 403 juga, ni cuma elak tunjuk
+            // Management sahaja - backend 403 juga, ni cuma elak tunjuk
             // pintu yang terkunci. Kumpulan BERASINGAN (bukan disisip
-            // dalam Kewangan/mana-mana) — semua tindakan di sini alat
+            // dalam Kewangan/mana-mana) - semua tindakan di sini alat
             // pengurusan, bukan sesuatu ahli biasa pernah nampak pun.
             if (p?.isManagement ?? false) ...[
               Builder(
                 builder: (context) {
-                  // `watch` di sini (bukan skop `build` luar) — hanya
+                  // `watch` di sini (bukan skop `build` luar) - hanya
                   // panggil `pendingMembersProvider` bila management,
                   // padanan pattern `notifications_page.dart`.
                   final pendingCount =
@@ -327,7 +378,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ],
             // Kumpulan BERASINGAN drpd "Pengurusan" (bukan disisip sekali)
-            // — sengaja: tindakan di atas boleh dibuat mana-mana
+            // - sengaja: tindakan di atas boleh dibuat mana-mana
             // management (supervisor/manager/admin), tapi konfigurasi
             // "root system" macam ni cuma superadmin (keputusan produk
             // 2026-08-15). Pengasingan visual tunjuk beza siling tu,
@@ -533,7 +584,7 @@ class _Header extends StatelessWidget {
 
 /// Label kumpulan kecil di atas setiap `_InfoCard` tindakan (bukan
 /// `_InfoCard` maklumat profil di bahagian atas skrin, yang kekal tanpa
-/// label) — ditambah supaya senarai 9 tindakan yang dulu satu kad rata
+/// label) - ditambah supaya senarai 9 tindakan yang dulu satu kad rata
 /// (Aktiviti Saya, Sijil Saya, Sokong MARC, Sejarah Bayaran Saya, Jejak
 /// Audit, Semua Bayaran, Soalan Lazim, Tentang + suis Mod Gelap) senang
 /// diimbas, bukan satu senarai panjang tanpa struktur.
@@ -565,7 +616,7 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    // Material (bukan Container+BoxDecoration) — ListTile lukis ink
+    // Material (bukan Container+BoxDecoration) - ListTile lukis ink
     // splash pada Material ANCESTOR terdekat; kalau bg+radius kat
     // Container/DecoratedBox biasa, splash terlukis DI BAWAH decoration
     // tu (tersorok). Jadikan card ni sendiri Material elak isu tu.

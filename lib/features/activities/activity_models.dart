@@ -1,4 +1,4 @@
-/// Model modul Aktiviti — kelas biasa dengan `fromJson`, ikut corak
+/// Model modul Aktiviti - kelas biasa dengan `fromJson`, ikut corak
 /// `post_models.dart`. Repo ini TIDAK guna `freezed`/codegen.
 ///
 /// Semua timestamp ditukar ke waktu tempatan (`toLocal()`) sebaik dihurai:
@@ -32,7 +32,7 @@ class ActivitySession {
       );
 }
 
-/// Sebab pendaftaran DISEKAT — satu enum, bukan rentetan, supaya model
+/// Sebab pendaftaran DISEKAT - satu enum, bukan rentetan, supaya model
 /// kekal bebas daripada teks paparan dan setiap keadaan boleh diuji tanpa
 /// membina widget. Halaman yang memetakannya kepada ayat Bahasa Melayu.
 enum RegistrationBlocker {
@@ -42,7 +42,7 @@ enum RegistrationBlocker {
   /// Aktiviti sudah tamat (`status == 'completed'`).
   completed,
 
-  /// Belum diterbitkan (`draft`) — tiada siapa boleh daftar lagi.
+  /// Belum diterbitkan (`draft`) - tiada siapa boleh daftar lagi.
   notPublished,
 
   /// Diterbitkan, tetapi tetingkap pendaftaran BELUM bermula
@@ -91,7 +91,7 @@ class Activity {
   final DateTime endsAt;
   final DateTime registrationClosesAt;
 
-  /// null = TIADA had kapasiti (lajur nullable di backend). Bukan sifar —
+  /// null = TIADA had kapasiti (lajur nullable di backend). Bukan sifar -
   /// sifar bermakna tiada slot langsung, yang backend memang tolak.
   final int? capacity;
   final int registrationCount;
@@ -109,15 +109,15 @@ class Activity {
   final int attendanceThresholdPct;
 
   /// Bila sijil aktiviti ini PERNAH diterbitkan. null = belum pernah.
-  /// Bukan jaminan setiap failnya siap — penerbitan berlaku dalam dua
+  /// Bukan jaminan setiap failnya siap - penerbitan berlaku dalam dua
   /// fasa dan boleh disambung.
   final DateTime? certificatesIssuedAt;
 
   /// Yuran aktiviti dalam sen. 0 = percuma. Pendaftaran aktiviti berbayar
-  /// tulis `payment_status='pending'` pada baris pendaftaran — status
+  /// tulis `payment_status='pending'` pada baris pendaftaran - status
   /// bayaran sebenar (belum/dah dibayar) cuma didedahkan oleh
   /// `GET /me/activities` (`MyRegistration.paymentStatus`), BUKAN respons
-  /// detail aktiviti ni — jadi medan ni hanya untuk tahu SAMA ADA perlu
+  /// detail aktiviti ni - jadi medan ni hanya untuk tahu SAMA ADA perlu
   /// bayar (untuk pandu ahli lepas daftar), bukan status bayaran semasa.
   final int feeCents;
 
@@ -135,13 +135,13 @@ class Activity {
 
   /// SATU-SATUNYA gerbang pendaftaran. `canRegister` di bawah diterbitkan
   /// daripadanya, dan halaman detail memetakan enum ini kepada ayat yang
-  /// dipapar — jadi butang yang dilumpuhkan dan sebab yang ditulis
+  /// dipapar - jadi butang yang dilumpuhkan dan sebab yang ditulis
   /// MUSTAHIL bercanggah. Dua rantaian selari yang perlu bersetuju akan
   /// menyimpang; ini menghapuskan rantaian kedua itu.
   ///
   /// Urutan mengikut backend (`registerTx`, activity_registrations.go):
   /// status dahulu, kemudian tetingkap masa, kemudian kapasiti. Server
-  /// tetap hakim muktamad — ini untuk melumpuhkan butang dan menerangkan
+  /// tetap hakim muktamad - ini untuk melumpuhkan butang dan menerangkan
   /// sebabnya, bukan untuk dipercayai.
   RegistrationBlocker? get registrationBlocker {
     if (isCancelled) return RegistrationBlocker.cancelled;
@@ -159,7 +159,7 @@ class Activity {
 
   bool get canRegister => !isRegistered && registrationBlocker == null;
 
-  /// Salinan dengan kiraan/status pendaftaran ditindih — untuk kemas kini
+  /// Salinan dengan kiraan/status pendaftaran ditindih - untuk kemas kini
   /// optimistik yang perlu digulung semula bila server menolak (409).
   Activity copyWith({int? registrationCount, bool? isRegistered}) => Activity(
     id: id,
@@ -235,7 +235,7 @@ class ActivityCategory {
   final String name;
   final int sortOrder;
 
-  /// false = disembunyikan drpd borang cipta aktiviti (soft-delete —
+  /// false = disembunyikan drpd borang cipta aktiviti (soft-delete -
   /// `category_id` di `activities` ialah `on delete restrict`, jadi
   /// kategori yang sudah digunakan TIDAK BOLEH dipadam terus).
   final bool isActive;
@@ -250,7 +250,7 @@ class ActivityCategory {
       );
 }
 
-/// Satu pendaftaran aktif milik pemanggil — `GET /me/activities`.
+/// Satu pendaftaran aktif milik pemanggil - `GET /me/activities`.
 ///
 /// Baris itu meratakan aktiviti berkaitan (title/starts_at/ends_at/
 /// activity_status/category_name) ke atas baris pendaftaran, jadi model
@@ -268,13 +268,15 @@ class MyRegistration {
     required this.activityStatus,
     required this.categoryName,
     this.paymentStatus = 'not_required',
+    this.feeCents,
+    this.currency = 'myr',
   });
 
   final String id;
   final String activityId;
   final String status;
 
-  /// Token QR untuk check-in — legap, dijana crypto/rand di backend.
+  /// Token QR untuk check-in - legap, dijana crypto/rand di backend.
   final String checkinToken;
   final DateTime registeredAt;
   final String title;
@@ -283,16 +285,27 @@ class MyRegistration {
   final String activityStatus;
   final String categoryName;
 
-  /// Status yuran AKTIVITI (bukan yuran pendaftaran ahli) — lajur
+  /// Status yuran AKTIVITI (bukan yuran pendaftaran ahli) - lajur
   /// `activity_registrations.payment_status`, satu daripada
   /// `not_required` (percuma), `pending` (belum bayar), `paid`,
   /// `refunded`. Lalai `not_required` untuk keserasian ke belakang kalau
   /// medan tiada dalam respons lama.
   final String paymentStatus;
 
+  /// Jumlah (sen) yuran aktiviti ini - sebelum bayar, `a.fee_cents`
+  /// SEMASA; selepas bayar, jumlah yang benar-benar dibayar
+  /// (`coalesce(fee_cents_paid, fee_cents)`, lihat
+  /// `queries/activity_registrations.sql` `ListMyRegistrations`). `null`
+  /// (BUKAN `0`) kalau medan tiada dalam respons lama - "tak diketahui"
+  /// dan "percuma" TAK BOLEH digabung, sebab papar "RM0.00" untuk caj
+  /// yang sebenarnya bukan sifar mengelirukan ahli (Opus verify
+  /// 2026-08-24).
+  final int? feeCents;
+  final String currency;
+
   bool get isCancelled => activityStatus == 'cancelled';
 
-  /// Yuran aktiviti ini belum dibayar — butang "Bayar Yuran Aktiviti"
+  /// Yuran aktiviti ini belum dibayar - butang "Bayar Yuran Aktiviti"
   /// patut dipapar.
   bool get feeUnpaid => paymentStatus == 'pending';
 
@@ -327,6 +340,8 @@ class MyRegistration {
     activityStatus: json['activity_status'] as String,
     categoryName: (json['category_name'] as String?) ?? '',
     paymentStatus: (json['payment_status'] as String?) ?? 'not_required',
+    feeCents: (json['fee_cents'] as num?)?.toInt(),
+    currency: (json['currency'] as String?) ?? 'myr',
   );
 }
 
@@ -340,7 +355,7 @@ class RegistrationGroups {
   bool get isEmpty => upcoming.isEmpty && past.isEmpty;
 }
 
-/// Backend memulangkan SATU senarai disusun `starts_at desc` — susunan
+/// Backend memulangkan SATU senarai disusun `starts_at desc` - susunan
 /// yang betul untuk arkib tetapi terbalik untuk apa yang ahli buka skrin
 /// ini untuk lihat: aktiviti seterusnya. Yang akan datang disusun semula
 /// menaik (paling hampir dahulu) dan yang lepas dibiarkan menurun
@@ -362,7 +377,7 @@ RegistrationGroups groupRegistrations(
   return RegistrationGroups(upcoming: upcoming, past: past);
 }
 
-/// Satu sijil milik pemanggil — `GET /me/certificates`.
+/// Satu sijil milik pemanggil - `GET /me/certificates`.
 ///
 /// Medan mengikut `certificateResponse` dalam
 /// `internal/http/handlers/activity_certificates.go`: tiada `r2_key` di
@@ -388,7 +403,7 @@ class MyCertificate {
   final String activityTitle;
   final String categoryName;
 
-  /// Tarikh aktiviti — backend hantar "2026-08-09" TANPA zon waktu, jadi
+  /// Tarikh aktiviti - backend hantar "2026-08-09" TANPA zon waktu, jadi
   /// ia tarikh kalendar dan bukan detik. `toLocal()` sengaja TIDAK
   /// dipanggil: menukar tengah malam tempatan ke zon lain menggelongsor
   /// tarikh sehari, dan tarikh pada sijil bercetak tidak boleh berubah

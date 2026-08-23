@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _prefsKey = 'theme_mode';
 
-/// Mod tema app — binary (light/dark), padanan `Switch.adaptive` di
+/// Mod tema app - binary (light/dark), padanan `Switch.adaptive` di
 /// Profile page. Default: ikut brightness sistem semasa app pertama
 /// dibuka (bukan hardcode light), lepas tu user punya pilihan eksplisit
 /// disimpan dan diguna semula setiap kali app dibuka.
@@ -32,7 +32,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
       state = ThemeMode.light;
     }
     // Kalau tiada saved preference, kekal `_systemBrightnessThemeMode()`
-    // yang dah di-set masa `build()` — elak "flash" ke default lain
+    // yang dah di-set masa `build()` - elak "flash" ke default lain
     // sementara SharedPreferences baru dibaca.
   }
 

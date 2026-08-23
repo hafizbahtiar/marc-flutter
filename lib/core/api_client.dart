@@ -18,7 +18,7 @@ final dioProvider = Provider<Dio>((ref) {
 });
 
 /// Endpoint yang tak patut trigger auto-refresh-dan-retry bila dapat 401
-/// — /auth/login memang boleh return 401 sebab password salah (bukan
+/// - /auth/login memang boleh return 401 sebab password salah (bukan
 /// sebab token luput), dan /auth/refresh sendiri tak boleh retry loop.
 bool _isAuthFlowPath(String path) {
   return path.contains('/auth/login') ||
@@ -40,7 +40,7 @@ class _AuthInterceptor extends Interceptor {
   /// Refresh call yang sedang berjalan (kalau ada). Beberapa request
   /// yang 401 serentak (cth: /me + /device-tokens waktu app baru start
   /// dengan access token dah luput) kongsi SATU refresh, bukan
-  /// masing-masing panggil /auth/refresh sendiri — refresh token
+  /// masing-masing panggil /auth/refresh sendiri - refresh token
   /// di-rotate sekali sahaja setiap panggilan, jadi refresh kedua yang
   /// terpisah akan gagal (token dah dipadam oleh refresh pertama) dan
   /// tersalah anggap sesi luput terus.
@@ -68,7 +68,7 @@ class _AuthInterceptor extends Interceptor {
       return;
     }
 
-    // Retry lepas refresh pun masih 401 — token baru still ditolak
+    // Retry lepas refresh pun masih 401 - token baru still ditolak
     // (bukan sekadar luput). Jangan cuba refresh lagi, terus anggap sesi
     // tak sah, elak infinite refresh-retry-401-refresh-retry loop.
     if (alreadyRetried) {
@@ -85,7 +85,7 @@ class _AuthInterceptor extends Interceptor {
       // jamin SEMUA 401 serentak overlap sempurna (bergantung timing
       // network sebenar). Kalau refresh KITA gagal tapi access token dah
       // bertukar (sibling call lain berjaya refresh di antara masa tu),
-      // sesi masih sah — retry dengan token terkini, jangan clear sesi
+      // sesi masih sah - retry dengan token terkini, jangan clear sesi
       // yang baru sahaja berjaya diperbaharui orang lain.
       final current = _ref.read(authNotifierProvider);
       if (current.isLoggedIn && current.accessToken != tokenBeforeRefresh) {
@@ -129,12 +129,12 @@ class _AuthInterceptor extends Interceptor {
       refreshToken = await storage.readRefreshToken();
     } on PlatformException {
       // Secure storage tak boleh dibaca (cth: Keystore invalid lepas
-      // restore backup Android) — anggap macam tiada sesi tersimpan,
+      // restore backup Android) - anggap macam tiada sesi tersimpan,
       // bukan biar exception ni terlepas tak tertangkap.
       return _RefreshOutcome.rejected;
     }
     if (refreshToken == null) {
-      // Tiada refresh token langsung tersimpan — sesi memang tak sah,
+      // Tiada refresh token langsung tersimpan - sesi memang tak sah,
       // bukan sekadar gagal sambung.
       return _RefreshOutcome.rejected;
     }
@@ -153,13 +153,13 @@ class _AuthInterceptor extends Interceptor {
       return _RefreshOutcome.success;
     } on DioException catch (e) {
       // 401 = server tolak refresh token (memang tak sah/luput/dah
-      // dipakai). Selain tu (timeout, offline, 5xx) = gagal sambung —
+      // dipakai). Selain tu (timeout, offline, 5xx) = gagal sambung -
       // refresh token masih boleh sah, cuma belum sempat dipakai.
       return e.response?.statusCode == 401
           ? _RefreshOutcome.rejected
           : _RefreshOutcome.networkFailure;
     } on PlatformException {
-      // setTokens gagal simpan token baru (storage rosak) — anggap
+      // setTokens gagal simpan token baru (storage rosak) - anggap
       // gagal sambung, elak exception tak tertangkap merosakkan request
       // asal yang sedang di-retry.
       return _RefreshOutcome.networkFailure;
@@ -167,7 +167,7 @@ class _AuthInterceptor extends Interceptor {
   }
 }
 
-/// Hasil `_tryRefresh` — kenapa perlu enum (bukan `bool` + shared field):
+/// Hasil `_tryRefresh` - kenapa perlu enum (bukan `bool` + shared field):
 /// outcome dipulangkan TERUS dari `_refreshOnce()` sebagai nilai LOCAL di
 /// `onError`, jadi tak boleh tertimpa oleh panggilan refresh berasingan
 /// (bukan-dedupe) yang selesai antara masa `_tryRefresh` siap dengan masa

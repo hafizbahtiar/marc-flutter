@@ -21,7 +21,7 @@ const _placeholderRow = MemberRow(
   status: 'approved',
 );
 
-/// Bottom sheet pilih role baru (Stage 12) — cuma papar role dengan rank
+/// Bottom sheet pilih role baru (Stage 12) - cuma papar role dengan rank
 /// lebih rendah drpd editor (backend kuatkuasakan semula, ni cuma UX
 /// supaya pilihan yang bakal 403 tak ditunjuk terus).
 Future<void> _showEditRoleSheet(
@@ -36,14 +36,14 @@ Future<void> _showEditRoleSheet(
   if (!context.mounted) return;
 
   // Backend dah tapis /roles kepada rank bawah caller, jadi senarai ni
-  // boleh jadi cuma role semasa ahli tu (cth supervisor edit ahli — satu
+  // boleh jadi cuma role semasa ahli tu (cth supervisor edit ahli - satu
   // pilihan sahaja, itu pun yang dia dah ada). Elak bottom sheet kosong
   // yang buntu.
   if (assignable.every((r) => r.key == row.roleKey)) {
     MySnackBar.error(context, 'Tiada role lain yang boleh anda tetapkan.');
     return;
   }
-  // Sheet yang sama dengan tindakan post/comment — mod pemilih (isSelected
+  // Sheet yang sama dengan tindakan post/comment - mod pemilih (isSelected
   // papar tanda semak pada role semasa) dan bukan senarai tindakan.
   final selected = await showAppActionSheet<RoleOption>(
     context,
@@ -91,7 +91,7 @@ class MembersPage extends ConsumerWidget {
     final myRoleRank = ref.watch(myProfileProvider).valueOrNull?.roleRank ?? 0;
 
     // Await refresh betul-betul sampai data baru sedia, bukan sekadar
-    // trigger invalidate — kalau tidak, spinner RefreshIndicator hilang
+    // trigger invalidate - kalau tidak, spinner RefreshIndicator hilang
     // serta-merta sementara list flip ke skeleton (invalidate() pulang
     // segera, tak tunggu fetch baru siap).
     Future<void> onRefresh() => ref.refresh(membersProvider.future);
@@ -196,7 +196,7 @@ class _MemberTile extends ConsumerWidget {
         avatarUrl: row.avatarUrl,
       ),
       title: Text(row.displayName ?? '(Tiada nama)'),
-      // Emel cuma ada untuk management (dan baris sendiri) — jangan
+      // Emel cuma ada untuk management (dan baris sendiri) - jangan
       // tinggalkan baris kedua kosong bila ia disembunyikan.
       subtitle: Text(
         row.email == null ? row.memberId : '${row.memberId}\n${row.email}',

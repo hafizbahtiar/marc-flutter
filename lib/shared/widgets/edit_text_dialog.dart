@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:marc/shared/widgets/app_dialog.dart';
 
-/// Dialog untuk edit satu medan teks — pulang teks baru (trimmed) bila
+/// Dialog untuk edit satu medan teks - pulang teks baru (trimmed) bila
 /// disimpan, `null` bila dibatal/ditutup tanpa simpan.
 ///
 /// Adaptive: CupertinoTextField dalam CupertinoAlertDialog di iOS/macOS,
@@ -41,7 +41,7 @@ Future<String?> showEditTextDialog(
 /// Versi lama cipta TextEditingController lalu `dispose()` dalam blok
 /// `finally` selepas `await showDialog(...)`. Future showDialog selesai
 /// sebaik `Navigator.pop` dipanggil, TAPI route masih beranimasi keluar
-/// dan TextField masih dibina beberapa frame selepas itu — jadi ia guna
+/// dan TextField masih dibina beberapa frame selepas itu - jadi ia guna
 /// controller yang dah dibuang dan app crash dengan "A
 /// TextEditingController was used after being disposed" setiap kali
 /// Simpan/Batal ditekan.

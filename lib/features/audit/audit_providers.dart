@@ -66,13 +66,13 @@ class AuditLogState {
 
 /// Jejak audit dengan pagination keyset.
 ///
-/// Guna `before_id` (id terakhir yang diterima) dan bukan offset —
+/// Guna `before_id` (id terakhir yang diterima) dan bukan offset -
 /// jejak audit sentiasa bertambah di hujung atas, jadi offset akan
 /// menyebabkan baris berulang/terlangkau semasa pengguna menatal.
 class AuditLogNotifier extends FamilyAsyncNotifier<AuditLogState, AuditFilter> {
   @override
   Future<AuditLogState> build(AuditFilter arg) async {
-    // Reaktif pada status log masuk — provider ni BUKAN autoDispose, jadi
+    // Reaktif pada status log masuk - provider ni BUKAN autoDispose, jadi
     // tanpa `watch` di sini jejak yang dah dimuat kekal dalam memori
     // selepas logout dan terus dihidangkan kepada sesiapa yang log masuk
     // seterusnya pada peranti yang sama. Ini data paling sensitif dalam

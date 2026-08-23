@@ -91,7 +91,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                         validator: validateEmail,
                       ),
                       const SizedBox(height: 28),
-                      // `ButtonBusy` BUKAN butang — ia penunjuk sibuk
+                      // `ButtonBusy` BUKAN butang - ia penunjuk sibuk
                       // (spinner + label) yang diletak SEBAGAI child
                       // butang. Corak ni disalin daripada
                       // `login_page.dart:82-87`.

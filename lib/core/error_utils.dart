@@ -3,17 +3,17 @@ import 'package:dio/dio.dart';
 /// Petik ralat dari response backend Go (`{"error": "..."}` dalam
 /// Bahasa Melayu) ke mesej mesra.
 ///
-/// PENTING — "Sambungan gagal" hanya untuk kegagalan sambungan SEBENAR.
+/// PENTING - "Sambungan gagal" hanya untuk kegagalan sambungan SEBENAR.
 ///
 /// Versi lama pulangkan "Sambungan gagal. Semak internet anda" untuk
 /// SEMUA ralat yang badan responsnya bukan `Map` berkunci `error`. Itu
 /// menyembunyikan satu kelas kegagalan penuh: PUT ke R2 yang ditolak
 /// 403 AccessDenied pulangkan XML (String, bukan Map), jadi ralat
-/// keizinan bucket dilaporkan kepada pengguna sebagai masalah internet —
+/// keizinan bucket dilaporkan kepada pengguna sebagai masalah internet -
 /// dan tiada sesiapa pergi periksa Cloudflare, sebab mesejnya kata WiFi.
 ///
 /// Sekarang: kalau ADA respons, permintaan itu sampai ke server dan
-/// ditolak — sebut status kodnya. Hanya ketiadaan respons (timeout, DNS,
+/// ditolak - sebut status kodnya. Hanya ketiadaan respons (timeout, DNS,
 /// soket) yang berbaloi disalahkan pada internet.
 String extractErrorMessage(DioException e) {
   final response = e.response;

@@ -31,7 +31,7 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
 
     if (result.isOk) {
       // Aktiviti berbayar tulis payment_status='pending' pada pendaftaran
-      // (registerTx, backend) — tapi ahli tak nampak status tu di skrin
+      // (registerTx, backend) - tapi ahli tak nampak status tu di skrin
       // ni langsung (respons detail tak dedahkan payment_status, cuma
       // GET /me/activities). Tanpa mesej ni, ahli fikir pendaftaran dah
       // "siap" dan tak sedar duit masih perlu dibayar, sehingga
@@ -45,14 +45,14 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
       if (activity != null && activity.feeCents > 0) {
         MySnackBar.success(
           context,
-          'Pendaftaran berjaya. Aktiviti ini berbayar — sila selesaikan '
+          'Pendaftaran berjaya. Aktiviti ini berbayar - sila selesaikan '
           'bayaran di "Aktiviti Saya" untuk kekalkan tempat anda.',
         );
       } else {
         MySnackBar.success(context, 'Pendaftaran berjaya.');
       }
     } else {
-      // Termasuk 409 — "aktiviti sudah penuh" / "anda sudah berdaftar" /
+      // Termasuk 409 - "aktiviti sudah penuh" / "anda sudah berdaftar" /
       // "pendaftaran telah ditutup". Mesej datang terus dari backend dalam
       // Bahasa Melayu; kiraan sudah digulung semula dan detail
       // di-invalidate oleh repository, jadi paparan akan menunjukkan
@@ -88,7 +88,7 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
   @override
   Widget build(BuildContext context) {
     final detail = ref.watch(activityDetailProvider(widget.activityId));
-    // valueOrNull SEKALI, dan bar tindakan dibina daripada nilai itu —
+    // valueOrNull SEKALI, dan bar tindakan dibina daripada nilai itu -
     // `AsyncValue.value` MEMBALING pada keadaan ralat walaupun data lama
     // masih ada (selepas invalidate yang gagal refetch), yang akan
     // menjatuhkan halaman ini tepat pada saat pendaftaran ditolak.
@@ -99,7 +99,7 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
         title: const Text('Aktiviti'),
         actions: [
           // Pintu ke skrin pengurusan. Disembunyikan daripada ahli biasa
-          // sebagai kemudahan sahaja — backend menolak setiap route di
+          // sebagai kemudahan sahaja - backend menolak setiap route di
           // sebaliknya dengan 403.
           if (ref.watch(isManagementProvider))
             PopupMenuButton<String>(
@@ -350,7 +350,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// Butang daftar/batal. Butang yang DILUMPUHKAN membawa sebabnya —
+/// Butang daftar/batal. Butang yang DILUMPUHKAN membawa sebabnya -
 /// butang kelabu tanpa penjelasan meninggalkan ahli meneka sama ada app
 /// yang rosak atau memang mereka tak layak.
 class _ActionBar extends StatelessWidget {
@@ -366,7 +366,7 @@ class _ActionBar extends StatelessWidget {
   final VoidCallback onRegister;
   final VoidCallback onCancel;
 
-  /// Memetakan gerbang TUNGGAL model kepada ayat — ia TIDAK membuat
+  /// Memetakan gerbang TUNGGAL model kepada ayat - ia TIDAK membuat
   /// keputusan sendiri. Butang dilumpuhkan oleh `activity.canRegister`,
   /// jadi teks di sini tak boleh bercanggah dengan keadaan butang.
   String? get _blockedReason {
@@ -412,7 +412,7 @@ class _ActionBar extends StatelessWidget {
             const SizedBox(height: 8),
           ],
           FilledButton.icon(
-            // Gerbang sebenar ialah `canRegister` — bukan kehadiran teks
+            // Gerbang sebenar ialah `canRegister` - bukan kehadiran teks
             // di atas. Kedua-duanya kini berpunca dari getter yang sama.
             onPressed: (busy || !activity.canRegister) ? null : onRegister,
             icon: const Icon(Icons.how_to_reg),

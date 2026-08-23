@@ -47,30 +47,219 @@ Backend: `../marc_go/TODO.md`.
         untuk kes format lama yang berbeza panjang/corak drpd format
         app.
 
-- [ ] **ToyyibPay: yuran pendaftaran ahli (sekali bayar) + yuran
-      aktiviti berbayar** — **BUKAN** "yuran ahli berulang"/dues (framing
-      lama dibetulkan 2026-08-15, sesi 3). Gateway kod **siap +
-      disahkan sandbox sebenar** (`marc_go/internal/payment/
-      toyyibpay.go`), lihat `PAYMENT-TOYYIB.md` untuk status penuh —
-      belum diwiring ke handler/route Flutter atau backend.
+- [x] **ToyyibPay: yuran pendaftaran ahli (sekali bayar) + yuran
+      aktiviti berbayar — UI checkout DIBINA DAN DIWIRING** (disahkan
+      2026-08-24, dah wujud dalam kod sebelum ni — TODO ni je yang lapuk,
+      tiada kerja tambahan diperlukan). **BUKAN** "yuran ahli
+      berulang"/dues (framing lama dibetulkan 2026-08-15, sesi 3).
 
-      Isu reka bentuk paling penting: **ToyyibPay tiada sah callback
-      kriptografi** yang boleh dipercayai (dua sumber sekunder bagi
-      formula `hash` bercanggah) — backend poll `getBillTransactions`
-      untuk sahkan status, bukan percaya body callback terus (butiran
-      penuh dalam `PAYMENT-TOYYIB.md` dan `../marc_go/TODO.md`).
+      **Yuran pendaftaran**: `_PendingStatusViewState._payRegistrationFee`
+      (`lib/features/posts/feed_page.dart`) — butang "Bayar Yuran
+      Pendaftaran"/"Cuba Bayar Semula" dalam `_PendingStatusView`,
+      `_PaymentStatusChip` papar status (pending/succeeded/failed).
+      `RegistrationPaymentRepository.checkout()`
+      (`lib/features/registration_payment/registration_payment_providers.dart`)
+      panggil `POST /registration-payments/checkout`, tangkap
+      `PhoneRequiredException` (ahli lama tiada phone) → dialog minta
+      nombor → checkout semula.
 
-      Bila sisi backend siap, perlu skrin baharu di sini: (1) langkah
-      bayar dalam aliran daftar ahli baharu (lokasi tepat — sebelum atau
-      selepas giliran kelulusan management — masih keputusan produk
-      terbuka), (2) langkah bayar pada pendaftaran aktiviti berbayar
-      (`activity_detail_page.dart`, ikut pattern skrin dues-status/gate
-      sedia ada macam `_EmailNotVerifiedView`/`_PendingStatusView` dalam
-      `feed_page.dart`).
+      **Yuran aktiviti**: `_RegistrationCardState._payActivityFee`
+      (`lib/features/activities/my_activities_page.dart`) — butang
+      "Bayar Yuran Aktiviti" pada kad pendaftaran bila `feeUnpaid`.
+      `activityRepositoryProvider.checkoutPayment(activityId)` corak
+      sama (`PhoneRequiredException` → dialog → checkout semula).
 
-      `RedirectCheckoutHandler` dah sedia untuk gateway hosted-redirect
-      (disahkan https-only selepas audit 2026-08-15) — tak perlu ubah
-      bila endpoint backend sedia.
+      Kedua-dua tapak guna corak SAMA: `Uri.tryParse` + skim `https`
+      sahaja (padan `RedirectCheckoutHandler` di `donation_gateway.dart`)
+      → `launchUrl(..., LaunchMode.externalApplication)` → snackbar
+      "selesaikan dalam pelayar, tekan Semak semula/tarik segar".
+      Pengesahan sebenar async via webhook backend — client tak pernah
+      tahu "berjaya" terus.
+
+      `flutter analyze` bersih pada ketiga-tiga fail (disahkan
+      2026-08-24). **Belum ada widget test khusus** untuk dua aliran ni.
+      **Belum disahkan pada peranti sebenar** — checkout ToyyibPay,
+      redirect balik, dan "Semak semula" tak pernah dilihat mata (padan
+      nota "tak pernah dijalankan pada peranti" untuk Modul Aktiviti di
+      bawah).
+
+      **Diekstrak ke `CheckoutPage` reusable, 2026-08-24.** Logik
+      checkout (phone-prompt, panggil `onCheckout`, validasi URL
+      https-only, `launchUrl`, snackbar) sebelum ni diduplikasi PENUH
+      dalam `_PendingStatusViewState._payRegistrationFee`
+      (`feed_page.dart`) dan `_RegistrationCardState._payActivityFee`
+      (`my_activities_page.dart`). Kini satu tempat sahaja:
+      `lib/features/checkout/checkout_page.dart` — `CheckoutRequest`
+      (title, amountCents, currency, description?, `onCheckout`
+      callback generik) + `CheckoutPage` (route `/checkout`, `state.extra`
+      — pertama kali `extra` dipakai dalam codebase ni, sebab
+      `onCheckout` closure tak boleh jadi path param). Caller (dua
+      tapak di atas) kini cuma `context.push('/checkout', extra:
+      CheckoutRequest(...))` — tiada state checkout tempatan lagi,
+      `_PendingStatusView`/`_RegistrationCard` bertukar
+      `ConsumerStatefulWidget` → `ConsumerWidget` (buang `_submitting`/
+      `_paying`, tak diperlukan lagi sebab navigasi sync). Lepas
+      `launchUrl` berjaya, `CheckoutPage` `pop()` balik ke skrin asal —
+      skrin asal yang uruskan "Semak semula"/pull-to-refresh, `CheckoutPage`
+      sendiri tak pantau status.
+
+      Reusable untuk module lain kelak (sebab asal permintaan ni):
+      caller mana-mana pun boleh `context.push('/checkout', extra:
+      CheckoutRequest(...))` tanpa `CheckoutPage` tahu apa-apa pasal
+      ToyyibPay/registration/activity — ia cuma panggil `onCheckout`.
+
+      **Widget test baharu**: `test/features/checkout/checkout_page_test.dart`
+      (6 kes — jumlah/description terpapar, checkout berjaya + pop,
+      URL bukan-https ditolak, `PhoneRequiredException` → dialog →
+      checkout semula, nombor tak sah, ralat generik). Guna fake
+      `UrlLauncherPlatform` (`extends`, bukan `implements` — constructor
+      asal `super(token: _token)` yang lulus `PlatformInterface.verify`)
+      — pertama kali pattern ni dipakai dalam test suite. Tambah
+      `url_launcher_platform_interface` sebagai dev_dependency eksplisit
+      (`pubspec.yaml`) — sebelum ni transitive sahaja.
+
+      `flutter analyze` bersih, 251/251 ujian lulus (245 asal + 6
+      baharu). Ni isi jurang "belum ada widget test khusus" yang
+      dicatat di atas.
+
+      **Opus verify 2026-08-24 (scoped kepada perubahan checkout ni)**:
+      SAFE TO SHIP, tiada blocking finding. 4 isu non-blocking dijumpai
+      dan KESEMUANYA DIBAIKI serta-merta:
+      - **"MYR 0.00" mengelirukan bila medan `fee_cents` tiada dalam
+        respons backend lama** (version skew — build baharu bercakap
+        dgn API lama/rollback). `CheckoutRequest.amountCents` dan
+        `MyRegistration.feeCents` ditukar `int` (lalai 0) →  `int?`
+        (lalai `null`) — "tak diketahui" dan "percuma" tak boleh
+        digabung. `CheckoutPage` sorok baris jumlah bila `null`, butang
+        aktiviti sorok jumlah dalam label sama.
+      - **`/checkout` boleh dicapai via deep-link `marc://...` dengan
+        `extra` null/salah jenis** (skim `marc` didaftar utk Stripe
+        redirect, `flutter_deeplinking_enabled` lalai ON) — crash
+        `state.extra!` tak ditangkap `errorBuilder`. Dibaiki: `redirect:`
+        pada `GoRoute` semak `state.extra is CheckoutRequest`, kalau
+        tidak hala ke `/feed` (bukan crash). State restoration selepas
+        process-death BUKAN laluan sebenar (tiada `restorationScopeId`
+        dikonfigur mana-mana, app cold-start di `/login`) — deep-link
+        satu-satunya laluan sebenar.
+      - **`ref` (WidgetRef) tertangkap dalam closure `onCheckout` yang
+        escape ke route lain** — kalau `_PendingStatusView`/
+        `_RegistrationCard` dibuang (cth status ahli bertukar di latar
+        semasa `CheckoutPage` terbuka) sebelum ahli tekan "Bayar
+        Sekarang" DI SANA, `ref.read(...)` lewat tu boleh kena widget
+        dilupuskan. Kesan kosmetik sahaja (jatuh ke snackbar ralat
+        generik `_pay`'s catch), tapi dibaiki: baca repo (`ref.read(...)`)
+        SEKARANG dalam `onPressed` (tapak butang mesti masih `mounted`
+        semasa ditekan), closure `onCheckout` rujuk objek repo terus
+        (bukan `ref` lagi) — objek repo tak terikat lifecycle widget.
+      - **Jurang liputan ujian**: `_FakeUrlLauncher.shouldSucceed=false`
+        tak pernah diuji (cabang `opened == false`), dan tiada assertion
+        `LaunchOptions.mode == externalApplication` (regresi ke
+        `inAppWebView` akan lulus senyap). Dua ujian baharu ditambah —
+        total kini 253/253 lulus (251 + 2).
+
+      **Invoice breakdown (Yuran + Caj Pemprosesan Pembayaran = Jumlah),
+      2026-08-24** — permintaan produk: `CheckoutPage` kini pecah jumlah
+      kepada baris "Yuran" (`amountCents - gatewayChargeCents`) + "Caj
+      Pemprosesan Pembayaran" (`gatewayChargeCents`) + garis pemisah +
+      "Jumlah Perlu Dibayar" (bold). `amountCents` (jumlah SEBENAR yang
+      dihantar ke gateway) **TAK disentuh** — cuma paparan dipecah.
+
+      **Backend**: `GATEWAY_CHARGE_CENTS` config baharu (`internal/config/
+      config.go`, lalai 100 sen/RM1 — PLACEHOLDER, lihat blocker di
+      bawah), endpoint baharu `GET /payment-config` (`protected`,
+      `RequireAuth` sahaja, tiada rate limiter — bacaan statik, tiada
+      DB) pulang `{"gateway_charge_cents": N}`. **Generik** — SATU sumber
+      untuk SEMUA checkout (pendaftaran, aktiviti, modul depan), bukan
+      duplikasi ke `/me`/`ListMyRegistrations`.
+
+      **Flutter**: `lib/features/checkout/checkout_providers.dart`
+      (`paymentConfigProvider`, `.autoDispose` — lihat nota Opus di bawah
+      — TAK PERNAH throw, `catch` senyap fallback `kDefaultGatewayChargeCents
+      = 100`). `_InvoiceCard`/`_InvoiceRow` dalam `checkout_page.dart`
+      papar breakdown HANYA bila `amountCents > gatewayChargeCents`;
+      kes tepi (≤ caj gateway, atau `amountCents` null) papar "Jumlah
+      Perlu Dibayar" sahaja — elak "Yuran RM0.00"/negatif yang
+      mengelirukan.
+
+      **Opus verify 2026-08-24 (breakdown ni)**: NEEDS FIXES. 2 isu
+      code-level DIBAIKI serta-merta:
+      - Ujian `checkout_page_test.dart` guna `gatewayChargeCents: 100`
+        (SAMA dgn `kDefaultGatewayChargeCents`) — tak boleh bezakan
+        "guna nilai fetch" drpd "kebetulan sama dgn fallback". Dibaiki:
+        tukar ke 250 (RM2.50) + 4 ujian baharu
+        `checkout_providers_test.dart` (respons sah, medan tiada,
+        ralat network, 404 backend lama) — total 14 ujian modul
+        checkout (10 asal + 4 baharu).
+      - `paymentConfigProvider` (`FutureProvider` biasa) cache nilai
+        FALLBACK sebagai "berjaya" SELAMA-LAMANYA sepanjang app run —
+        ahli buka checkout sekali semasa offline, breakdown terperangkap
+        pada anggaran RM1 walau internet pulih kemudian, tiada cara
+        betulkan selain restart app. Dibaiki: `.autoDispose` — provider
+        reset bila `CheckoutPage` ditutup (tiada listener), checkout
+        seterusnya fetch semula dari awal.
+
+      - [x] **Angka RM1 DISAHKAN 2026-08-24** — pemilik produk sahkan
+            terus fi ToyyibPay sebenar ialah RM1 (bukan tier NGO
+            percuma yang `PAYMENT-TOYYIB.md` cadangkan sebagai
+            kemungkinan). `GATEWAY_CHARGE_CENTS=100` ditulis eksplisit
+            dalam `.env`/`.env.example` (bukan bergantung default kod
+            senyap lagi).
+      - [x] **Kontradik dengan resit PDF — DISELESAIKAN 2026-08-24
+            (opsyen (a): resit dipecah sama macam checkout).**
+            `receipt.FeePayment` (`marc_go/internal/receipt/receipt.go`)
+            tambah medan `GatewayChargeCents` — `drawFeeDetailsTable`
+            sisip DUA baris baharu ("Yuran"/"Caj Pemprosesan Pembayaran")
+            SEBELUM baris "Penerima", guna boundary SAMA dengan
+            `CheckoutPage` (`AmountCents > GatewayChargeCents`, `>`
+            ketat — elak "Yuran RM0.00"/negatif). Panel "JUMLAH DIBAYAR"
+            (jumlah besar atas resit) **TAK berubah** — kekal papar
+            jumlah PENUH, breakdown cuma tambahan pada jadual butiran.
+            `PaymentsHandler` (`internal/http/handlers/payments.go`)
+            terima `gatewayChargeCents int` baharu (wiring `router.go`),
+            kedua-dua `RegistrationReceipt` DAN `ActivityReceipt` hantar
+            nilai sama. **`DonationReceipt` TAK disentuh** — gateway
+            Stripe berasingan, tiada kaitan fi ToyyibPay ni.
+
+            Ujian baharu `internal/receipt/receipt_test.go`
+            (`TestGenerateFeePDF`, `TestGenerateFeePDFTanpaBreakdown` —
+            3 kes tepi: jumlah sama caj, jumlah kurang caj,
+            `GatewayChargeCents` tak diisi). `go build`/`go vet`/
+            `gofmt -l .` bersih, `go test ./...` PENUH lulus (semua
+            pakej, termasuk `internal/http/handlers`).
+
+            **Tiada perubahan email** — resit pendaftaran/aktiviti
+            TAK PERNAH dihantar emel (PDF download on-demand sahaja
+            via `GET /me/payments/.../receipt`); emel resit cuma wujud
+            untuk donation (Stripe, gateway berasingan sepenuhnya,
+            tiada kaitan RM1 ToyyibPay ni) — jadi tiada "email sending
+            UI" untuk diselaraskan di sini.
+
+      Displayed-vs-charged amount race (senarai papar jumlah lama,
+      checkout endpoint caj jumlah SEMASA kalau `PATCH /activities/:id`
+      berlaku antara dua panggilan) turut disemak — **diterima sebagai
+      risiko rendah, bukan bug**: ToyyibPay punya halaman sendiri papar
+      jumlah SEBENAR sebelum ahli commit bayar, dan resit snapshot
+      `fee_cents_paid` daripada jumlah yang BENAR-BENAR dihantar ke
+      gateway, jadi resit tak pernah tersasar walau papar-app lapuk
+      seketika.
+
+      **Jumlah (RM) DITAMBAH pada butang bayar, 2026-08-24.** Sebelum ni
+      butang "Bayar Yuran Pendaftaran"/"Bayar Yuran Aktiviti" tak papar
+      apa-apa jumlah — ahli tekan bayar tanpa tahu berapa sehingga
+      dilontar keluar ke halaman ToyyibPay sendiri (di luar kawalan
+      app). Backend (`marc_go`): `GET /me` kini pulang
+      `registration_fee_cents` (cuma bila `status != 'approved'`, padan
+      skop `registration_payment_status`; `profile.go` `ProfileHandler`
+      terima `registrationFeeCents` baharu, router.go wiring), dan
+      `ListMyRegistrations` (`queries/activity_registrations.sql`) kini
+      pulang `fee_cents`/`currency`
+      (`coalesce(r.fee_cents_paid, a.fee_cents)` — sama pola
+      `GetMyActivityFeeByID`). Flutter: `Profile.registrationFeeCents`,
+      `MyRegistration.feeCents`/`currency`, butang papar "Bayar Yuran
+      Pendaftaran RM10.00" / "Bayar Yuran Aktiviti MYR 25.00". `go
+      build`/`go vet`/`gofmt -l .` bersih, handler test lulus
+      (`HANDLER_TEST_DB`); `flutter analyze` bersih, 245/245 ujian
+      lulus. **Belum disahkan mata pada peranti sebenar.**
 
       SociaBuzz (<RM500, donation) ialah gateway **BERASINGAN**, belum
       diresearch — jangan keliru dengan ToyyibPay, dua guna kes/akaun
@@ -379,6 +568,63 @@ sebagai penemuan baharu — semua enam sudah dibaiki dan disahkan
 - [x] **Logout tak clear cache gambar disk.** Peranti kongsi warisi gambar
       ahli sebelumnya. Dibaiki: `clearMemoryImageCache()` +
       `clearDiskCachedImages()` dalam `signOut()`.
+
+## Profile page diblok untuk ahli pending/rejected (2026-08-24) ✅
+
+Permintaan pengguna: "kalau tak bayar yuran, profile page pun tak boleh
+access macam page lain, cuma profile tambah button logout." Sebelum ni
+cuma `FeedPage` blok ahli `pending`/`rejected` (`PendingStatusView`,
+dulu private `_PendingStatusView`) — tab Profile tetap papar profil
+penuh + Edit Profil + tukar avatar walau ahli belum diluluskan/bayar.
+
+**Diekstrak jadi reusable**: `lib/shared/widgets/pending_status_view.dart`
+(`PendingStatusView`, public — dulu private dalam `feed_page.dart`).
+`feed_page.dart` diringkaskan (buang duplikasi `_PendingStatusView`/
+`_PaymentStatusChip`, guna widget dikongsi). Tambahan baharu: parameter
+`footer` (widget pilihan) untuk kandungan tambahan khusus caller.
+
+**`profile_page.dart`** kini gate SEBELUM papar kandungan profil biasa
+(`p != null && p.status != 'approved'`) — papar `PendingStatusView` yang
+SAMA dengan Feed, tapi `footer:` diisi butang "Log Keluar"
+(`_handleLogout` sedia ada, guna semula terus). `footer` WAJIB di sini
+(tak macam Feed) — sebaik profile turut diblok, ahli yang SEMUA tab
+diblok takkan ada jalan keluar akaun langsung tanpa butang ni (Profile
+dulu SATU-SATUNYA tempat logout tinggal).
+
+`flutter analyze` bersih, 259/259 ujian lulus (tiada regresi — tiada
+widget test sedia ada untuk `ProfilePage`/`FeedPage` yang perlu
+dikemas kini, konsisten dengan jurang ujian yang dicatat di bawah).
+
+- [x] **Disahkan pada peranti sebenar 2026-08-24 — 1 bug SEBENAR
+      dijumpai dan DIBAIKI.** Hot restart sebagai ahli `pending` dedah
+      race semasa muat PERTAMA `myProfileProvider`: gate
+      `if (profileStatus != null && ...)` (Feed) dan
+      `if (p != null && ...)` (Profile) kedua-duanya guna
+      `valueOrNull`, yang `null` SAMA ADA masih loading ATAU pernah
+      error — jadi semasa loading pertama (belum PERNAH ada nilai),
+      gate gagal terbuka dan Scaffold PENUH terpapar sekejap SEBELUM
+      status sebenar sampai. Kesan konkrit: FAB "Cipta Post" (Feed) dan
+      butang "Edit Profil" (Profile, di AppBar `actions`, tak macam
+      avatar-tap yang sedia ada guard `p == null ? null : ...`) boleh
+      ditekan oleh ahli pending dalam tetingkap singkat tu.
+
+      Dibaiki KEDUA-DUA fail: tambah semakan eksplisit
+      `profile.isLoading && !profile.hasValue` (muat PERTAMA, beza
+      drpd `hasError` selepas cubaan pertama — itu KEKAL fail-open
+      sengaja, komen sedia ada) → papar `Scaffold` neutral
+      (`CircularProgressIndicator.adaptive()` sahaja, tiada FAB/action)
+      SEBELUM gate status. `feed_page.dart`: `isInitialLoading`
+      ditambah dalam tuple `.select()` sedia ada (kekal satu
+      panggilan `ref.watch`, tak tambah rebuild baharu).
+      `flutter analyze` bersih, 259/259 ujian lulus (tiada test khusus
+      ditambah untuk race ni — perlukan kawalan timing `AsyncValue`
+      dalam widget test, jurang yang sama dgn `ProfilePage`/`FeedPage`
+      tiada widget test sedia ada, dicatat di bawah).
+- [ ] **`ActivitiesPage`/`NotificationsPage` tak digate langsung** —
+      skop permintaan ni cuma Feed + Profile. Ahli pending yang tekan
+      tab lain masih papar skrin biasa (kosong/ralat sebab backend 403
+      pada endpoint bergantung `RequireApprovedStatus`), bukan skrin
+      blok yang konsisten. Sengaja tak disentuh — bukan diminta.
 
 ## Backend L32 (2026-08-22) — reset kata laluan ✅
 

@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 /// Nyahlantun bagi kod QR yang SAMA.
 ///
 /// QR yang dipegang di depan lens mencetuskan pengesanan berpuluh kali
-/// sesaat. Tanpa ini, satu peserta menghantar puluhan permintaan POST —
+/// sesaat. Tanpa ini, satu peserta menghantar puluhan permintaan POST -
 /// satu ditanda, selebihnya `created:false`, dan sepanduk skrin berkelip
 /// antara "hadir" dan "sudah ditanda hadir" terlalu pantas untuk dibaca.
 ///
@@ -12,7 +12,7 @@ import 'package:dio/dio.dart';
 /// patut menunggu tiga saat kerana orang pertama baru sahaja diimbas.
 ///
 /// Diletakkan di sini dan bukan di dalam `State` skrin supaya ia boleh
-/// diuji tanpa kamera. [now] disuntik atas sebab yang sama — ujian tidak
+/// diuji tanpa kamera. [now] disuntik atas sebab yang sama - ujian tidak
 /// boleh menunggu tiga saat sebenar.
 class ScanDebouncer {
   ScanDebouncer({this.window = const Duration(seconds: 3)});
@@ -45,7 +45,7 @@ class ScanDebouncer {
     _recent.removeWhere((_, seen) => t.difference(seen) >= window);
   }
 
-  /// Dipanggil semasa skrin dilupuskan — token tidak hidup lebih lama
+  /// Dipanggil semasa skrin dilupuskan - token tidak hidup lebih lama
   /// daripada skrin yang membacanya.
   void clear() => _recent.clear();
 
@@ -53,7 +53,7 @@ class ScanDebouncer {
   ///
   /// Dipanggil apabila permintaan check-in bagi kod itu GAGAL (mis. wifi
   /// tempat majlis terputus). `shouldSkip` menyetel cap masa semasa
-  /// PERMINTAAN dihantar, bukan selepas ia berjaya — tanpa pembuangan ini,
+  /// PERMINTAAN dihantar, bukan selepas ia berjaya - tanpa pembuangan ini,
   /// mempersembahkan semula QR yang sama dalam tetingkap nyahlantun akan
   /// disekat diam-diam, dan di pintu itu kelihatan seperti pengimbas beku
   /// walhal kod itu cuma perlu dicuba semula.
@@ -69,8 +69,8 @@ class ScanDebouncer {
 /// ahli bahawa dia tidak berdaftar.
 ///
 /// DUA daripadanya bukan kegagalan: [marked] dan [alreadyMarked]. Imbasan
-/// berulang ialah kelakuan BIASA di pintu — QR yang sama dipegang semula,
-/// dua pengurus mengimbas orang yang sama — dan backend memulangkan 200
+/// berulang ialah kelakuan BIASA di pintu - QR yang sama dipegang semula,
+/// dua pengurus mengimbas orang yang sama - dan backend memulangkan 200
 /// dengan `created:false` untuknya, bukan ralat.
 enum ScanResultKind {
   marked,
@@ -90,7 +90,7 @@ enum ScanResultKind {
 /// Sepanduk kejayaan di pintu perlu kekal SEBARIS dan boleh dibaca.
 ///
 /// Nama ahli boleh membawa baris baharu terbenam atau panjang sewenang-
-/// wenangnya (medan profil tidak dihadkan sisi pelayan) — tanpa ini, satu
+/// wenangnya (medan profil tidak dihadkan sisi pelayan) - tanpa ini, satu
 /// nama boleh memesongkan seluruh sepanduk atau memaksa teks lain keluar
 /// dari skrin. Ini SEMATA-MATA kebersihan paparan, bukan sekatan
 /// keselamatan.
@@ -117,7 +117,7 @@ class ScanResult {
     final member = data['member'];
     final rawName = member is Map ? member['display_name'] as String? : null;
     // Profil yang gagal dibaca memulangkan nama kosong (lihat `memberOf`
-    // dalam activity_attendance.go) — kehadiran itu tetap SUDAH direkod,
+    // dalam activity_attendance.go) - kehadiran itu tetap SUDAH direkod,
     // jadi skrin mesti mengesahkannya dengan label generik dan bukan
     // kelihatan seperti gagal.
     final nama = _sanitizeName(
@@ -160,7 +160,7 @@ class ScanResult {
       default:
         // Baldi merah generik: 400/403/500. Bukan "rangkaian" dari segi
         // teknikal, tetapi ia berkongsi satu-satunya tindakan yang tinggal
-        // — cuba lagi atau tanda manual — dan mesej server dibawa apa
+        // - cuba lagi atau tanda manual - dan mesej server dibawa apa
         // adanya supaya sebab sebenar tidak hilang.
         return ScanResult(ScanResultKind.network, mesej);
     }

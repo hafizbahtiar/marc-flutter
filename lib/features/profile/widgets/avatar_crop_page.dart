@@ -7,12 +7,12 @@ import 'package:image/image.dart' as img;
 /// Potong gambar profil kepada segi empat sama sebelum dinaikkan.
 ///
 /// Kenapa perlu: avatar dipapar dalam bulatan. Tanpa potong, gambar
-/// landskap jadi muka terkerat di tepi — pengguna tak dapat kawal bahagian
+/// landskap jadi muka terkerat di tepi - pengguna tak dapat kawal bahagian
 /// mana yang kekal. Nisbah dikunci 1:1 supaya apa yang dipilih ialah tepat
 /// apa yang dipapar.
 ///
 /// Guna editor `extended_image` yang memang dah jadi kebergantungan untuk
-/// pemapar gambar post — tiada pakej crop tambahan diperlukan.
+/// pemapar gambar post - tiada pakej crop tambahan diperlukan.
 class AvatarCropPage extends StatefulWidget {
   const AvatarCropPage({super.key, required this.bytes});
 
@@ -49,7 +49,7 @@ class _AvatarCropPageState extends State<AvatarCropPage> {
   /// Potong dalam Dart guna pakej `image`.
   ///
   /// Selamat untuk dilakukan di thread utama HANYA sebab gambar dah
-  /// dikecilkan kepada ≤512px semasa dipilih — menyahkod dan memotong
+  /// dikecilkan kepada ≤512px semasa dipilih - menyahkod dan memotong
   /// gambar sensor penuh di sini akan membekukan UI.
   Uint8List _crop(ExtendedImageEditorState state) {
     final rect = state.getCropRect();
@@ -99,7 +99,7 @@ class _AvatarCropPageState extends State<AvatarCropPage> {
           maxScale: 4,
           cropRectPadding: const EdgeInsets.all(24),
           hitTestSize: 20,
-          // 1:1 dikunci — avatar sentiasa bulat, jadi membenarkan nisbah
+          // 1:1 dikunci - avatar sentiasa bulat, jadi membenarkan nisbah
           // lain cuma menjanjikan kawalan yang UI takkan hormati.
           cropAspectRatio: CropAspectRatios.ratio1_1,
         ),

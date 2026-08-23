@@ -104,7 +104,7 @@ class PostCard extends ConsumerWidget {
                   ),
                 ),
                 // Dulu PopupMenuButton (menu kecil melekat di sudut kanan
-                // atas). Sekarang sheet yang sama dengan comment — sasaran
+                // atas). Sekarang sheet yang sama dengan comment - sasaran
                 // sentuh lebih besar dan dua-dua tempat berkelakuan sama.
                 if (canDelete)
                   IconButton(
@@ -171,7 +171,7 @@ class PostCard extends ConsumerWidget {
   }
 }
 
-/// Butang aksi gaya Twitter — ikon dalam bulatan sentuh dengan tint
+/// Butang aksi gaya Twitter - ikon dalam bulatan sentuh dengan tint
 /// separa-lut bila `active` (cth. post yang dah di-like), dan splash tint
 /// warna sama bila ditekan. Kiraan disembunyikan bila 0 (padanan gaya
 /// Twitter yang tak papar "0"). [bounceOnActive] tambah "pop" gaya
@@ -200,11 +200,11 @@ class _ActionButton extends StatefulWidget {
 
 class _ActionButtonState extends State<_ActionButton>
     with SingleTickerProviderStateMixin {
-  // NULLABLE + dicipta dalam initState() (bukan `late final` malas) —
+  // NULLABLE + dicipta dalam initState() (bukan `late final` malas) -
   // punca ralat "Looking up a deactivated widget's ancestor is unsafe"
   // yang dilaporkan: `late final` baca kali PERTAMA pada butang comment
   // (`bounceOnActive: false`, cabang `build()` tak pernah sentuh
-  // `_scale`/`_controller`) berlaku dalam `dispose()` sendiri — bina
+  // `_scale`/`_controller`) berlaku dalam `dispose()` sendiri - bina
   // `AnimationController(vsync: this,...)` BAHARU semasa widget tengah
   // di-unmount, dan carian ancestor `TickerMode` di dalamnya gagal sebab
   // context dah tak aktif. Bina awal (initState, semasa masih mounted)

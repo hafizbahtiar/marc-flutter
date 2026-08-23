@@ -5,10 +5,10 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/admin/blocked_email_domains_models.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
-/// Senarai domain emel disekat — superadmin SAHAJA (padanan gate backend
+/// Senarai domain emel disekat - superadmin SAHAJA (padanan gate backend
 /// `authz.IsAtLeastRole(..., "superadmin")`). Provider ni sengaja fail
 /// senyap (list kosong) kalau bukan superadmin, elak panggilan 403 yang
-/// pengguna tak boleh buat apa-apa dengannya — padanan pola
+/// pengguna tak boleh buat apa-apa dengannya - padanan pola
 /// `allActivityCategoriesProvider`.
 final blockedEmailDomainsProvider = FutureProvider<List<BlockedEmailDomain>>((
   ref,
@@ -55,7 +55,7 @@ class BlockedEmailDomainsRepository {
     }
   }
 
-  /// [domain] dihantar sebagai segmen laluan — Uri.encodeComponent elak
+  /// [domain] dihantar sebagai segmen laluan - Uri.encodeComponent elak
   /// domain dengan aksara istimewa (patut tak pernah berlaku, domain sah
   /// tak ada, tapi jangan pecah URL kalau input pelik terlepas validasi).
   Future<BlockedDomainResult> remove(String domain) async {

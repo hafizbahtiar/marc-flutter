@@ -13,7 +13,7 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 
 /// Senarai peserta satu aktiviti, dengan tanda hadir per SESI.
 ///
-/// Kehadiran ialah per-sesi, bukan per-aktiviti — jadi pemilih sesi di atas
+/// Kehadiran ialah per-sesi, bukan per-aktiviti - jadi pemilih sesi di atas
 /// bukan hiasan: menandakan seseorang "hadir" tanpa memilih sesi tiada
 /// makna dalam skema ini, dan sijil dikira daripada bilangan sesi yang
 /// dihadiri berbanding ambang aktiviti.
@@ -49,7 +49,7 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
   /// Keadaan asas dibaca daripada senarai peserta (satu permintaan menyemai
   /// keseluruhan skrin); peta ini hanya membawa perubahan yang skrin INI
   /// buat selepas itu, supaya suis tidak perlu menunggu muat semula penuh.
-  /// Ia dikosongkan setiap kali sesi bertukar atau senarai dibaca semula —
+  /// Ia dikosongkan setiap kali sesi bertukar atau senarai dibaca semula -
   /// selepas itu server yang menjadi kebenaran semula.
   final Map<String, bool> _marked = {};
 
@@ -107,7 +107,7 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
     if (mounted) setState(_resetOverrides);
   }
 
-  /// QR venue utk daftar hadir SENDIRI ahli (`self_scan`) — beza drpd
+  /// QR venue utk daftar hadir SENDIRI ahli (`self_scan`) - beza drpd
   /// `_openScanner` (pengurusan imbas QR PERIBADI ahli lain). Tiada
   /// perlu `setState(_resetOverrides)` selepas kembali: skrin ni cuma
   /// PAPAR QR, tak sentuh kehadiran secara langsung sendiri (ahli yang
@@ -133,11 +133,11 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
 
     // Sesi mungkin sudah bertukar semasa permintaan dalam penerbangan.
     // Menulis hasilnya sekarang akan menandakan orang ini hadir untuk sesi
-    // yang dia TIDAK dihadiri — dan kerana suis kini menunjukkan data
+    // yang dia TIDAK dihadiri - dan kerana suis kini menunjukkan data
     // sebenar, pembohongan itu kelihatan berwibawa.
     if (_resolvedSessionId() != sessionId) {
       // Entri busy TETAP dibuang. `_selectSession` sudah mengosongkan set
-      // itu hari ini, jadi ini tidak boleh dicapai — tetapi kunci
+      // itu hari ini, jadi ini tidak boleh dicapai - tetapi kunci
       // bersesi bermakna pembersihan ini tepat dan bukan spekulasi, dan
       // laluan yang meninggalkan spinner kekal hidup pada satu baris ialah
       // jenis kerosakan yang hanya muncul selepas refactor kemudian.
@@ -153,7 +153,7 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
 
     // Toast SELEPAS penjaga. Sebelum ini "Ali ditanda hadir." dipapar dari
     // dalam `_mark`, jadi hasil yang dibuang tetap menghijaukan skrin di
-    // atas senarai sesi BAHARU — pengesahan bagi tanda yang tidak berlaku
+    // atas senarai sesi BAHARU - pengesahan bagi tanda yang tidak berlaku
     // di sana. Ralat sengaja TIDAK dilewatkan begitu (lihat `_mark`):
     // kegagalan ialah maklumat yang tidak boleh ditelan diam-diam, dan
     // merah tidak boleh disalah baca sebagai pengesahan.
@@ -263,11 +263,11 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
       // mewarisi sesi yang sedang dipapar, jadi mustahil untuk mengimbas
       // barisan penuh ke dalam sesi yang tidak dilihat sesiapa.
       //
-      // Dimatikan bila tiada sesi dipilih — kehadiran adalah per-sesi, dan
+      // Dimatikan bila tiada sesi dipilih - kehadiran adalah per-sesi, dan
       // butang yang membuka kamera tanpa sasaran hanya boleh mengecewakan
       // selepas imbasan pertama.
       floatingActionButton: FloatingActionButton.extended(
-        // heroTag unik — lihat komen padanan di feed_page.dart (elak
+        // heroTag unik - lihat komen padanan di feed_page.dart (elak
         // clash Hero dgn FAB tab shell yang tetap mounted di belakang
         // route push ni).
         heroTag: 'registrations-fab',
@@ -410,8 +410,8 @@ class _SessionPicker extends StatelessWidget {
               value: sessions[i].id,
               child: Text(
                 sessions[i].title.isNotEmpty
-                    ? '${sessions[i].title} — ${formatDateTime(sessions[i].startsAt)}'
-                    : 'Sesi ${sessions[i].seq} — ${formatDateTime(sessions[i].startsAt)}',
+                    ? '${sessions[i].title} - ${formatDateTime(sessions[i].startsAt)}'
+                    : 'Sesi ${sessions[i].seq} - ${formatDateTime(sessions[i].startsAt)}',
                 overflow: TextOverflow.ellipsis,
               ),
             ),

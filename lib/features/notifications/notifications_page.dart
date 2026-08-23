@@ -14,7 +14,7 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 /// Dahulu rantaian `if` di sini JATUH ke ayat `member_rejected`, jadi setiap
 /// notifikasi aktiviti dibaca ahli sebagai "Pendaftaran anda tidak
 /// diluluskan." Pemetaan kini menyeluruh: jenis baharu daripada server
-/// mendarat di `default` — `assert` menjeritkannya semasa pembangunan/ujian,
+/// mendarat di `default` - `assert` menjeritkannya semasa pembangunan/ujian,
 /// dan pengguna nampak ayat neutral, bukan ayat orang lain.
 const unknownNotificationTitle = 'Anda ada notifikasi baharu.';
 
@@ -72,7 +72,7 @@ String notificationTitle(AppNotification n) {
       return 'Seseorang menyukai post anda';
     // `comment_like` ditambah 2026-08-22 (backend L35). Ia membawa
     // `post_id` DAN `comment_id`, jadi `notificationDestination` sudah
-    // menghalakannya ke post yang betul tanpa perubahan — cuma teks,
+    // menghalakannya ke post yang betul tanpa perubahan - cuma teks,
     // ikon dan warna yang perlu dipetakan di sini.
     case 'comment_like':
       return 'Seseorang menyukai komen anda';
@@ -98,7 +98,7 @@ String notificationTitle(AppNotification n) {
   }
 }
 
-/// Ke mana ketukan pada notifikasi ini patut pergi — `null` bermakna tiada
+/// Ke mana ketukan pada notifikasi ini patut pergi - `null` bermakna tiada
 /// destinasi (ketukan hanya menanda dibaca).
 ///
 /// `certificate_ready` membawa KEDUA-DUA `certificate_id` dan `activity_id`,
@@ -113,7 +113,7 @@ String? notificationDestination(AppNotification n) {
   return null;
 }
 
-/// Label kumpulan tarikh ("Hari ini" / "Semalam" / "Lebih awal") — padanan
+/// Label kumpulan tarikh ("Hari ini" / "Semalam" / "Lebih awal") - padanan
 /// hari kalendar TEMPATAN, bukan selang 24 jam (notifikasi 11pm semalam
 /// dan 1am hari ini tak patut sekumpulan).
 String _dateBucket(DateTime createdAt) {
@@ -145,7 +145,7 @@ List<Object> _groupByDate(List<AppNotification> items) {
 }
 
 /// Gate `approved` + email disahkan (padanan `verified.GET("/notifications")`
-/// backend) diletak DI LUAR isi kandungan sebenar — provider notifikasi
+/// backend) diletak DI LUAR isi kandungan sebenar - provider notifikasi
 /// (dan panggilan API-nya) hanya di-watch bila `_NotificationsContent`
 /// betul-betul dibina oleh Flutter, iaitu bila ApprovalGate lulus. Ahli
 /// `pending` yang tekan tab Notifikasi TAK sampai cetus panggilan 403
@@ -198,7 +198,7 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
   Widget build(BuildContext context) {
     final notifications = ref.watch(notificationsProvider);
     // Ditambah 2026-08-15: pintasan "Ahli Pending" letak di kepala senarai
-    // notifikasi, bukan cuma ikon dalam AppBar Ahli — ahli biasa langsung
+    // notifikasi, bukan cuma ikon dalam AppBar Ahli - ahli biasa langsung
     // tak `watch` pendingMembersProvider (elak panggilan API sia-sia),
     // management nampak kiraan terus tanpa kena pergi ke tab Ahli dahulu.
     final isManagement = ref.watch(
@@ -352,7 +352,7 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
                       }
                       final destination = notificationDestination(n);
                       // `ref.read(routerProvider)` terus, BUKAN
-                      // `context.push` — baris ni bukan sinkron dengan
+                      // `context.push` - baris ni bukan sinkron dengan
                       // ketukan: `await markRead` di atas boleh buat list
                       // notifikasi rebuild (bacaan berubah), dan context
                       // ListTile ni boleh jadi lapuk sebelum sampai sini.
@@ -374,11 +374,11 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
   }
 }
 
-/// Kepala kumpulan "Ahli Pending" — pintasan ke `/members/pending`,
+/// Kepala kumpulan "Ahli Pending" - pintasan ke `/members/pending`,
 /// management sahaja. Sengaja diletak SEBAGAI baris pertama senarai
 /// notifikasi (bukan widget berasingan di luar list) supaya ia turut
 /// gulung bersama & ikut RefreshIndicator yang sama. Nombor badge cuma
-/// dipapar bila ada ahli menunggu — baris ini kekal kelihatan walau
+/// dipapar bila ada ahli menunggu - baris ini kekal kelihatan walau
 /// kiraan sifar, jadi ia sentiasa jadi laluan pantas untuk management.
 class _PendingMembersHeader extends StatelessWidget {
   const _PendingMembersHeader({required this.count});
@@ -403,7 +403,7 @@ class _PendingMembersHeader extends StatelessWidget {
   }
 }
 
-/// Label kumpulan tarikh ("Hari ini" / "Semalam" / "Lebih awal") — gaya
+/// Label kumpulan tarikh ("Hari ini" / "Semalam" / "Lebih awal") - gaya
 /// disalin (bukan dikongsi) daripada `_SectionHeader` di
 /// `payment_history_page.dart`; kedua-dua widget itu private kepada fail
 /// masing-masing.

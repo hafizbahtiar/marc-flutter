@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 /// Satu tindakan dalam [AppDialogShell] / [showAppDialog].
 ///
-/// `isPrimary` = tindakan positif (Simpan/Padam/Ya) — dirender sebagai
+/// `isPrimary` = tindakan positif (Simpan/Padam/Ya) - dirender sebagai
 /// butang elevated di Material, `isDefaultAction` di Cupertino. Tindakan
 /// bukan primary jadi outlined.
 class AppDialogAction {
@@ -22,13 +22,13 @@ class AppDialogAction {
   final bool isDestructive;
 }
 
-/// Rangka dialog adaptive yang boleh guna semula — CupertinoAlertDialog
+/// Rangka dialog adaptive yang boleh guna semula - CupertinoAlertDialog
 /// di iOS/macOS, AlertDialog di platform lain.
 ///
 /// Di Material, tindakan disusun **sebaris** dengan lebar sama rata:
 /// outlined untuk tindakan negatif (kiri), elevated untuk yang positif
 /// (kanan). Ini sengaja ganti OverflowBar default AlertDialog yang letak
-/// butang teks kecil rapat di kanan — susah dicapai dengan ibu jari dan
+/// butang teks kecil rapat di kanan - susah dicapai dengan ibu jari dan
 /// keutamaan tindakan tak jelas. Di Cupertino, susunan asal platform
 /// dikekalkan (dua tindakan memang dah sebaris).
 ///
@@ -129,7 +129,7 @@ Future<T?> showAppDialog<T>(
 }
 
 /// Butang sebaris, lebar sama rata. Setiap butang dibalut Expanded supaya
-/// dapat had lebar yang jelas — `filledButtonTheme` global kita set
+/// dapat had lebar yang jelas - `filledButtonTheme` global kita set
 /// `minimumSize: Size.fromHeight(54)`, iaitu lebar tak terhingga, yang
 /// meletup dalam susun atur mendatar yang tak berhad.
 class _MaterialActionRow extends StatelessWidget {

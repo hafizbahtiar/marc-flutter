@@ -46,7 +46,7 @@ class AuthService {
     } on PlatformException catch (e) {
       return _storageCorruptResult(e);
     } catch (_) {
-      // Ralat luar Dio (cth: .env tak dimuat, API_BASE_URL hilang) —
+      // Ralat luar Dio (cth: .env tak dimuat, API_BASE_URL hilang) -
       // pastikan controller tetap dapat AsyncError, bukan throw tak
       // tertangkap yang buat butang submit stuck loading selama-lamanya.
       return const AuthResult(
@@ -81,7 +81,7 @@ class AuthService {
 
   /// Minta pautan reset kata laluan. Backend pulang 204 SENTIASA (tiada
   /// enumerasi akaun), jadi "berjaya" di sini bermakna "permintaan
-  /// diterima" — BUKAN "akaun itu wujud". Mesej UI mesti kekal neutral.
+  /// diterima" - BUKAN "akaun itu wujud". Mesej UI mesti kekal neutral.
   Future<AuthResult> requestPasswordReset(String email) async {
     try {
       await _dio.post(
@@ -138,7 +138,7 @@ class AuthService {
   }
 
   /// Simpan token, tapi kalau secure storage rosak (cth: PlatformException
-  /// sebab Keystore invalid lepas restore backup Android — lihat
+  /// sebab Keystore invalid lepas restore backup Android - lihat
   /// TokenStorage) buang SEMUA entri lama sekali sahaja dan cuba simpan
   /// balik, supaya login lepas ni tak asyik gagal dengan storage yang
   /// tak boleh ditulis.
@@ -154,11 +154,11 @@ class AuthService {
     }
   }
 
-  /// PlatformException lepas retry deleteAll+save pun masih gagal — log
+  /// PlatformException lepas retry deleteAll+save pun masih gagal - log
   /// jelas (bukan hilang dalam catch generik) supaya kegagalan storage ni
   /// boleh didiagnosis, bukan nampak macam "ralat tak dijangka" biasa.
   AuthResult _storageCorruptResult(PlatformException e) {
-    debugPrint('AuthService: secure storage rosak lepas retry — $e');
+    debugPrint('AuthService: secure storage rosak lepas retry - $e');
     return const AuthResult(
       success: false,
       error: 'Storan peranti bermasalah. Cuba log masuk semula.',
@@ -166,11 +166,11 @@ class AuthService {
   }
 
   /// Clear sesi tempatan SERTA-MERTA (router redirect ke /login jadi
-  /// responsif) — tangkap access/refresh token dulu untuk 2 panggilan
+  /// responsif) - tangkap access/refresh token dulu untuk 2 panggilan
   /// latar belakang (unlink device + revoke refresh token di server),
   /// KEDUA-DUA tak di-`await`, supaya butang "Log keluar" betul-betul
   /// tak block pada network perlahan/timeout macam yang comment ni
-  /// dulu cakap (tapi kod sebenar tak buat — H1 punya sibling bug,
+  /// dulu cakap (tapi kod sebenar tak buat - H1 punya sibling bug,
   /// dah fix di sini).
   Future<void> signOut() async {
     final access = await _tokenStorage.readAccessToken();
@@ -180,7 +180,7 @@ class AuthService {
 
     // Buang cache gambar (avatar/post) atas cakera & memori supaya akaun
     // seterusnya yang log masuk pada peranti KONGSI tak nampak gambar
-    // akaun sebelum ni — AppNetworkImage muat semua gambar rangkaian
+    // akaun sebelum ni - AppNetworkImage muat semua gambar rangkaian
     // dengan `cache: true` (extended_image), tokens sahaja tak cukup.
     clearMemoryImageCache();
     unawaited(clearDiskCachedImages());
@@ -194,7 +194,7 @@ class AuthService {
         _dio.post('/auth/logout', data: {'refresh_token': refresh}).catchError((
           _,
         ) {
-          // Tak kisah kalau gagal revoke di server — sesi lokal dah clear.
+          // Tak kisah kalau gagal revoke di server - sesi lokal dah clear.
           return Response(requestOptions: RequestOptions());
         }),
       );

@@ -1,4 +1,4 @@
-/// Satu percubaan yuran pendaftaran (`registration_payments`) — boleh
+/// Satu percubaan yuran pendaftaran (`registration_payments`) - boleh
 /// lebih drpd satu baris seorang ahli (percubaan gagal/cuba semula).
 class RegistrationPaymentEntry {
   const RegistrationPaymentEntry({
@@ -32,7 +32,7 @@ class RegistrationPaymentEntry {
 }
 
 /// Satu pendaftaran aktiviti yang PERNAH perlukan bayaran
-/// (`payment_status <> 'not_required'`) — TERMASUK yang telah dibatalkan,
+/// (`payment_status <> 'not_required'`) - TERMASUK yang telah dibatalkan,
 /// beza drpd `MyRegistration` (activity_models.dart) yang kuasakan tab
 /// "Aktiviti Saya" (aktif sahaja).
 class ActivityPaymentEntry {
@@ -55,7 +55,7 @@ class ActivityPaymentEntry {
   final String currency;
   final DateTime startsAt;
 
-  /// Status PENDAFTARAN — "registered" / "cancelled" dll (bukan bayaran).
+  /// Status PENDAFTARAN - "registered" / "cancelled" dll (bukan bayaran).
   final String registrationStatus;
 
   /// "pending" / "paid" / "refunded".
@@ -80,7 +80,7 @@ class ActivityPaymentEntry {
 /// Satu derma milik ahli log masuk (`donations`).
 ///
 /// Derma TANPA NAMA (`user_id` null di backend) tak pernah muncul di sini
-/// — penderma itu tiada akaun untuk menuntutnya, dan emel resit semasa
+/// - penderma itu tiada akaun untuk menuntutnya, dan emel resit semasa
 /// webhook ialah satu-satunya jejak mereka ada, mengikut reka bentuk.
 ///
 /// SENGAJA tiada `donorName`/`donorEmail`: ahli boleh menderma dgn nama
@@ -118,7 +118,7 @@ class DonationPaymentEntry {
   }
 }
 
-/// Sejarah bayaran seorang ahli (`GET /me/payments`) — TIGA senarai
+/// Sejarah bayaran seorang ahli (`GET /me/payments`) - TIGA senarai
 /// berasingan, padanan bentuk respons backend.
 ///
 /// `donations` ditambah 2026-08-22 (backend L33). Sebelum ni
@@ -146,7 +146,7 @@ class MyPaymentHistory {
       activityFees: (json['activity_fees'] as List)
           .map((e) => ActivityPaymentEntry.fromJson(e as Map<String, dynamic>))
           .toList(),
-      // `?? const []` — bukan kemasan: app yang dikeluarkan SEBELUM L33
+      // `?? const []` - bukan kemasan: app yang dikeluarkan SEBELUM L33
       // bercakap dgn backend yang tak menghantar kunci ni, dan sebaliknya
       // app baharu boleh mencapai backend lama semasa deploy berperingkat.
       // Kedua-dua arah mesti tak terhempas.
@@ -157,9 +157,9 @@ class MyPaymentHistory {
   }
 }
 
-/// Satu catatan `payment_logs` (`GET /admin/payments`) — tinjauan merentas
+/// Satu catatan `payment_logs` (`GET /admin/payments`) - tinjauan merentas
 /// modul untuk pengurusan. SENGAJA tiada raw_payload (lihat komen backend
-/// `paymentLogItem`) — payload gateway mentah boleh bawa PII, tak
+/// `paymentLogItem`) - payload gateway mentah boleh bawa PII, tak
 /// didedahkan menerusi API ni.
 class PaymentLogEntry {
   const PaymentLogEntry({

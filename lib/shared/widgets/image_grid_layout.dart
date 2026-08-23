@@ -11,7 +11,7 @@ const _radius = 14.0;
 /// Sebelum ni penggubah papar jalur mendatar yang tak menyerupai hasil
 /// akhir langsung.
 ///
-/// Susunan ikut bilangan gambar — sebab tu ia bukan `GridView`:
+/// Susunan ikut bilangan gambar - sebab tu ia bukan `GridView`:
 ///
 ///   1 -> satu jubin lebar penuh
 ///   2 -> dua lajur sama lebar
@@ -41,7 +41,7 @@ class ImageGridLayout extends StatelessWidget {
           1 => tiles[0],
           2 => Row(
             // stretch: `Expanded` cuma mengekang paksi UTAMA. Tanpa ni
-            // jubin bersaiz ikut kandungan sendiri pada paksi silang —
+            // jubin bersaiz ikut kandungan sendiri pada paksi silang -
             // widget tanpa saiz intrinsik runtuh jadi sifar, dan gambar
             // besar melimpah keluar sel.
             crossAxisAlignment: CrossAxisAlignment.stretch,

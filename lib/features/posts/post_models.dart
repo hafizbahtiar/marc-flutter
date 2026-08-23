@@ -143,12 +143,12 @@ class AppNotification {
   final String? postId;
   final String? commentId;
 
-  /// Deep-link aktiviti — diisi oleh notifikasi `activity_published` /
+  /// Deep-link aktiviti - diisi oleh notifikasi `activity_published` /
   /// `activity_cancelled` (migrasi 20260810100700). Tanpa medan ini
   /// notifikasi aktiviti tidak boleh diketuk.
   final String? activityId;
 
-  /// Deep-link sijil — diisi oleh notifikasi `certificate_ready`.
+  /// Deep-link sijil - diisi oleh notifikasi `certificate_ready`.
   final String? certificateId;
   final bool read;
   final DateTime createdAt;

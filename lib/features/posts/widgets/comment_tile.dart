@@ -14,7 +14,7 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 
 /// Satu comment top-level + reply-reply di bawahnya (indent sekali sahaja
-/// — backend dah cap depth 2, jadi `replies` sentiasa leaf, tak recurse).
+/// - backend dah cap depth 2, jadi `replies` sentiasa leaf, tak recurse).
 class CommentThread extends StatelessWidget {
   const CommentThread({
     super.key,
@@ -43,7 +43,7 @@ class CommentThread extends StatelessWidget {
           Padding(
             // 14 (align stem bawah tengah avatar induk, radius 14) + 2
             // (lebar stem) + 24 (jarak sebelum avatar reply) = 40, sama
-            // dgn indent asal — reply avatar kekal posisi sama, cuma
+            // dgn indent asal - reply avatar kekal posisi sama, cuma
             // tambah garis dalam jarak yang dah ada.
             padding: const EdgeInsets.only(left: 14),
             child: IntrinsicHeight(
@@ -282,7 +282,7 @@ class _CommentRow extends ConsumerWidget {
                       ),
                     ),
                     // Edit/Padam dulu dua butang teks berasingan dalam
-                    // baris ni — padat, senang tersalah tekan, dan
+                    // baris ni - padat, senang tersalah tekan, dan
                     // 'Padam' merah sentiasa terpampang. Sekarang satu
                     // titik masuk yang buka sheet tindakan.
                     if (isOwner || canDelete) ...[

@@ -102,7 +102,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 // Penafian ni WAJIB kekal. MARC dibangunkan secara sukarela
-                // dan BUKAN aplikasi rasmi MAIWP — tanpa baris ni, app yang
+                // dan BUKAN aplikasi rasmi MAIWP - tanpa baris ni, app yang
                 // ada logo, senarai ahli dan pengumuman memang akan dibaca
                 // sebagai rasmi. Ia juga mesti selari dengan halaman
                 // sumbangan, yang menyatakan derma pergi kepada pembangun

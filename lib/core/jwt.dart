@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-/// Decode claim `sub` (user id) daripada JWT access token — cukup untuk
+/// Decode claim `sub` (user id) daripada JWT access token - cukup untuk
 /// link identiti OneSignal (`OneSignal.login(userId)`). Signature verify
 /// bukan tanggungjawab client, itu kerja server.
 String? decodeJwtSubject(String token) {

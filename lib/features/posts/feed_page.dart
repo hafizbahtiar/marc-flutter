@@ -8,13 +8,10 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/features/registration_payment/registration_payment_providers.dart';
-import 'package:marc/shared/phone.dart';
-import 'package:marc/shared/validators.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:marc/shared/widgets/pending_status_view.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
@@ -50,37 +47,56 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   Widget build(BuildContext context) {
     // Stage 11: user pending/rejected tak boleh akses Feed (backend 403
     // semua endpoint selain /me). Gate content-level di sini (bukan
-    // router redirect) sebab myProfileProvider async — lihat design spec
+    // router redirect) sebab myProfileProvider async - lihat design spec
     // untuk rasional penuh. Fail-open kalau /me gagal fetch (error state)
-    // — jangan block user approved sebab isu rangkaian sekejap.
+    // - jangan block user approved sebab isu rangkaian sekejap.
     //
     // Backend (marc_go router.go) chains RequireApprovedStatus THEN
     // RequireVerifiedEmail on every Posts/comments/uploads/notifications
-    // route — jadi client kena semak KEDUA-DUA status DAN emailVerified,
+    // route - jadi client kena semak KEDUA-DUA status DAN emailVerified,
     // bukan status sahaja, atau ahli approved-tapi-belum-sahkan-email
     // terperangkap pada 403 generic tanpa jalan keluar.
     //
     // Guna .select dengan record supaya widget ni hanya rebuild bila
-    // status ATAU emailVerified berubah — bukan pada sebarang field
+    // status ATAU emailVerified berubah - bukan pada sebarang field
     // Profile lain.
     final (
       status: profileStatus,
       emailVerified: profileEmailVerified,
       registrationPaymentStatus: profileRegistrationPaymentStatus,
+      registrationFeeCents: profileRegistrationFeeCents,
+      isInitialLoading: profileIsInitialLoading,
     ) = ref.watch(
       myProfileProvider.select(
         (p) => (
           status: p.valueOrNull?.status,
           emailVerified: p.valueOrNull?.emailVerified,
           registrationPaymentStatus: p.valueOrNull?.registrationPaymentStatus,
+          registrationFeeCents: p.valueOrNull?.registrationFeeCents,
+          // Muat pertama (belum PERNAH ada nilai) - beza dgn `hasError`
+          // (rangkaian gagal SELEPAS cubaan pertama), yang kekal
+          // fail-open sengaja (komen di atas). Tanpa semakan ni,
+          // `profileStatus` null semasa loading pertama sama macam null
+          // semasa error - gate di bawah (`profileStatus != null`) gagal
+          // terbuka, Feed PENUH (dgn FAB tekan-boleh) terpapar sekejap
+          // sebelum status sebenar ahli diketahui. Ditemui 2026-08-24
+          // (hot restart sebagai ahli pending, sempat tekan FAB).
+          isInitialLoading: p.isLoading && !p.hasValue,
         ),
       ),
     );
 
+    if (profileIsInitialLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator.adaptive()),
+      );
+    }
+
     if (profileStatus != null && profileStatus != 'approved') {
-      return _PendingStatusView(
+      return PendingStatusView(
         status: profileStatus,
         registrationPaymentStatus: profileRegistrationPaymentStatus,
+        registrationFeeCents: profileRegistrationFeeCents,
         onRefresh: () async {
           try {
             final refreshed = await ref.refresh(myProfileProvider.future);
@@ -244,224 +260,9 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   }
 }
 
-class _PendingStatusView extends ConsumerStatefulWidget {
-  const _PendingStatusView({
-    required this.status,
-    required this.onRefresh,
-    this.registrationPaymentStatus,
-  });
-
-  final String status;
-  final Future<void> Function() onRefresh;
-
-  /// "pending"/"succeeded"/"failed", atau null kalau tak pernah cuba
-  /// bayar — lihat `Profile.registrationPaymentStatus`.
-  final String? registrationPaymentStatus;
-
-  @override
-  ConsumerState<_PendingStatusView> createState() => _PendingStatusViewState();
-}
-
-class _PendingStatusViewState extends ConsumerState<_PendingStatusView> {
-  bool _submitting = false;
-
-  /// Papar dialog minta nombor telefon (ahli `pending` yang daftar
-  /// SEBELUM phone jadi wajib — lihat [PhoneRequiredException]). Pulang
-  /// nombor TERNORMAL (padanan `register_page.dart`) atau `null` kalau
-  /// dibatal/tak sah — caller MESTI berhenti (bukan cuba checkout lagi)
-  /// bila `null`.
-  Future<String?> _promptPhone() async {
-    final raw = await showEditTextDialog(
-      context,
-      title: 'Nombor Telefon',
-      initialValue: '',
-      maxLines: 1,
-    );
-    if (raw == null) return null; // dibatal
-    final error = validatePhone(raw);
-    if (error != null) {
-      if (!mounted) return null;
-      MySnackBar.error(context, error);
-      return null;
-    }
-    return normalizeMY(raw);
-  }
-
-  Future<void> _payRegistrationFee() async {
-    setState(() => _submitting = true);
-    try {
-      String url;
-      try {
-        url = await ref.read(registrationPaymentRepositoryProvider).checkout();
-      } on PhoneRequiredException {
-        if (!mounted) return;
-        final phone = await _promptPhone();
-        if (phone == null) return;
-        if (!mounted) return;
-        url = await ref
-            .read(registrationPaymentRepositoryProvider)
-            .checkout(phone: phone);
-      }
-
-      // Padanan corak `RedirectCheckoutHandler.handle()`
-      // (`lib/features/donation/donation_gateway.dart`): `Uri.tryParse`
-      // (bukan `Uri.parse`, elak `FormatException` tak ditangkap), skim
-      // dihadkan `https` sahaja, `launchUrl` external + semak nilai bool.
-      final uri = Uri.tryParse(url);
-      if (uri == null || uri.scheme != 'https') {
-        if (!mounted) return;
-        MySnackBar.error(context, 'Pautan pembayaran tidak sah.');
-        return;
-      }
-      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!opened) {
-        if (!mounted) return;
-        MySnackBar.error(context, 'Gagal buka laman pembayaran.');
-        return;
-      }
-
-      if (!mounted) return;
-      MySnackBar.success(
-        context,
-        'Selesaikan pembayaran dalam pelayar, kemudian tekan "Semak semula" di sini.',
-      );
-    } catch (e) {
-      if (!mounted) return;
-      MySnackBar.error(
-        context,
-        e is DioException
-            ? extractErrorMessage(e)
-            : 'Gagal proses pembayaran. Cuba lagi.',
-      );
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isRejected = widget.status == 'rejected';
-    // Eksplisit 'pending' (bukan `!isRejected`) untuk butang bayar — kalau
-    // status baharu ditambah kelak (bukan pending/rejected/approved), ia
-    // jatuh ke cabang "sedang disemak" (isRejected=false) tapi TAK patut
-    // automatik nampak butang bayar tanpa disemak dulu sama ada ia
-    // relevan (Opus verify 2026-08-15).
-    final isPending = widget.status == 'pending';
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('MARC')),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isRejected ? Icons.error_outline : Icons.hourglass_empty,
-                  size: 48,
-                  color: isRejected
-                      ? theme.colorScheme.error
-                      : theme.extension<AppSemanticColors>()!.warning,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  isRejected
-                      ? 'Pendaftaran anda tidak diluluskan. Sila hubungi pihak pengurusan MARC.'
-                      : 'Pendaftaran anda sedang disemak oleh pihak pengurusan MARC.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                if (isPending && widget.registrationPaymentStatus != null) ...[
-                  const SizedBox(height: 12),
-                  _PaymentStatusChip(status: widget.registrationPaymentStatus!),
-                ],
-                const SizedBox(height: 20),
-                // Butang bayar disembunyikan bila SUDAH succeeded — tiada
-                // sebab bayar lagi, tinggal tunggu kelulusan pengurusan.
-                // Kekal untuk 'failed'/'pending'/null (belum cuba) supaya
-                // ahli boleh cuba/cuba semula.
-                if (isPending &&
-                    widget.registrationPaymentStatus != 'succeeded') ...[
-                  FilledButton(
-                    onPressed: _submitting ? null : _payRegistrationFee,
-                    child: _submitting
-                        ? const SizedBox(
-                            height: 14,
-                            width: 14,
-                            child: CircularProgressIndicator.adaptive(),
-                          )
-                        : Text(
-                            widget.registrationPaymentStatus == 'failed'
-                                ? 'Cuba Bayar Semula'
-                                : 'Bayar Yuran Pendaftaran',
-                          ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                OutlinedButton(
-                  onPressed: widget.onRefresh,
-                  child: const Text('Semak semula'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Isyarat visual status bayaran yuran pendaftaran — `pending`/`succeeded`/
-/// `failed`. Ditambah 2026-08-15: webhook ToyyibPay dah rekod hasil bayaran
-/// BETUL dalam DB sejak awal (gagal direkod gagal, berjaya direkod
-/// berjaya), tapi client tak pernah papar apa-apa, jadi ahli nampak
-/// "tiada apa berlaku" tak kira hasil sebenar.
-class _PaymentStatusChip extends StatelessWidget {
-  const _PaymentStatusChip({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final (icon, label, color) = switch (status) {
-      'succeeded' => (
-        Icons.check_circle_outline,
-        'Bayaran diterima — menunggu kelulusan pengurusan.',
-        theme.colorScheme.primary,
-      ),
-      'failed' => (
-        Icons.error_outline,
-        'Bayaran tidak berjaya. Sila cuba lagi.',
-        theme.colorScheme.error,
-      ),
-      _ => (
-        Icons.hourglass_top,
-        'Bayaran sedang disahkan — boleh ambil masa beberapa minit.',
-        theme.extension<AppSemanticColors>()!.warning,
-      ),
-    };
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(color: color),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Gate untuk ahli yang approved tapi email belum disahkan. Backend
 /// (RequireVerifiedEmail) 403 semua route Posts/comments/uploads/
-/// notifications untuk kes ni — beri jalan keluar terus di sini (hantar
+/// notifications untuk kes ni - beri jalan keluar terus di sini (hantar
 /// semula email pengesahan, atau semak semula status) supaya user tak
 /// terperangkap pada Feed yang error generic.
 class _EmailNotVerifiedView extends ConsumerStatefulWidget {

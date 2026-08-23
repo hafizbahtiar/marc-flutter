@@ -5,19 +5,19 @@ import 'package:marc/features/payments/payment_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 
-// "RM" digodam keras sengaja — `payment_logs` TIADA lajur currency (log
+// "RM" digodam keras sengaja - `payment_logs` TIADA lajur currency (log
 // peristiwa, bukan jadual bayaran), dan setiap modul bayaran dalam app ni
 // (donation, yuran pendaftaran, yuran aktiviti) MYR sahaja, tiada
 // sokongan multi-currency di mana-mana. Kalau modul bukan-MYR ditambah
 // kelak, lajur currency perlu ditambah ke payment_logs dahulu (Opus
 // verify 2026-08-15 tandakan andaian ni).
 String _formatAmount(int? cents) =>
-    cents == null ? '—' : 'RM ${(cents / 100).toStringAsFixed(2)}';
+    cents == null ? '-' : 'RM ${(cents / 100).toStringAsFixed(2)}';
 
 /// Tinjauan bayaran merentas modul (donation/yuran pendaftaran/yuran
-/// aktiviti) untuk pengurusan — `payment_logs`, log PERISTIWA (checkout,
+/// aktiviti) untuk pengurusan - `payment_logs`, log PERISTIWA (checkout,
 /// webhook, reconcile), bukan senarai satu-baris-satu-bayaran. Satu
-/// bayaran boleh muncul beberapa kali (setiap peristiwa) — ini sengaja,
+/// bayaran boleh muncul beberapa kali (setiap peristiwa) - ini sengaja,
 /// padanan tujuan asal payment_logs (diagnosis/reconcile), bukan
 /// pengganti "Sejarah Bayaran Saya" ahli.
 class AdminPaymentsPage extends ConsumerStatefulWidget {
@@ -52,7 +52,7 @@ class _AdminPaymentsPageState extends ConsumerState<AdminPaymentsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Bezakan "masih memuat profil" daripada "bukan management" — padanan
+    // Bezakan "masih memuat profil" daripada "bukan management" - padanan
     // audit_page.dart, elak kilasan "tiada akses" utk pengurus SAH semasa
     // /me masih dalam perjalanan.
     final profile = ref.watch(myProfileProvider);
@@ -163,7 +163,7 @@ class _FilterBar extends StatelessWidget {
   final PaymentLogFilter filter;
   final ValueChanged<PaymentLogFilter> onChanged;
 
-  /// Derma cuma untuk superadmin (keputusan produk 2026-08-15) — cip
+  /// Derma cuma untuk superadmin (keputusan produk 2026-08-15) - cip
   /// disembunyikan drpd management biasa. Kemudahan UI sahaja; backend
   /// tolak `?module=donation` 403 utk sesiapa bukan superadmin walau
   /// diminta terus.

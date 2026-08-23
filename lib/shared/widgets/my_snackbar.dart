@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Reusable SnackBar helper — floating as default.
+/// Reusable SnackBar helper - floating as default.
 ///
 /// Usage:
 ///   MySnackBar.show(context, 'Profil dikemas kini.');

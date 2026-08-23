@@ -20,7 +20,7 @@ class ActivityFilter {
   final String? categoryId;
 
   /// Papar DRAF sahaja. Backend meninggalkan draf keluar daripada senarai
-  /// lalai dan menuntut role pengurusan untuk `status=draft` — tanpa
+  /// lalai dan menuntut role pengurusan untuk `status=draft` - tanpa
   /// penapis ini, aktiviti yang baru dicipta tidak boleh dijumpai semula
   /// dalam app untuk diterbitkan.
   final bool drafts;
@@ -51,7 +51,7 @@ final activityFilterProvider = StateProvider<ActivityFilter>(
 );
 
 /// State senarai: aktiviti + cursor untuk load-more. Sama bentuk dengan
-/// `FeedState` — backend guna keyset pagination yang sama.
+/// `FeedState` - backend guna keyset pagination yang sama.
 class ActivitiesState {
   const ActivitiesState({
     this.activities = const [],
@@ -77,7 +77,7 @@ class ActivitiesState {
 }
 
 class ActivitiesNotifier extends AsyncNotifier<ActivitiesState> {
-  /// Penjaga generasi — sama rasional dengan `FeedNotifier`: halaman yang
+  /// Penjaga generasi - sama rasional dengan `FeedNotifier`: halaman yang
   /// tiba lewat selepas penapis bertukar tidak boleh menulis ke atas
   /// senarai yang lebih baharu.
   int _generation = 0;
@@ -151,7 +151,7 @@ class ActivitiesNotifier extends AsyncNotifier<ActivitiesState> {
     }
   }
 
-  /// Tindih satu aktiviti dalam senarai — dipanggil selepas daftar/batal
+  /// Tindih satu aktiviti dalam senarai - dipanggil selepas daftar/batal
   /// dari halaman detail supaya kiraan slot dalam senarai sync balik
   /// tanpa pull-to-refresh manual.
   void patch(Activity updated) {
@@ -192,7 +192,7 @@ final activitiesProvider =
       ActivitiesNotifier.new,
     );
 
-/// Kategori untuk cip penapis. Jarang berubah — dibiarkan cache seumur
+/// Kategori untuk cip penapis. Jarang berubah - dibiarkan cache seumur
 /// hayat ProviderContainer.
 final activityCategoriesProvider = FutureProvider<List<ActivityCategory>>((
   ref,
@@ -210,7 +210,7 @@ final activityCategoriesProvider = FutureProvider<List<ActivityCategory>>((
 });
 
 /// Aktiviti tunggal (halaman detail). Sama rasional dengan
-/// `postDetailProvider` — throw bila logout supaya halaman papar error
+/// `postDetailProvider` - throw bila logout supaya halaman papar error
 /// state dan bukan cache aktiviti user lama pada peranti yang sama.
 final activityDetailProvider = FutureProvider.family<Activity, String>((
   ref,
@@ -220,14 +220,14 @@ final activityDetailProvider = FutureProvider.family<Activity, String>((
     authNotifierProvider.select((s) => s.isLoggedIn),
   );
   if (!isLoggedIn) {
-    throw StateError('Sesi tamat — sila log masuk semula.');
+    throw StateError('Sesi tamat - sila log masuk semula.');
   }
 
   final res = await ref.watch(dioProvider).get('/activities/$activityId');
   return Activity.fromJson(res.data as Map<String, dynamic>);
 });
 
-/// Pendaftaran aktif pemanggil — `GET /me/activities`.
+/// Pendaftaran aktif pemanggil - `GET /me/activities`.
 final myRegistrationsProvider = FutureProvider<List<MyRegistration>>((
   ref,
 ) async {
@@ -243,7 +243,7 @@ final myRegistrationsProvider = FutureProvider<List<MyRegistration>>((
       .toList();
 });
 
-/// Sijil pemanggil — `GET /me/certificates`. Sijil yang ditarik balik
+/// Sijil pemanggil - `GET /me/certificates`. Sijil yang ditarik balik
 /// tidak dipulangkan oleh backend, jadi tiada penapisan di sini.
 final myCertificatesProvider = FutureProvider<List<MyCertificate>>((ref) async {
   final isLoggedIn = ref.watch(
@@ -276,7 +276,7 @@ class CertificateLinkResult {
 ///
 /// Backend menerbitkan sijil dalam DUA fasa: baris + nombor siri komit
 /// dahulu, PDF dijana dan dimuat naik selepasnya. Antara kedua-duanya
-/// sijil itu WUJUD dan sah — cuma failnya belum ada. Mesej ralat generik
+/// sijil itu WUJUD dan sah - cuma failnya belum ada. Mesej ralat generik
 /// di sini akan menyuruh ahli melaporkan pepijat untuk keadaan yang
 /// selesai sendiri dalam beberapa saat.
 const certificatePendingMessage =
@@ -292,7 +292,7 @@ class CertificateRepository {
 
   /// Minta URL bertandatangan bagi PDF sijil.
   ///
-  /// Endpoint memulangkan `{"url": "..."}` dan BUKAN bait — R2 yang
+  /// Endpoint memulangkan `{"url": "..."}` dan BUKAN bait - R2 yang
   /// menyampaikan fail. Pemanggil membuka URL itu dengan `url_launcher`;
   /// tiada apa-apa yang ditulis ke storan peranti.
   Future<CertificateLinkResult> fileUrl(String certificateId) async {
@@ -313,7 +313,7 @@ class CertificateRepository {
       }
       if (code == 410) {
         // Ditarik balik selepas senarai ini dimuatkan. Baris itu tidak
-        // sepatutnya kekal dipapar — senarai dibaca semula supaya ia
+        // sepatutnya kekal dipapar - senarai dibaca semula supaya ia
         // hilang, bukan sekadar gagal setiap kali diketuk.
         _ref.invalidate(myCertificatesProvider);
       }
@@ -330,7 +330,7 @@ final activityRepositoryProvider = Provider<ActivityRepository>(
 
 /// Hasil satu percubaan daftar/batal.
 ///
-/// `message` bukan null bermakna GAGAL dengan sebab yang boleh dibaca —
+/// `message` bukan null bermakna GAGAL dengan sebab yang boleh dibaca -
 /// termasuk 409, yang bukan kes tepi tetapi jawapan biasa daripada
 /// server.
 class RegistrationResult {
@@ -350,7 +350,7 @@ class ActivityRepository {
   ///
   /// 409 daripada server ialah KEBENARAN, bukan kes tepi: dua ahli boleh
   /// menekan Daftar dalam saat yang sama dan kiraan tempatan tak dapat
-  /// menghalangnya — server yang menyerikan lewat kunci baris. Bila ia
+  /// menghalangnya - server yang menyerikan lewat kunci baris. Bila ia
   /// menolak, kemas kini optimistik digulung semula DAN detail
   /// di-invalidate supaya kiraan sebenar (yang mungkin sudah bergerak
   /// kerana orang lain) dibaca semula dari server, bukan diteka.
@@ -377,7 +377,7 @@ class ActivityRepository {
       } else {
         await dio.delete('/activities/$activityId/registration');
       }
-      // Baca semula kiraan sebenar — pendaftaran orang lain yang mendarat
+      // Baca semula kiraan sebenar - pendaftaran orang lain yang mendarat
       // antara muatan terakhir dan ketukan ini hanya kelihatan di server.
       _ref.invalidate(activityDetailProvider(activityId));
       _ref.invalidate(myRegistrationsProvider);
@@ -387,7 +387,7 @@ class ActivityRepository {
       if (before != null) notifier.patch(before);
       _ref.invalidate(activityDetailProvider(activityId));
       // 409 (penuh / pendaftaran ditutup / sudah berdaftar / belum
-      // dibuka), 403 (bukan pengurusan), 400 (parameter buruk) — semuanya
+      // dibuka), 403 (bukan pengurusan), 400 (parameter buruk) - semuanya
       // datang dengan `{"error": "..."}` Bahasa Melayu dari backend, jadi
       // mesejnya boleh terus dipapar.
       return RegistrationResult.failed(extractErrorMessage(e));
@@ -400,7 +400,7 @@ class ActivityRepository {
     }
   }
 
-  /// Mulakan pembayaran yuran AKTIVITI (bukan yuran pendaftaran ahli —
+  /// Mulakan pembayaran yuran AKTIVITI (bukan yuran pendaftaran ahli -
   /// itu `RegistrationPaymentRepository.checkout`) untuk pendaftaran yang
   /// SUDAH wujud. [phone] pilihan, sama pola dengan
   /// `RegistrationPaymentRepository.checkout`: hanya perlu bila
@@ -423,13 +423,13 @@ class ActivityRepository {
     }
   }
 
-  /// Tanda kehadiran SENDIRI (`method: 'self_scan'`) — TIADA
+  /// Tanda kehadiran SENDIRI (`method: 'self_scan'`) - TIADA
   /// registration_id/checkin_token dihantar, identiti datang drpd token
   /// JWT ahli sendiri di sisi pelayan. Ini SATU-SATUNYA tindakan
   /// kehadiran yang boleh dipanggil ahli biasa (padanan gate backend
-  /// `activity_attendance.go` Mark — semua kaedah LAIN kekal pengurusan
+  /// `activity_attendance.go` Mark - semua kaedah LAIN kekal pengurusan
   /// sahaja). [sessionId] datang drpd kandungan QR venue yang diimbas
-  /// (lihat `self_checkin_scanner_page.dart`), BUKAN pilihan ahli —
+  /// (lihat `self_checkin_scanner_page.dart`), BUKAN pilihan ahli -
   /// mengimbas QR salah sesi akan ditolak backend (409 pendaftaran
   /// bukan utk aktiviti/sesi tu), bukan senyap tanda sesi salah.
   Future<ScanResult> selfCheckIn({
@@ -457,7 +457,7 @@ class ActivityRepository {
     }
   }
 
-  /// Tarik versi terkini dari server dan tindih ke dalam senarai — best
+  /// Tarik versi terkini dari server dan tindih ke dalam senarai - best
   /// effort, tak boleh gagalkan mutasi yang dah pun berjaya.
   Future<void> _syncToList(String activityId) async {
     try {

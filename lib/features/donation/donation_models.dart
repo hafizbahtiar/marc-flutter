@@ -1,4 +1,4 @@
-/// Response `/donations/checkout` (marc_go, Stage 12) — backend pilih
+/// Response `/donations/checkout` (marc_go, Stage 12) - backend pilih
 /// gateway (Stripe sekarang; ToyyibPay/SociaBuzz akan datang) ikut
 /// amount, client TAK boleh andaikan gateway apa. HANYA satu antara
 /// [clientSecret]/[redirectUrl] terisi, ikut model gateway (padanan

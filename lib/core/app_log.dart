@@ -20,12 +20,12 @@ void appLog(String scope, String message) {
 /// status, dan badan respons.
 ///
 /// Sebab wujud: mesej lalai DioException tak beritahu sama ada permintaan
-/// itu langsung tak sampai, atau sampai dan ditolak dengan 403 — dua punca
+/// itu langsung tak sampai, atau sampai dan ditolak dengan 403 - dua punca
 /// yang berbeza sepenuhnya tapi nampak serupa pada pengguna.
 void appLogDioError(String scope, String stage, DioException e) {
   if (!kDebugMode) return;
   final response = e.response;
-  final buffer = StringBuffer('$stage GAGAL — ${e.type.name}')
+  final buffer = StringBuffer('$stage GAGAL - ${e.type.name}')
     ..write(
       '\n  url: ${e.requestOptions.method} ${_safeUri(e.requestOptions.uri)}',
     );
@@ -33,7 +33,7 @@ void appLogDioError(String scope, String stage, DioException e) {
     buffer.write('\n  status: ${response.statusCode}');
     buffer.write('\n  body: ${_preview(response.data)}');
   } else {
-    buffer.write('\n  (tiada respons — permintaan tak sampai/timeout)');
+    buffer.write('\n  (tiada respons - permintaan tak sampai/timeout)');
     buffer.write('\n  error: ${e.error}');
   }
   developer.log(buffer.toString(), name: 'marc.$scope', error: e);
@@ -41,7 +41,7 @@ void appLogDioError(String scope, String stage, DioException e) {
 
 /// Buang query string sebelum log.
 ///
-/// URL presigned R2 bawa `X-Amz-Signature` dalam query — kredential
+/// URL presigned R2 bawa `X-Amz-Signature` dalam query - kredential
 /// jangka pendek, tapi tetap kredential, dan log peranti bukan tempatnya.
 /// Path dikekalkan sebab itulah yang berguna untuk nyahpepijat (kunci
 /// objek mana yang gagal); tandatangan tak pernah berguna.
@@ -55,7 +55,7 @@ String _preview(Object? data) {
   return text.length <= 800 ? text : '${text.substring(0, 800)}…';
 }
 
-/// Diekspos untuk ujian sahaja — penapisan kredential berbaloi diuji,
+/// Diekspos untuk ujian sahaja - penapisan kredential berbaloi diuji,
 /// dan fungsi peribadi tak boleh dicapai dari luar pustaka.
 @visibleForTesting
 String debugSafeUriForTest(Uri uri) => _safeUri(uri);

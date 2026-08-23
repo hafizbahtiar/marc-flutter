@@ -6,7 +6,7 @@ import 'package:marc/features/audit/audit_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 
-/// Jejak audit — management sahaja (backend kuatkuasakan semula 403).
+/// Jejak audit - management sahaja (backend kuatkuasakan semula 403).
 class AuditPage extends ConsumerStatefulWidget {
   const AuditPage({super.key});
 
@@ -42,7 +42,7 @@ class _AuditPageState extends ConsumerState<AuditPage> {
     // Bezakan "masih memuat profil" daripada "bukan management". Guna
     // `valueOrNull` sahaja akan pulang null semasa muat, jadi ahli
     // pengurusan yang SAH nampak kilasan "tiada akses" sebelum skrin
-    // muncul — corak bug sama yang pernah kosongkan medan emel pada
+    // muncul - corak bug sama yang pernah kosongkan medan emel pada
     // borang donation.
     final profile = ref.watch(myProfileProvider);
     if (profile.isLoading) {

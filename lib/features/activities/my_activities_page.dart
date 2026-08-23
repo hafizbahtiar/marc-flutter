@@ -1,26 +1,22 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/app/theme.dart';
-import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/activities/activity_format.dart';
 import 'package:marc/features/activities/checkin_qr.dart';
 import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
-import 'package:marc/features/registration_payment/registration_payment_providers.dart'
-    show PhoneRequiredException;
-import 'package:marc/shared/phone.dart';
-import 'package:marc/shared/validators.dart';
-import 'package:marc/shared/widgets/edit_text_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:marc/features/checkout/checkout_page.dart';
+
+/// Padan pola `_formatAmount` di `payment_history_page.dart`.
+String _formatAmount(int cents, String currency) =>
+    '${currency.toUpperCase()} ${(cents / 100).toStringAsFixed(2)}';
 
 /// Aktiviti yang ahli ini sudah daftar, dengan QR check-in.
 ///
 /// QR dilukis daripada `checkin_token` yang SUDAH tiba bersama
-/// `GET /me/activities` — tiada permintaan rangkaian kedua untuk
+/// `GET /me/activities` - tiada permintaan rangkaian kedua untuk
 /// memaparkannya. Liputan di gelanggang selalunya teruk; ahli yang
 /// membuka skrin ini sebelum sampai mesti tetap boleh menunjukkan kodnya
 /// tanpa isyarat.
@@ -111,7 +107,7 @@ class MyActivitiesPage extends ConsumerWidget {
                       _RegistrationCard(
                         registration: r,
                         // Aktiviti yang sudah tamat tiada check-in untuk
-                        // direkodkan — QR di sini hanya akan ditolak
+                        // direkodkan - QR di sini hanya akan ditolak
                         // pengimbas dan mengelirukan.
                         showQr: false,
                         onTap: () =>
@@ -186,7 +182,7 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-class _RegistrationCard extends ConsumerStatefulWidget {
+class _RegistrationCard extends ConsumerWidget {
   const _RegistrationCard({
     required this.registration,
     required this.showQr,
@@ -198,91 +194,14 @@ class _RegistrationCard extends ConsumerStatefulWidget {
   final VoidCallback onTap;
 
   @override
-  ConsumerState<_RegistrationCard> createState() => _RegistrationCardState();
-}
-
-class _RegistrationCardState extends ConsumerState<_RegistrationCard> {
-  bool _paying = false;
-
-  /// Papar dialog minta nombor telefon — padanan
-  /// `_PendingStatusViewState._promptPhone` dalam `feed_page.dart`.
-  /// Duplikasi ~15 baris sengaja dibiarkan: dua tapak panggilan sahaja,
-  /// mengekstrak helper kongsi cuma tambah lapisan tanpa memudahkan apa-apa.
-  Future<String?> _promptPhone() async {
-    final raw = await showEditTextDialog(
-      context,
-      title: 'Nombor Telefon',
-      initialValue: '',
-      maxLines: 1,
-    );
-    if (raw == null) return null; // dibatal
-    final error = validatePhone(raw);
-    if (error != null) {
-      if (!mounted) return null;
-      MySnackBar.error(context, error);
-      return null;
-    }
-    return normalizeMY(raw);
-  }
-
-  Future<void> _payActivityFee() async {
-    final activityId = widget.registration.activityId;
-    setState(() => _paying = true);
-    try {
-      String url;
-      final repo = ref.read(activityRepositoryProvider);
-      try {
-        url = await repo.checkoutPayment(activityId);
-      } on PhoneRequiredException {
-        if (!mounted) return;
-        final phone = await _promptPhone();
-        if (phone == null) return;
-        if (!mounted) return;
-        url = await repo.checkoutPayment(activityId, phone: phone);
-      }
-
-      // Padanan corak `_payRegistrationFee` (`feed_page.dart`): parse
-      // selamat, skim `https` sahaja, buka external.
-      final uri = Uri.tryParse(url);
-      if (uri == null || uri.scheme != 'https') {
-        if (!mounted) return;
-        MySnackBar.error(context, 'Pautan pembayaran tidak sah.');
-        return;
-      }
-      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!opened) {
-        if (!mounted) return;
-        MySnackBar.error(context, 'Gagal buka laman pembayaran.');
-        return;
-      }
-
-      if (!mounted) return;
-      MySnackBar.success(
-        context,
-        'Selesaikan pembayaran dalam pelayar, kemudian tarik segar senarai ini untuk lihat status terkini.',
-      );
-    } catch (e) {
-      if (!mounted) return;
-      MySnackBar.error(
-        context,
-        e is DioException
-            ? extractErrorMessage(e)
-            : 'Gagal proses pembayaran. Cuba lagi.',
-      );
-    } finally {
-      if (mounted) setState(() => _paying = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final r = widget.registration;
+    final r = registration;
 
     return Card(
       margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: InkWell(
-        onTap: widget.onTap,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -321,7 +240,7 @@ class _RegistrationCardState extends ConsumerState<_RegistrationCard> {
                   if (r.categoryName.isNotEmpty) _Tag(label: r.categoryName),
                   if (r.isCancelled)
                     _Tag(label: 'Dibatalkan', color: theme.colorScheme.error),
-                  // `not_required` (aktiviti percuma) sengaja tiada tag —
+                  // `not_required` (aktiviti percuma) sengaja tiada tag -
                   // kes biasa yang tak berbaloi bunyi bising visual.
                   if (r.feePaid)
                     _Tag(
@@ -342,18 +261,35 @@ class _RegistrationCardState extends ConsumerState<_RegistrationCard> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: _paying ? null : _payActivityFee,
-                    child: _paying
-                        ? const SizedBox(
-                            height: 14,
-                            width: 14,
-                            child: CircularProgressIndicator.adaptive(),
-                          )
-                        : const Text('Bayar Yuran Aktiviti'),
+                    onPressed: () {
+                      // Baca repo SEKARANG, bukan dalam closure
+                      // `onCheckout` yang dipanggil KEMUDIAN dalam
+                      // `CheckoutPage` - lihat komen sama dalam
+                      // `feed_page.dart` (Opus verify 2026-08-24).
+                      final repo = ref.read(activityRepositoryProvider);
+                      context.push(
+                        '/checkout',
+                        extra: CheckoutRequest(
+                          title: 'Yuran Aktiviti',
+                          description: r.title,
+                          amountCents: r.feeCents,
+                          currency: r.currency,
+                          onCheckout: ({phone}) =>
+                              repo.checkoutPayment(r.activityId, phone: phone),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      [
+                        'Bayar Yuran Aktiviti',
+                        if (r.feeCents != null)
+                          _formatAmount(r.feeCents!, r.currency),
+                      ].join(' '),
+                    ),
                   ),
                 ),
               ],
-              if (widget.showQr) ...[
+              if (showQr) ...[
                 const SizedBox(height: 16),
                 Center(child: CheckinQr(token: r.checkinToken)),
               ],
