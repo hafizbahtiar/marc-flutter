@@ -162,7 +162,7 @@ final paymentLogsProvider =
 /// boleh terus dipapar.
 ///
 /// Sebelum 2026-08-24 ni `ReceiptLinkResult` (bawa URL R2
-/// bertandatangan) — backend kini stream PDF TERUS (tiada simpanan R2
+/// bertandatangan) - backend kini stream PDF TERUS (tiada simpanan R2
 /// langsung untuk resit lagi, lihat catatan di repo backend), jadi
 /// client terima bait terus dan buka dengan `printing` (bukan
 /// `launchUrl` pada URL luaran lagi).
@@ -175,7 +175,7 @@ class ReceiptBytesResult {
   final Uint8List? bytes;
 
   /// Nama fail SEBENAR dari backend (header `Content-Disposition`,
-  /// cth `Resit-Pendaftaran-MARC-TBP123456789.pdf`) — `null` kalau
+  /// cth `Resit-Pendaftaran-MARC-TBP123456789.pdf`) - `null` kalau
   /// header tiada/tak dapat dihurai, caller patut jatuh balik ke nama
   /// generik.
   final String? filename;
@@ -185,7 +185,7 @@ class ReceiptBytesResult {
 }
 
 /// Hurai nama fail daripada header `Content-Disposition:
-/// attachment; filename="...".pdf` — `null` kalau header tiada/format
+/// attachment; filename="...".pdf` - `null` kalau header tiada/format
 /// tak dijangka. Backend (`payments.go` `respondReceiptPDF`) sentiasa
 /// hantar dalam bentuk ni, tapi jangan crash kalau proksi/CDN kelak
 /// ubah suai header dalam laluan.
@@ -205,7 +205,7 @@ final paymentReceiptRepositoryProvider = Provider<PaymentReceiptRepository>(
   (ref) => PaymentReceiptRepository(ref),
 );
 
-/// Minta bait PDF resit TERUS daripada backend — `responseType: bytes`
+/// Minta bait PDF resit TERUS daripada backend - `responseType: bytes`
 /// sebab endpoint kini pulangkan `application/pdf` mentah (bukan
 /// `{"url": "..."}` lagi). Pemanggil buka bait guna `printing`
 /// (`Printing.layoutPdf`, dialog preview/simpan/kongsi/cetak native).
@@ -248,12 +248,12 @@ class PaymentReceiptRepository {
 }
 
 /// `extractErrorMessage` andaikan `e.response?.data` sudah nyahsiri
-/// (Map) — betul untuk permintaan JSON biasa, tapi request resit ni
+/// (Map) - betul untuk permintaan JSON biasa, tapi request resit ni
 /// paksa `responseType: bytes` (perlu terima PDF mentah bila BERJAYA),
 /// jadi badan ralat pun sampai sebagai `List<int>` mentah, bukan Map.
 /// Cuba nyahsiri sendiri dahulu (badan ralat backend Go kecil, selamat
 /// dibaca penuh) sebelum jatuh balik ke `extractErrorMessage` (yang
-/// tetap betul untuk status-code generik/timeout/dsb — cuma tak dapat
+/// tetap betul untuk status-code generik/timeout/dsb - cuma tak dapat
 /// mesej Melayu spesifik daripada JSON dalam kes ni).
 String _extractBytesError(DioException e) {
   final data = e.response?.data;
@@ -264,7 +264,7 @@ String _extractBytesError(DioException e) {
         return decoded['error'] as String;
       }
     } catch (_) {
-      // Badan bukan JSON sah — jatuh balik ke bawah.
+      // Badan bukan JSON sah - jatuh balik ke bawah.
     }
   }
   return extractErrorMessage(e);

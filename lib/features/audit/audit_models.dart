@@ -5,6 +5,7 @@ class AuditLog {
     required this.entityType,
     required this.entityId,
     required this.action,
+    required this.actorId,
     required this.actorMemberId,
     required this.actorRoleKey,
     required this.changedFields,
@@ -17,6 +18,9 @@ class AuditLog {
   final String entityType;
   final String entityId;
   final String action;
+
+  /// UUID pelaku (admin/management) — lajur actor_id dari API.
+  final String? actorId;
 
   /// Snapshot pada masa tindakan - bukan role semasa pelaku.
   final String? actorMemberId;
@@ -37,6 +41,7 @@ class AuditLog {
       entityType: json['entity_type'] as String,
       entityId: json['entity_id'] as String,
       action: json['action'] as String,
+      actorId: json['actor_id'] as String?,
       actorMemberId: json['actor_member_id'] as String?,
       actorRoleKey: json['actor_role_key'] as String?,
       changedFields:
@@ -63,12 +68,19 @@ class AuditLog {
     _ => action,
   };
 
-  /// Label BM untuk medan delta audit — supaya jejak langkau bayaran
+  /// Label BM untuk medan delta audit - supaya jejak langkau bayaran
   /// (`payment_bypassed`, `bypass_reason`) boleh dibaca tanpa kunci mentah.
   static String fieldLabel(String field) => switch (field) {
     'status' => 'Status',
     'payment_bypassed' => 'Bayaran dilangkau',
     'bypass_reason' => 'Nota langkau bayaran',
+    'registration_payment_status' => 'Status bayaran yuran',
+    'cancelled_by_admin' => 'Bil dibatalkan admin',
+    'payment_id' => 'ID bayaran',
+    'gateway_ref' => 'Rujukan bil',
+    'actor_user_id' => 'UUID admin',
+    'actor_member_id' => 'No. ahli admin',
+    'actor_role_key' => 'Role admin',
     'role_key' => 'Role',
     'role_rank' => 'Rank role',
     'avatar_r2_key' => 'Avatar',

@@ -171,6 +171,16 @@ class ProfileRepository {
     _ref.invalidate(pendingMembersProvider);
   }
 
+  /// Batalkan bil yuran pendaftaran 'pending' ahli — admin/superadmin
+  /// sahaja. Supaya laluan langkau bayaran boleh digunakan selepas bil
+  /// online tamat/dibatalkan (backend semak gateway dulu).
+  Future<void> cancelRegistrationPayment(String userId) async {
+    final dio = _ref.read(dioProvider);
+    await dio.post('/members/$userId/cancel-registration-payment');
+    _ref.invalidate(membersProvider);
+    _ref.invalidate(pendingMembersProvider);
+  }
+
   /// Tukar role ahli (Stage 12) - backend kuatkuasakan hierarki rank,
   /// client cuma hantar niat.
   Future<void> updateMemberRole(String userId, String roleKey) async {

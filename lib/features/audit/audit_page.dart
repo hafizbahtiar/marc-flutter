@@ -150,6 +150,7 @@ final _placeholder = AuditLog(
   entityType: 'post',
   entityId: '00000000-0000-0000-0000-000000000000',
   action: 'update',
+  actorId: '00000000-0000-0000-0000-000000000001',
   actorMemberId: 'MARC2026/08/0000',
   actorRoleKey: 'ahli',
   changedFields: const ['content'],
@@ -251,13 +252,27 @@ class _AuditTile extends StatelessWidget {
         '${log.entityLabel} ${log.actionLabel.toLowerCase()}',
         style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
-      subtitle: Text(
-        [
-          log.actorMemberId ?? 'Sistem',
-          if (log.actorRoleKey != null) '(${log.actorRoleKey})',
-          '· ${relativeTime(log.createdAt)}',
-        ].join(' '),
-        style: textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            [
+              log.actorMemberId ?? 'Sistem',
+              if (log.actorRoleKey != null) '(${log.actorRoleKey})',
+              '· ${relativeTime(log.createdAt)}',
+            ].join(' '),
+            style: textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          if (log.actorId != null)
+            SelectableText(
+              log.actorId!,
+              style: textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontFamily: 'monospace',
+                fontSize: 11,
+              ),
+            ),
+        ],
       ),
       children: [
         if (log.changedFields.isNotEmpty)

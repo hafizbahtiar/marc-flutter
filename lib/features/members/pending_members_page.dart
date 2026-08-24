@@ -100,6 +100,37 @@ class PendingMembersPage extends ConsumerWidget {
       await handleApprove(row, bypassReason: reason);
     }
 
+    Future<void> handleCancelBill(MemberRow row) async {
+      final name = row.displayName ?? row.memberId;
+      final ok = await showConfirmDialog(
+        context,
+        title: 'Batalkan bil online',
+        message:
+            'Batalkan bil yuran pendaftaran $name yang masih aktif? '
+            'Guna ni sebelum langkau bayaran untuk ahli lama. '
+            'Bil juga tamat tempoh automatik ~30 minit.',
+        confirmLabel: 'Batalkan bil',
+        isDestructive: true,
+      );
+      if (!ok || !context.mounted) return;
+
+      try {
+        await ref
+            .read(profileRepositoryProvider)
+            .cancelRegistrationPayment(row.userId);
+        if (context.mounted) {
+          MySnackBar.success(context, 'Bil ${row.memberId} dibatalkan.');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          MySnackBar.error(
+            context,
+            e is DioException ? extractErrorMessage(e) : 'Gagal batalkan bil.',
+          );
+        }
+      }
+    }
+
     Future<void> handleReject(MemberRow row) async {
       try {
         await ref.read(profileRepositoryProvider).rejectMember(row.userId);
@@ -127,6 +158,7 @@ class PendingMembersPage extends ConsumerWidget {
               onApprove: (_) async {},
               onReject: (_) async {},
               onApproveBypass: (_) async {},
+              onCancelBill: (_) async {},
               isAdminOrAbove: isAdminOrAbove,
             ),
           ),
@@ -179,6 +211,7 @@ class PendingMembersPage extends ConsumerWidget {
                 onApprove: handleApprove,
                 onReject: handleReject,
                 onApproveBypass: handleApproveBypass,
+                onCancelBill: handleCancelBill,
                 isAdminOrAbove: isAdminOrAbove,
               ),
             );
@@ -195,6 +228,7 @@ class _PendingList extends StatelessWidget {
     required this.onApprove,
     required this.onReject,
     required this.onApproveBypass,
+    required this.onCancelBill,
     required this.isAdminOrAbove,
   });
 
@@ -202,6 +236,7 @@ class _PendingList extends StatelessWidget {
   final Future<void> Function(MemberRow row) onApprove;
   final Future<void> Function(MemberRow row) onReject;
   final Future<void> Function(MemberRow row) onApproveBypass;
+  final Future<void> Function(MemberRow row) onCancelBill;
   final bool isAdminOrAbove;
 
   @override
@@ -215,6 +250,7 @@ class _PendingList extends StatelessWidget {
         onApprove: () => onApprove(rows[i]),
         onReject: () => onReject(rows[i]),
         onApproveBypass: () => onApproveBypass(rows[i]),
+        onCancelBill: () => onCancelBill(rows[i]),
         isAdminOrAbove: isAdminOrAbove,
       ),
     );
@@ -227,6 +263,7 @@ class _PendingTile extends StatefulWidget {
     required this.onApprove,
     required this.onReject,
     required this.onApproveBypass,
+    required this.onCancelBill,
     required this.isAdminOrAbove,
   });
 
@@ -234,6 +271,7 @@ class _PendingTile extends StatefulWidget {
   final Future<void> Function() onApprove;
   final Future<void> Function() onReject;
   final Future<void> Function() onApproveBypass;
+  final Future<void> Function() onCancelBill;
   final bool isAdminOrAbove;
 
   @override
@@ -255,11 +293,11 @@ class _PendingTileState extends State<_PendingTile> {
 
   String get _name => widget.row.displayName ?? widget.row.memberId;
 
-  /// Laluan biasa — ahli dah bayar yuran dalam sistem.
+  /// Laluan biasa - ahli dah bayar yuran dalam sistem.
   bool get _canApproveNormally =>
       widget.row.registrationPaymentStatus == 'succeeded';
 
-  /// Laluan migrasi — admin/superadmin sahaja, ahli belum bayar online,
+  /// Laluan migrasi - admin/superadmin sahaja, ahli belum bayar online,
   /// TIADA bil ToyyibPay 'pending' yang masih hidup (backend 409 kalau ada).
   bool get _canBypass =>
       widget.isAdminOrAbove &&
@@ -272,12 +310,12 @@ class _PendingTileState extends State<_PendingTile> {
   String get _approveTooltip {
     if (_canApproveNormally) return 'Luluskan';
     if (_hasPendingOnlineBill) {
-      return 'Ahli ada bil online belum selesai — selesaikan bil tu dulu';
+      return 'Ahli ada bil online — batalkan atau tunggu tamat tempoh dulu';
     }
     if (widget.isAdminOrAbove) {
-      return 'Ahli belum bayar — guna butang langkau bayaran untuk ahli lama';
+      return 'Ahli belum bayar - guna butang langkau bayaran untuk ahli lama';
     }
-    return 'Ahli belum bayar yuran — cuma admin/superadmin boleh langkau';
+    return 'Ahli belum bayar yuran - cuma admin/superadmin boleh langkau';
   }
 
   String get _bypassTooltip =>
@@ -311,6 +349,10 @@ class _PendingTileState extends State<_PendingTile> {
   // gilir `_busy` sekitarnya, sama pola dgn _confirmApprove/_confirmReject.
   Future<void> _approveBypass() async {
     await _run(widget.onApproveBypass);
+  }
+
+  Future<void> _cancelBill() async {
+    await _run(widget.onCancelBill);
   }
 
   @override
@@ -351,8 +393,8 @@ class _PendingTileState extends State<_PendingTile> {
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      'Bil online masih aktif — selesaikan/tamatkan sebelum '
-                      'langkau bayaran.',
+                      'Bil online masih aktif — batalkan di bawah, atau '
+                      'tunggu tamat tempoh (~30 min).',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.extension<AppSemanticColors>()!.warning,
                       ),
@@ -361,6 +403,12 @@ class _PendingTileState extends State<_PendingTile> {
               ],
             ),
           ),
+          if (_hasPendingOnlineBill && widget.isAdminOrAbove)
+            IconButton(
+              icon: Icon(Icons.link_off_outlined, color: scheme.error),
+              tooltip: 'Batalkan bil online',
+              onPressed: _busy ? null : _cancelBill,
+            ),
           if (_canBypass)
             IconButton(
               icon: Icon(
