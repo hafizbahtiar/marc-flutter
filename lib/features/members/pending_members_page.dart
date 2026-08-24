@@ -7,6 +7,7 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 const _placeholderPendingRow = MemberRow(
@@ -48,12 +49,15 @@ class PendingMembersPage extends ConsumerWidget {
     }
 
     final pending = ref.watch(pendingMembersProvider);
+    final isAdminOrAbove = ref.watch(isAdminOrAboveProvider);
 
     Future<void> onRefresh() => ref.refresh(pendingMembersProvider.future);
 
-    Future<void> handleApprove(MemberRow row) async {
+    Future<void> handleApprove(MemberRow row, {String? bypassReason}) async {
       try {
-        await ref.read(profileRepositoryProvider).approveMember(row.userId);
+        await ref
+            .read(profileRepositoryProvider)
+            .approveMember(row.userId, bypassReason: bypassReason);
         if (context.mounted) {
           MySnackBar.success(context, '${row.memberId} diluluskan.');
         }
@@ -65,6 +69,34 @@ class PendingMembersPage extends ConsumerWidget {
           );
         }
       }
+    }
+
+    // Ahli lama (migrasi manual->digital) yang dah bayar tunai sebelum
+    // sistem ni wujud - admin/superadmin sahaja (server hakim sebenar,
+    // ni cuma UI). Nota WAJIB - showEditTextDialog pulang null kalau
+    // kosong, jadi guard `reason == null` di bawah dah cukup.
+    Future<void> handleApproveBypass(MemberRow row) async {
+      final name = row.displayName ?? row.memberId;
+      final ok = await showConfirmDialog(
+        context,
+        title: 'Langkau bayaran yuran',
+        message:
+            'Luluskan $name TANPA bayaran yuran pendaftaran? '
+            'Guna ni cuma untuk ahli lama yang dah bayar secara manual '
+            'sebelum sistem digital.',
+        confirmLabel: 'Teruskan',
+      );
+      if (!ok || !context.mounted) return;
+
+      final reason = await showEditTextDialog(
+        context,
+        title: 'Nota (wajib)',
+        initialValue: '',
+        maxLines: 3,
+      );
+      if (reason == null || !context.mounted) return;
+
+      await handleApprove(row, bypassReason: reason);
     }
 
     Future<void> handleReject(MemberRow row) async {
@@ -93,6 +125,8 @@ class PendingMembersPage extends ConsumerWidget {
               rows: List.filled(4, _placeholderPendingRow),
               onApprove: (_) async {},
               onReject: (_) async {},
+              onApproveBypass: (_) async {},
+              isAdminOrAbove: isAdminOrAbove,
             ),
           ),
           error: (e, _) => RefreshIndicator.adaptive(
@@ -143,6 +177,8 @@ class PendingMembersPage extends ConsumerWidget {
                 rows: rows,
                 onApprove: handleApprove,
                 onReject: handleReject,
+                onApproveBypass: handleApproveBypass,
+                isAdminOrAbove: isAdminOrAbove,
               ),
             );
           },
@@ -157,11 +193,15 @@ class _PendingList extends StatelessWidget {
     required this.rows,
     required this.onApprove,
     required this.onReject,
+    required this.onApproveBypass,
+    required this.isAdminOrAbove,
   });
 
   final List<MemberRow> rows;
   final Future<void> Function(MemberRow row) onApprove;
   final Future<void> Function(MemberRow row) onReject;
+  final Future<void> Function(MemberRow row) onApproveBypass;
+  final bool isAdminOrAbove;
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +213,8 @@ class _PendingList extends StatelessWidget {
         row: rows[i],
         onApprove: () => onApprove(rows[i]),
         onReject: () => onReject(rows[i]),
+        onApproveBypass: () => onApproveBypass(rows[i]),
+        isAdminOrAbove: isAdminOrAbove,
       ),
     );
   }
@@ -183,11 +225,15 @@ class _PendingTile extends StatefulWidget {
     required this.row,
     required this.onApprove,
     required this.onReject,
+    required this.onApproveBypass,
+    required this.isAdminOrAbove,
   });
 
   final MemberRow row;
   final Future<void> Function() onApprove;
   final Future<void> Function() onReject;
+  final Future<void> Function() onApproveBypass;
+  final bool isAdminOrAbove;
 
   @override
   State<_PendingTile> createState() => _PendingTileState();
@@ -231,9 +277,17 @@ class _PendingTileState extends State<_PendingTile> {
     if (ok && mounted) await _run(widget.onReject);
   }
 
+  // Dialog pengesahan + nota wajib dah dikendalikan oleh
+  // `handleApproveBypass` (pending_members_page level) - di sini cuma
+  // gilir `_busy` sekitarnya, sama pola dgn _confirmApprove/_confirmReject.
+  Future<void> _approveBypass() async {
+    await _run(widget.onApproveBypass);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
@@ -269,6 +323,19 @@ class _PendingTileState extends State<_PendingTile> {
               ],
             ),
           ),
+          // Ahli lama (migrasi manual->digital) - admin/superadmin sahaja,
+          // dan cuma bermakna kalau belum ada bayaran 'succeeded' lagi
+          // (kalau dah bayar, laluan biasa `_confirmApprove` dah cukup).
+          if (widget.isAdminOrAbove &&
+              widget.row.registrationPaymentStatus != 'succeeded')
+            IconButton(
+              icon: Icon(
+                Icons.no_cell_outlined,
+                color: theme.extension<AppSemanticColors>()!.warning,
+              ),
+              tooltip: 'Luluskan (langkau bayaran)',
+              onPressed: _busy ? null : _approveBypass,
+            ),
           IconButton(
             icon: Icon(Icons.check_circle_outline, color: scheme.primary),
             tooltip: 'Luluskan',

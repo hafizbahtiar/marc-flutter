@@ -144,9 +144,20 @@ class ProfileRepository {
 
   /// Luluskan pendaftaran ahli (Stage 11) - management sahaja, backend
   /// tolak 403 kalau bukan.
-  Future<void> approveMember(String userId) async {
+  ///
+  /// [bypassReason] - langkau gate bayaran yuran pendaftaran untuk ahli
+  /// lama yang dah bayar secara manual sebelum sistem digital wujud.
+  /// Backend hakim sebenar: cuma admin/superadmin (rank >= "admin")
+  /// dibenarkan, dan nota WAJIB bila bypass digunakan - client cuma
+  /// hantar niat (lihat [isAdminOrAboveProvider]).
+  Future<void> approveMember(String userId, {String? bypassReason}) async {
     final dio = _ref.read(dioProvider);
-    await dio.post('/members/$userId/approve');
+    await dio.post(
+      '/members/$userId/approve',
+      data: bypassReason == null
+          ? null
+          : {'bypass_payment': true, 'bypass_reason': bypassReason},
+    );
     _ref.invalidate(membersProvider);
     _ref.invalidate(pendingMembersProvider);
   }
@@ -288,6 +299,37 @@ final isSuperAdminProvider = Provider<bool>((ref) {
   if (superAdminRank == null) return false;
 
   return profile.roleRank >= superAdminRank;
+});
+
+/// Siling "admin ke atas" (admin/superadmin, BUKAN supervisor/manager) -
+/// sama pola dgn [isSuperAdminProvider] di atas. Kemudahan UI SAHAJA
+/// (papar/sembunyi butang langkau bayaran di skrin kelulusan ahli) -
+/// backend kuatkuasakan sekatan sebenar guna
+/// `authz.IsAtLeastRole(..., "admin")` pada `ApproveMember`.
+final isAdminOrAboveProvider = Provider<bool>((ref) {
+  final profile = ref.watch(myProfileProvider).valueOrNull;
+  if (profile == null) return false;
+
+  // Jalan pintas laluan literal - lihat komen [isSuperAdminProvider] untuk
+  // sebab carian dinamik di bawah tak boleh dipercayai bagi role sendiri
+  // (`/roles` tolak mana-mana rank >= rank caller, termasuk rank sendiri).
+  if (profile.roleKey == 'admin' || profile.roleKey == 'superadmin') {
+    return true;
+  }
+
+  final roles = ref.watch(rolesProvider).valueOrNull;
+  if (roles == null) return false;
+
+  int? adminRank;
+  for (final r in roles) {
+    if (r.key == 'admin') {
+      adminRank = r.rank;
+      break;
+    }
+  }
+  if (adminRank == null) return false;
+
+  return profile.roleRank >= adminRank;
 });
 
 /// Senarai ahli. Backend tentukan siapa nampak apa: management → semua;
