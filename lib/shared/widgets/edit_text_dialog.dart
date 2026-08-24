@@ -22,6 +22,7 @@ Future<String?> showEditTextDialog(
   required String title,
   required String initialValue,
   int maxLines = 5,
+  int? maxLength,
 }) {
   // showAdaptiveDialog (bukan showDialog) supaya transisi/barrier pun ikut
   // platform, padan dengan rangka adaptive dalam AppDialogShell.
@@ -31,6 +32,7 @@ Future<String?> showEditTextDialog(
       title: title,
       initialValue: initialValue,
       maxLines: maxLines,
+      maxLength: maxLength,
     ),
   );
 }
@@ -53,11 +55,13 @@ class _EditTextDialog extends StatefulWidget {
     required this.title,
     required this.initialValue,
     required this.maxLines,
+    this.maxLength,
   });
 
   final String title;
   final String initialValue;
   final int maxLines;
+  final int? maxLength;
 
   @override
   State<_EditTextDialog> createState() => _EditTextDialogState();
@@ -91,11 +95,13 @@ class _EditTextDialogState extends State<_EditTextDialog> {
           ? CupertinoTextField(
               controller: _controller,
               maxLines: widget.maxLines,
+              maxLength: widget.maxLength,
               autofocus: true,
             )
           : TextField(
               controller: _controller,
               maxLines: widget.maxLines,
+              maxLength: widget.maxLength,
               autofocus: true,
               decoration: const InputDecoration(border: OutlineInputBorder()),
             ),

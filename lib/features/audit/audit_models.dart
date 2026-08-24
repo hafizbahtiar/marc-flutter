@@ -62,4 +62,17 @@ class AuditLog {
     'delete' => 'Dipadam',
     _ => action,
   };
+
+  /// Label BM untuk medan delta audit — supaya jejak langkau bayaran
+  /// (`payment_bypassed`, `bypass_reason`) boleh dibaca tanpa kunci mentah.
+  static String fieldLabel(String field) => switch (field) {
+    'status' => 'Status',
+    'payment_bypassed' => 'Bayaran dilangkau',
+    'bypass_reason' => 'Nota langkau bayaran',
+    'role_key' => 'Role',
+    'role_rank' => 'Rank role',
+    'avatar_r2_key' => 'Avatar',
+    'content' => 'Kandungan',
+    _ => field,
+  };
 }

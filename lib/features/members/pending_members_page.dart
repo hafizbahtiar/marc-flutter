@@ -93,6 +93,7 @@ class PendingMembersPage extends ConsumerWidget {
         title: 'Nota (wajib)',
         initialValue: '',
         maxLines: 3,
+        maxLength: 500,
       );
       if (reason == null || !context.mounted) return;
 
@@ -254,6 +255,34 @@ class _PendingTileState extends State<_PendingTile> {
 
   String get _name => widget.row.displayName ?? widget.row.memberId;
 
+  /// Laluan biasa — ahli dah bayar yuran dalam sistem.
+  bool get _canApproveNormally =>
+      widget.row.registrationPaymentStatus == 'succeeded';
+
+  /// Laluan migrasi — admin/superadmin sahaja, ahli belum bayar online,
+  /// TIADA bil ToyyibPay 'pending' yang masih hidup (backend 409 kalau ada).
+  bool get _canBypass =>
+      widget.isAdminOrAbove &&
+      widget.row.registrationPaymentStatus != 'succeeded' &&
+      widget.row.registrationPaymentStatus != 'pending';
+
+  bool get _hasPendingOnlineBill =>
+      widget.row.registrationPaymentStatus == 'pending';
+
+  String get _approveTooltip {
+    if (_canApproveNormally) return 'Luluskan';
+    if (_hasPendingOnlineBill) {
+      return 'Ahli ada bil online belum selesai — selesaikan bil tu dulu';
+    }
+    if (widget.isAdminOrAbove) {
+      return 'Ahli belum bayar — guna butang langkau bayaran untuk ahli lama';
+    }
+    return 'Ahli belum bayar yuran — cuma admin/superadmin boleh langkau';
+  }
+
+  String get _bypassTooltip =>
+      'Luluskan tanpa bayaran (ahli lama, bayar manual sebelum sistem digital)';
+
   Future<void> _confirmApprove() async {
     final ok = await showConfirmDialog(
       context,
@@ -314,32 +343,37 @@ class _PendingTileState extends State<_PendingTile> {
                     widget.row.email!,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                if (widget.row.registrationPaymentStatus != null) ...[
-                  const SizedBox(height: 4),
-                  _PaymentStatusBadge(
-                    status: widget.row.registrationPaymentStatus!,
+                const SizedBox(height: 4),
+                _PaymentStatusBadge(
+                  status: widget.row.registrationPaymentStatus,
+                ),
+                if (_hasPendingOnlineBill && widget.isAdminOrAbove)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Bil online masih aktif — selesaikan/tamatkan sebelum '
+                      'langkau bayaran.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.extension<AppSemanticColors>()!.warning,
+                      ),
+                    ),
                   ),
-                ],
               ],
             ),
           ),
-          // Ahli lama (migrasi manual->digital) - admin/superadmin sahaja,
-          // dan cuma bermakna kalau belum ada bayaran 'succeeded' lagi
-          // (kalau dah bayar, laluan biasa `_confirmApprove` dah cukup).
-          if (widget.isAdminOrAbove &&
-              widget.row.registrationPaymentStatus != 'succeeded')
+          if (_canBypass)
             IconButton(
               icon: Icon(
-                Icons.no_cell_outlined,
+                Icons.money_off_outlined,
                 color: theme.extension<AppSemanticColors>()!.warning,
               ),
-              tooltip: 'Luluskan (langkau bayaran)',
+              tooltip: _bypassTooltip,
               onPressed: _busy ? null : _approveBypass,
             ),
           IconButton(
             icon: Icon(Icons.check_circle_outline, color: scheme.primary),
-            tooltip: 'Luluskan',
-            onPressed: _busy ? null : _confirmApprove,
+            tooltip: _approveTooltip,
+            onPressed: _busy || !_canApproveNormally ? null : _confirmApprove,
           ),
           IconButton(
             icon: Icon(Icons.cancel_outlined, color: scheme.error),
@@ -360,7 +394,8 @@ class _PendingTileState extends State<_PendingTile> {
 class _PaymentStatusBadge extends StatelessWidget {
   const _PaymentStatusBadge({required this.status});
 
-  final String status;
+  /// "pending"/"succeeded"/"failed", atau null kalau tak pernah cuba bayar.
+  final String? status;
 
   @override
   Widget build(BuildContext context) {
@@ -376,9 +411,14 @@ class _PaymentStatusBadge extends StatelessWidget {
         'Bayaran gagal',
         theme.colorScheme.error,
       ),
-      _ => (
+      'pending' => (
         Icons.hourglass_top,
-        'Menunggu pengesahan',
+        'Bil online belum selesai',
+        theme.extension<AppSemanticColors>()!.warning,
+      ),
+      _ => (
+        Icons.payments_outlined,
+        'Belum bayar',
         theme.extension<AppSemanticColors>()!.warning,
       ),
     };

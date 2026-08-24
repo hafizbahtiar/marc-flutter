@@ -269,7 +269,10 @@ class _AuditTile extends StatelessWidget {
               children: [
                 for (final f in log.changedFields)
                   Chip(
-                    label: Text(f, style: const TextStyle(fontSize: 11)),
+                    label: Text(
+                      AuditLog.fieldLabel(f),
+                      style: const TextStyle(fontSize: 11),
+                    ),
                     visualDensity: VisualDensity.compact,
                     side: BorderSide.none,
                     backgroundColor: scheme.surfaceContainerHighest,
@@ -349,7 +352,7 @@ class _DiffRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            field,
+            AuditLog.fieldLabel(field),
             style: textTheme.labelSmall?.copyWith(
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w700,
