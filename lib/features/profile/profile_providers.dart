@@ -19,6 +19,13 @@ class Profile {
     this.registrationFeeCents,
     required this.telegramLinked,
     this.telegramUsername,
+    this.emergencyContactName,
+    this.emergencyContactPhone,
+    this.healthNotes,
+    this.isActive = true,
+    this.departmentCode,
+    this.departmentName,
+    this.position,
   });
 
   final String memberId;
@@ -50,6 +57,29 @@ class Profile {
   final bool telegramLinked;
   final String? telegramUsername;
 
+  /// Nama waris/kenalan kecemasan - null = belum diisi.
+  final String? emergencyContactName;
+
+  /// No. telefon waris/kenalan kecemasan - null = belum diisi.
+  final String? emergencyContactPhone;
+
+  /// Nota tahap kesihatan (freeform) - null = belum diisi.
+  final String? healthNotes;
+
+  /// Status keahlian aktif/tak aktif - BUKAN status kelulusan ([status]
+  /// pending/approved/rejected kekal berasingan). Management sahaja boleh
+  /// tukar, via `PATCH /members/:id/active`.
+  final bool isActive;
+
+  /// Bahagian/jawatan - baca sahaja di sini, cuma manager ke atas boleh
+  /// tukar (via `PATCH /members/:id/department`), BUKAN self-service.
+  /// `departmentCode` = kod rujukan (`departments.code`), `departmentName`
+  /// = nama penuh terjoin (papar, jangan pilih drpd ni). `null` = belum
+  /// ditetapkan.
+  final String? departmentCode;
+  final String? departmentName;
+  final String? position;
+
   bool get isManagement => category == 'management';
 
   bool get registrationPaymentFailed => registrationPaymentStatus == 'failed';
@@ -80,6 +110,13 @@ class Profile {
       telegramUsername: telegramUsername == _sentinel
           ? this.telegramUsername
           : telegramUsername as String?,
+      emergencyContactName: emergencyContactName,
+      emergencyContactPhone: emergencyContactPhone,
+      healthNotes: healthNotes,
+      isActive: isActive,
+      departmentCode: departmentCode,
+      departmentName: departmentName,
+      position: position,
     );
   }
 
@@ -102,6 +139,13 @@ class Profile {
       registrationFeeCents: (json['registration_fee_cents'] as num?)?.toInt(),
       telegramLinked: (json['telegram_linked'] as bool?) ?? false,
       telegramUsername: json['telegram_username'] as String?,
+      emergencyContactName: json['emergency_contact_name'] as String?,
+      emergencyContactPhone: json['emergency_contact_phone'] as String?,
+      healthNotes: json['health_notes'] as String?,
+      isActive: (json['is_active'] as bool?) ?? true,
+      departmentCode: json['department_code'] as String?,
+      departmentName: json['department_name'] as String?,
+      position: json['position'] as String?,
     );
   }
 }
@@ -127,19 +171,75 @@ class ProfileRepository {
   ProfileRepository(this._ref);
   final Ref _ref;
 
-  /// Kemas kini display name & phone user semasa.
+  /// Kemas kini display name, phone & medan waris/kesihatan user semasa.
+  ///
+  /// [emergencyContactName]/[emergencyContactPhone]/[healthNotes] opsyenal
+  /// (pointer semantik padanan `display_name`/`phone`) - `null` = tak
+  /// hantar medan tu langsung (backend tak ubah nilai sedia ada). Hantar
+  /// string kosong utk buang nilai.
   Future<void> update({
     required String displayName,
     required String phone,
+    String? emergencyContactName,
+    String? emergencyContactPhone,
+    String? healthNotes,
   }) async {
     final dio = _ref.read(dioProvider);
-    await dio.patch('/me', data: {'display_name': displayName, 'phone': phone});
+    await dio.patch(
+      '/me',
+      data: {
+        'display_name': displayName,
+        'phone': phone,
+        'emergency_contact_name': ?emergencyContactName,
+        'emergency_contact_phone': ?emergencyContactPhone,
+        'health_notes': ?healthNotes,
+      },
+    );
 
     _ref.invalidate(myProfileProvider);
     // membersProvider papar display_name yang sama - tanpa invalidate ni,
     // tab Ahli kekal papar nama lama sampai logout/restart (non-autoDispose,
     // cuma recompute bila isLoggedIn berubah).
     _ref.invalidate(membersProvider);
+  }
+
+  /// Minta padam akaun - rekod permintaan sahaja (bukan padam serta-merta),
+  /// pasukan MARC proses secara manual. Idempoten di server (panggil dua
+  /// kali pulangkan rekod ASAL yang sama, bukan ralat).
+  Future<void> requestAccountDeletion() async {
+    final dio = _ref.read(dioProvider);
+    await dio.post('/me/deletion-request');
+  }
+
+  /// Tukar status aktif/tak aktif ahli - management sahaja (backend
+  /// kuatkuasakan hierarki rank, client cuma hantar niat), padanan pola
+  /// [updateMemberRole].
+  Future<void> updateMemberActive(String userId, bool isActive) async {
+    final dio = _ref.read(dioProvider);
+    await dio.patch('/members/$userId/active', data: {'is_active': isActive});
+    _ref.invalidate(membersProvider);
+  }
+
+  /// Tukar bahagian/jawatan ahli - manager ke atas SAHAJA (backend
+  /// kuatkuasakan "setaraf & ke bawah", BEZA drpd [updateMemberRole]/
+  /// [updateMemberActive] yang "strictly lebih tinggi"). GANTI PENUH:
+  /// `null`/kosong = kosongkan, kod/teks bukan-kosong = tetapkan.
+  ///
+  /// Backend benarkan self-assignment (tiada sekatan userId == caller) -
+  /// invalidate [myProfileProvider] juga (bukan cuma [membersProvider]),
+  /// kalau tidak profil sendiri kekal stale sehingga logout/restart.
+  Future<void> updateMemberDepartment(
+    String userId, {
+    String? departmentCode,
+    String? position,
+  }) async {
+    final dio = _ref.read(dioProvider);
+    await dio.patch(
+      '/members/$userId/department',
+      data: {'department_code': departmentCode, 'position': position},
+    );
+    _ref.invalidate(membersProvider);
+    _ref.invalidate(myProfileProvider);
   }
 
   /// Luluskan pendaftaran ahli (Stage 11) - management sahaja, backend
@@ -203,6 +303,10 @@ class MemberRow {
     required this.status,
     this.avatarUrl,
     this.registrationPaymentStatus,
+    this.isActive = true,
+    this.departmentCode,
+    this.departmentName,
+    this.position,
   });
 
   final String userId;
@@ -229,6 +333,15 @@ class MemberRow {
   /// bayaran sebelum management tekan Luluskan.
   final String? registrationPaymentStatus;
 
+  /// Status keahlian aktif/tak aktif - default `true` kalau backend tak
+  /// hantar (lihat komen [Profile.isActive]).
+  final bool isActive;
+
+  /// Bahagian/jawatan - padanan [Profile.departmentCode]/[Profile.position].
+  final String? departmentCode;
+  final String? departmentName;
+  final String? position;
+
   factory MemberRow.fromJson(Map<String, dynamic> json) {
     return MemberRow(
       userId: json['user_id'] as String,
@@ -242,6 +355,10 @@ class MemberRow {
       status: (json['status'] as String?) ?? 'pending',
       avatarUrl: json['avatar_url'] as String?,
       registrationPaymentStatus: json['registration_payment_status'] as String?,
+      isActive: (json['is_active'] as bool?) ?? true,
+      departmentCode: json['department_code'] as String?,
+      departmentName: json['department_name'] as String?,
+      position: json['position'] as String?,
     );
   }
 }

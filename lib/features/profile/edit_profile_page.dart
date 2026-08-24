@@ -18,6 +18,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _phone = TextEditingController();
+  final _emergencyName = TextEditingController();
+  final _emergencyPhone = TextEditingController();
+  final _healthNotes = TextEditingController();
   bool _saving = false;
   bool _seeded = false;
 
@@ -25,6 +28,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   void dispose() {
     _name.dispose();
     _phone.dispose();
+    _emergencyName.dispose();
+    _emergencyPhone.dispose();
+    _healthNotes.dispose();
     super.dispose();
   }
 
@@ -32,6 +38,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     if (_seeded) return;
     _name.text = p.displayName ?? '';
     _phone.text = p.phone ?? '';
+    _emergencyName.text = p.emergencyContactName ?? '';
+    _emergencyPhone.text = p.emergencyContactPhone ?? '';
+    _healthNotes.text = p.healthNotes ?? '';
     _seeded = true;
   }
 
@@ -41,7 +50,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     try {
       await ref
           .read(profileRepositoryProvider)
-          .update(displayName: _name.text, phone: _phone.text);
+          .update(
+            displayName: _name.text,
+            phone: _phone.text,
+            emergencyContactName: _emergencyName.text,
+            emergencyContactPhone: _emergencyPhone.text,
+            healthNotes: _healthNotes.text,
+          );
       if (!mounted) return;
       MySnackBar.success(context, 'Profil dikemas kini.');
       context.pop();
@@ -87,6 +102,32 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   label: 'No. telefon',
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 28),
+                Text('Waris', style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 12),
+                AuthField(
+                  controller: _emergencyName,
+                  label: 'Nama waris',
+                  icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 16),
+                AuthField(
+                  controller: _emergencyPhone,
+                  label: 'No. telefon waris',
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  'Tahap kesihatan',
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+                const SizedBox(height: 12),
+                AuthField(
+                  controller: _healthNotes,
+                  label: 'Nota kesihatan',
+                  icon: Icons.health_and_safety_outlined,
                 ),
                 const SizedBox(height: 28),
                 FilledButton(

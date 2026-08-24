@@ -12,6 +12,7 @@ import 'package:marc/features/activities/my_activities_page.dart';
 import 'package:marc/features/activities/my_certificates_page.dart';
 import 'package:marc/features/activities/manage/activity_categories_page.dart';
 import 'package:marc/features/admin/blocked_email_domains_page.dart';
+import 'package:marc/features/admin/departments_page.dart';
 import 'package:marc/features/activities/manage/activity_form_page.dart';
 import 'package:marc/features/activities/manage/issue_certificates_page.dart';
 import 'package:marc/features/activities/manage/checkin_scanner_page.dart';
@@ -30,9 +31,13 @@ import 'package:marc/features/posts/create_post_page.dart';
 import 'package:marc/features/posts/feed_page.dart';
 import 'package:marc/features/posts/post_detail_page.dart';
 import 'package:marc/features/profile/about_page.dart';
+import 'package:marc/features/profile/address_form_page.dart';
+import 'package:marc/features/profile/address_providers.dart';
 import 'package:marc/features/profile/edit_profile_page.dart';
 import 'package:marc/features/profile/faq_page.dart';
+import 'package:marc/features/profile/manage_addresses_page.dart';
 import 'package:marc/features/profile/profile_page.dart';
+import 'package:marc/features/profile/settings_page.dart';
 import 'package:marc/features/profile/telegram_link_page.dart';
 import 'package:marc/shared/widgets/web_view_page.dart';
 
@@ -82,6 +87,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/edit-profile',
         builder: (_, _) => const EditProfilePage(),
       ),
+      GoRoute(path: '/settings', builder: (_, _) => const SettingsPage()),
+      GoRoute(
+        path: '/profile/addresses',
+        builder: (_, _) => const ManageAddressesPage(),
+      ),
+      // '/profile/addresses/new' MESTI didahulukan drpd
+      // '/profile/addresses/:id/edit' - go_router memadan mengikut
+      // urutan (sama sebab dengan '/activities/new' di bawah).
+      GoRoute(
+        path: '/profile/addresses/new',
+        builder: (_, _) => const AddressFormPage(),
+      ),
+      GoRoute(
+        path: '/profile/addresses/:id/edit',
+        builder: (_, state) =>
+            AddressFormPage(existing: state.extra! as AddressRow),
+      ),
       GoRoute(path: '/about', builder: (_, _) => const AboutPage()),
       GoRoute(path: '/faq', builder: (_, _) => const FaqPage()),
       GoRoute(
@@ -123,6 +145,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/blocked-email-domains',
         builder: (_, _) => const BlockedEmailDomainsPage(),
+      ),
+      GoRoute(
+        path: '/admin/departments',
+        builder: (_, _) => const DepartmentsPage(),
       ),
       GoRoute(
         path: '/payments/history',

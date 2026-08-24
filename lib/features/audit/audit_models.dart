@@ -85,6 +85,9 @@ class AuditLog {
     'role_rank' => 'Rank role',
     'avatar_r2_key' => 'Avatar',
     'content' => 'Kandungan',
+    'is_active' => 'Status aktif',
+    'department_code' => 'Bahagian',
+    'position' => 'Jawatan',
     _ => field,
   };
 }

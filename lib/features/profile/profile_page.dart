@@ -9,13 +9,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/app/theme.dart';
-import 'package:marc/core/theme_mode_provider.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/profile/widgets/verify_email_banner.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 import 'package:marc/shared/widgets/pending_status_view.dart';
+import 'package:marc/shared/widgets/settings_section.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -191,6 +191,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             tooltip: 'Edit Profil',
             onPressed: () => context.push('/edit-profile'),
           ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Tetapan',
+            onPressed: () => context.push('/settings'),
+          ),
         ],
       ),
       body: SafeArea(
@@ -239,13 +244,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               context,
                             ).extension<AppSemanticColors>()!.warning,
                     ),
+                    // Bahagian/jawatan cuma manager ke atas boleh tetapkan
+                    // (bukan self-service) - papar sahaja bila dah diisi,
+                    // elak baris "-" utk ahli yang belum ditetapkan lagi.
+                    if (p?.departmentName != null)
+                      _InfoRow(label: 'Bahagian', value: p!.departmentName!),
+                    if (p?.position != null)
+                      _InfoRow(label: 'Jawatan', value: p!.position!),
                   ],
                 ),
               ),
             ],
             const SizedBox(height: 28),
-            _GroupLabel('Komuniti'),
-            _InfoCard(
+            SettingsGroupLabel('Komuniti'),
+            SettingsCard(
               children: [
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
@@ -254,32 +266,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/members'),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _GroupLabel('Tetapan'),
-            _InfoCard(
-              children: [
-                SwitchListTile.adaptive(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  secondary: const Icon(Icons.dark_mode_outlined),
-                  title: const Text('Mod Gelap'),
-                  value: ref.watch(themeModeProvider) == ThemeMode.dark,
-                  onChanged: (isDark) =>
-                      ref.read(themeModeProvider.notifier).setDark(isDark),
-                ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.send_outlined),
-                  title: const Text('Telegram'),
+                  leading: const Icon(Icons.location_on_outlined),
+                  title: const Text('Alamat Saya'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/telegram-link'),
+                  onTap: () => context.push('/profile/addresses'),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            _GroupLabel('Aktiviti'),
-            _InfoCard(
+            SettingsGroupLabel('Aktiviti'),
+            SettingsCard(
               children: [
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
@@ -298,8 +296,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ],
             ),
             const SizedBox(height: 20),
-            _GroupLabel('Kewangan'),
-            _InfoCard(
+            SettingsGroupLabel('Kewangan'),
+            SettingsCard(
               children: [
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
@@ -334,8 +332,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
-                      _GroupLabel('Pengurusan'),
-                      _InfoCard(
+                      SettingsGroupLabel('Pengurusan'),
+                      SettingsCard(
                         children: [
                           ListTile(
                             contentPadding: const EdgeInsets.symmetric(
@@ -377,67 +375,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 },
               ),
             ],
-            // Kumpulan BERASINGAN drpd "Pengurusan" (bukan disisip sekali)
-            // - sengaja: tindakan di atas boleh dibuat mana-mana
-            // management (supervisor/manager/admin), tapi konfigurasi
-            // "root system" macam ni cuma superadmin (keputusan produk
-            // 2026-08-15). Pengasingan visual tunjuk beza siling tu,
-            // bukan sekadar backend yang tolak diam-diam.
-            if (ref.watch(isSuperAdminProvider)) ...[
-              const SizedBox(height: 20),
-              _GroupLabel('Sistem'),
-              _InfoCard(
-                children: [
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                    leading: const Icon(Icons.block_outlined),
-                    title: const Text('Domain Emel Disekat'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/admin/blocked-email-domains'),
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 20),
-            _GroupLabel('Bantuan'),
-            _InfoCard(
-              children: [
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.help_outline),
-                  title: const Text('Soalan Lazim'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/faq'),
-                ),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('Tentang'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/about'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            OutlinedButton.icon(
-              onPressed: _signingOut ? null : _handleLogout,
-              icon: _signingOut
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator.adaptive(),
-                    )
-                  : const Icon(Icons.logout, size: 20),
-              label: const Text('Log keluar'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: scheme.error,
-                minimumSize: const Size.fromHeight(52),
-                side: BorderSide(color: scheme.error.withValues(alpha: 0.5)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -582,32 +519,10 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Label kumpulan kecil di atas setiap `_InfoCard` tindakan (bukan
-/// `_InfoCard` maklumat profil di bahagian atas skrin, yang kekal tanpa
-/// label) - ditambah supaya senarai 9 tindakan yang dulu satu kad rata
-/// (Aktiviti Saya, Sijil Saya, Sokong MARC, Sejarah Bayaran Saya, Jejak
-/// Audit, Semua Bayaran, Soalan Lazim, Tentang + suis Mod Gelap) senang
-/// diimbas, bukan satu senarai panjang tanpa struktur.
-class _GroupLabel extends StatelessWidget {
-  const _GroupLabel(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
+/// Kad maklumat profil di bahagian atas skrin (Email/telefon/no. ahli) -
+/// tindakan navigasi guna `SettingsCard`/`SettingsGroupLabel` dikongsi
+/// (`shared/widgets/settings_section.dart`), kad ni kekal berasingan
+/// (tanpa label kumpulan) sebab ia bukan senarai tindakan.
 class _InfoCard extends StatelessWidget {
   const _InfoCard({required this.children});
 

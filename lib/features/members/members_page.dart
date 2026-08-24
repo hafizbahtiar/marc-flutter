@@ -4,8 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
+import 'package:marc/features/activities/manage/manage_providers.dart';
+import 'package:marc/features/admin/departments_models.dart';
+import 'package:marc/features/admin/departments_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/widgets/app_action_sheet.dart';
+import 'package:marc/shared/widgets/app_dialog.dart';
+import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 
@@ -19,7 +24,58 @@ const _placeholderRow = MemberRow(
   roleRank: 10,
   category: 'ahli',
   status: 'approved',
+  isActive: true,
 );
+
+/// Gabung bahagian+jawatan jadi satu baris papar (cth "BKP · Penolong
+/// Pegawai") - `null` kalau dua-dua kosong (elak baris subtitle kosong).
+String? _deptPositionLine(MemberRow row) {
+  final parts = [
+    row.departmentCode,
+    row.position,
+  ].where((s) => s != null && s.isNotEmpty);
+  return parts.isEmpty ? null : parts.join(' · ');
+}
+
+/// Sahkan & tukar status aktif/tak aktif ahli - management sahaja
+/// (dipanggil bila [canEdit], gate rank hierarki sama macam tukar role).
+Future<void> _confirmToggleActive(
+  BuildContext context,
+  WidgetRef ref,
+  MemberRow row,
+) async {
+  final name = row.displayName ?? row.memberId;
+  final makeActive = !row.isActive;
+  final ok = await showConfirmDialog(
+    context,
+    title: makeActive ? 'Aktifkan ahli' : 'Nyahaktifkan ahli',
+    message: makeActive
+        ? 'Aktifkan semula $name?'
+        : 'Nyahaktifkan $name? Status kelulusan pendaftaran tidak berubah.',
+    confirmLabel: makeActive ? 'Aktifkan' : 'Nyahaktifkan',
+    isDestructive: !makeActive,
+  );
+  if (!ok || !context.mounted) return;
+
+  try {
+    await ref
+        .read(profileRepositoryProvider)
+        .updateMemberActive(row.userId, makeActive);
+    if (context.mounted) {
+      MySnackBar.success(
+        context,
+        makeActive ? '$name diaktifkan.' : '$name dinyahaktifkan.',
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      MySnackBar.error(
+        context,
+        e is DioException ? extractErrorMessage(e) : 'Gagal tukar status.',
+      );
+    }
+  }
+}
 
 /// Bottom sheet pilih role baru (Stage 12) - cuma papar role dengan rank
 /// lebih rendah drpd editor (backend kuatkuasakan semula, ni cuma UX
@@ -79,6 +135,219 @@ Future<void> _showEditRoleSheet(
         e is DioException ? extractErrorMessage(e) : 'Gagal tukar role.',
       );
     }
+  }
+}
+
+/// Borang pilih bahagian (dropdown, opsyenal "Tiada bahagian") + jawatan
+/// (teks bebas). `key` diguna oleh pemanggil (`showAppDialog`) utk cetus
+/// `submit()` dari butang "Simpan" di luar widget ni.
+class _DepartmentPositionForm extends StatefulWidget {
+  const _DepartmentPositionForm({
+    super.key,
+    required this.departments,
+    this.initialDepartmentCode,
+    this.initialPosition,
+  });
+
+  final List<Department> departments;
+  final String? initialDepartmentCode;
+  final String? initialPosition;
+
+  @override
+  State<_DepartmentPositionForm> createState() =>
+      _DepartmentPositionFormState();
+}
+
+class _DepartmentPositionFormState extends State<_DepartmentPositionForm> {
+  late String? _departmentCode = widget.initialDepartmentCode;
+  late final _position = TextEditingController(
+    text: widget.initialPosition ?? '',
+  );
+
+  @override
+  void dispose() {
+    _position.dispose();
+    super.dispose();
+  }
+
+  void submit() {
+    final position = _position.text.trim();
+    Navigator.of(
+      context,
+    ).pop((_departmentCode, position.isEmpty ? null : position));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Backend `ListForAssignment` boleh pulangkan senarai yang dah tak
+    // kandung kod semasa ahli (bahagian dibuang selepas ditetapkan) -
+    // sisip sbg opsyen tambahan supaya dropdown tak crash/senyap reset.
+    final codes = widget.departments.map((d) => d.code).toSet();
+    final missingCurrent =
+        _departmentCode != null && !codes.contains(_departmentCode);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String?>(
+          initialValue: _departmentCode,
+          decoration: const InputDecoration(
+            labelText: 'Bahagian',
+            border: OutlineInputBorder(),
+          ),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('Tiada bahagian')),
+            if (missingCurrent)
+              DropdownMenuItem(
+                value: _departmentCode,
+                child: Text('$_departmentCode (tidak sah lagi)'),
+              ),
+            for (final d in widget.departments)
+              DropdownMenuItem(value: d.code, child: Text('${d.code} — ${d.name}')),
+          ],
+          onChanged: (v) => setState(() => _departmentCode = v),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _position,
+          maxLength: 150,
+          decoration: const InputDecoration(
+            labelText: 'Jawatan (cth: Penolong Pegawai)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Buka borang tukar bahagian/jawatan seorang ahli - manager ke atas
+/// SAHAJA (dipanggil bila [canEditDeptPosition]).
+Future<void> _showEditDepartmentDialog(
+  BuildContext context,
+  WidgetRef ref,
+  MemberRow row,
+) async {
+  final List<Department> departments;
+  try {
+    departments = await ref.read(assignableDepartmentsProvider.future);
+  } catch (e) {
+    if (context.mounted) {
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal muat senarai bahagian.',
+      );
+    }
+    return;
+  }
+  if (!context.mounted) return;
+
+  final formKey = GlobalKey<_DepartmentPositionFormState>();
+  final result = await showAppDialog<(String?, String?)>(
+    context,
+    title: 'Bahagian & Jawatan',
+    content: _DepartmentPositionForm(
+      key: formKey,
+      departments: departments,
+      initialDepartmentCode: row.departmentCode,
+      initialPosition: row.position,
+    ),
+    actions: (ctx) => [
+      AppDialogAction(
+        label: 'Batal',
+        onPressed: () => Navigator.of(ctx).pop(),
+      ),
+      AppDialogAction(
+        label: 'Simpan',
+        isPrimary: true,
+        onPressed: () => formKey.currentState?.submit(),
+      ),
+    ],
+  );
+  if (result == null || !context.mounted) return;
+  final (departmentCode, position) = result;
+
+  try {
+    await ref
+        .read(profileRepositoryProvider)
+        .updateMemberDepartment(
+          row.userId,
+          departmentCode: departmentCode,
+          position: position,
+        );
+    if (context.mounted) {
+      MySnackBar.success(
+        context,
+        'Bahagian/jawatan ${row.displayName ?? row.memberId} dikemas kini.',
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal kemas kini bahagian/jawatan.',
+      );
+    }
+  }
+}
+
+enum _MemberAction { editRole, toggleActive, editDepartment }
+
+/// Sheet tindakan management utk satu ahli. Tukar role/status aktif gate
+/// `canEdit` (rank STRICTLY lebih tinggi); tukar bahagian/jawatan gate
+/// [canEditDeptPosition] yang berasingan (manager ke atas, "setaraf & ke
+/// bawah") - jadi hujah `canEdit` diperlukan supaya sheet tahu tindakan
+/// mana nak papar.
+Future<void> _showMemberActionsSheet(
+  BuildContext context,
+  WidgetRef ref,
+  MemberRow row,
+  int myRoleRank, {
+  required bool canEdit,
+  required bool canEditDeptPosition,
+}) async {
+  final action = await showAppActionSheet<_MemberAction>(
+    context,
+    title: row.displayName ?? row.memberId,
+    message: row.memberId,
+    actions: [
+      if (canEdit) ...[
+        const AppSheetAction(
+          value: _MemberAction.editRole,
+          label: 'Tukar role',
+          icon: Icons.badge_outlined,
+        ),
+        AppSheetAction(
+          value: _MemberAction.toggleActive,
+          label: row.isActive ? 'Nyahaktifkan ahli' : 'Aktifkan ahli',
+          icon: row.isActive
+              ? Icons.person_off_outlined
+              : Icons.person_outlined,
+          isDestructive: row.isActive,
+        ),
+      ],
+      if (canEditDeptPosition)
+        const AppSheetAction(
+          value: _MemberAction.editDepartment,
+          label: 'Tukar bahagian & jawatan',
+          icon: Icons.apartment_outlined,
+        ),
+    ],
+  );
+  if (action == null || !context.mounted) return;
+
+  switch (action) {
+    case _MemberAction.editRole:
+      await _showEditRoleSheet(context, ref, row, myRoleRank);
+    case _MemberAction.toggleActive:
+      await _confirmToggleActive(context, ref, row);
+    case _MemberAction.editDepartment:
+      await _showEditDepartmentDialog(context, ref, row);
   }
 }
 
@@ -186,10 +455,23 @@ class _MemberTile extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final isManagement = row.category == 'management';
     final canEdit = myRoleRank > row.roleRank;
+    // Bahagian/jawatan: manager ke atas, "setaraf & ke bawah" (>=) - BEZA
+    // drpd [canEdit] (role/status aktif, strictly >). Isyarat tambahan
+    // di luar `canEdit` supaya rakan setaraf (cth manager -> manager lain)
+    // tetap boleh sentuh baris utk tindakan ni walau `canEdit` sendiri false.
+    final canEditDeptPosition =
+        ref.watch(isManagerOrAboveProvider) && myRoleRank >= row.roleRank;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      onTap: canEdit
-          ? () => _showEditRoleSheet(context, ref, row, myRoleRank)
+      onTap: canEdit || canEditDeptPosition
+          ? () => _showMemberActionsSheet(
+              context,
+              ref,
+              row,
+              myRoleRank,
+              canEdit: canEdit,
+              canEditDeptPosition: canEditDeptPosition,
+            )
           : null,
       leading: MemberAvatar(
         label: row.displayName ?? row.memberId,
@@ -197,25 +479,46 @@ class _MemberTile extends ConsumerWidget {
       ),
       title: Text(row.displayName ?? '(Tiada nama)'),
       // Emel cuma ada untuk management (dan baris sendiri) - jangan
-      // tinggalkan baris kedua kosong bila ia disembunyikan.
+      // tinggalkan baris kedua kosong bila ia disembunyikan. Bahagian/
+      // jawatan (kalau ada) baris tambahan - digabung satu baris (bukan
+      // dua) supaya senarai tak jadi terlalu tinggi bila kedua-duanya diisi.
       subtitle: Text(
-        row.email == null ? row.memberId : '${row.memberId}\n${row.email}',
+        [
+          row.email == null ? row.memberId : '${row.memberId}\n${row.email}',
+          ?_deptPositionLine(row),
+        ].join('\n'),
       ),
-      isThreeLine: row.email != null,
-      trailing: isManagement
-          ? Chip(
-              label: Text(row.roleName),
-              backgroundColor: scheme.primary.withValues(alpha: 0.12),
-              labelStyle: TextStyle(
-                color: Theme.of(
-                  context,
-                ).extension<AppSemanticColors>()!.accentDark,
-                fontSize: 12,
-              ),
-              side: BorderSide.none,
-              visualDensity: VisualDensity.compact,
-            )
-          : null,
+      isThreeLine: row.email != null || row.departmentCode != null || row.position != null,
+      trailing: !isManagement && row.isActive
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Ahli tak aktif - label minimal (bukan chip kedua), warna
+                // error supaya senang dikesan management tanpa lagi satu
+                // kad/chip yang menyesakkan baris.
+                if (!row.isActive) ...[
+                  Text(
+                    'Tidak aktif',
+                    style: TextStyle(color: scheme.error, fontSize: 12),
+                  ),
+                  if (isManagement) const SizedBox(width: 8),
+                ],
+                if (isManagement)
+                  Chip(
+                    label: Text(row.roleName),
+                    backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                    labelStyle: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).extension<AppSemanticColors>()!.accentDark,
+                      fontSize: 12,
+                    ),
+                    side: BorderSide.none,
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
+            ),
     );
   }
 }
