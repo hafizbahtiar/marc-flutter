@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/widgets/app_action_sheet.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
@@ -21,6 +22,8 @@ const _placeholderPendingRow = MemberRow(
   category: 'ahli',
   status: 'pending',
 );
+
+enum _PendingAction { approve, cancelBill, bypass, reject }
 
 class PendingMembersPage extends ConsumerWidget {
   const PendingMembersPage({super.key});
@@ -281,6 +284,19 @@ class _PendingTile extends StatefulWidget {
 class _PendingTileState extends State<_PendingTile> {
   bool _busy = false;
 
+  String get _name => widget.row.displayName ?? widget.row.memberId;
+
+  bool get _canApproveNormally =>
+      widget.row.registrationPaymentStatus == 'succeeded';
+
+  bool get _canBypass =>
+      widget.isAdminOrAbove &&
+      widget.row.registrationPaymentStatus != 'succeeded' &&
+      widget.row.registrationPaymentStatus != 'pending';
+
+  bool get _hasPendingOnlineBill =>
+      widget.row.registrationPaymentStatus == 'pending';
+
   Future<void> _run(Future<void> Function() action) async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -290,36 +306,6 @@ class _PendingTileState extends State<_PendingTile> {
       if (mounted) setState(() => _busy = false);
     }
   }
-
-  String get _name => widget.row.displayName ?? widget.row.memberId;
-
-  /// Laluan biasa - ahli dah bayar yuran dalam sistem.
-  bool get _canApproveNormally =>
-      widget.row.registrationPaymentStatus == 'succeeded';
-
-  /// Laluan migrasi - admin/superadmin sahaja, ahli belum bayar online,
-  /// TIADA bil ToyyibPay 'pending' yang masih hidup (backend 409 kalau ada).
-  bool get _canBypass =>
-      widget.isAdminOrAbove &&
-      widget.row.registrationPaymentStatus != 'succeeded' &&
-      widget.row.registrationPaymentStatus != 'pending';
-
-  bool get _hasPendingOnlineBill =>
-      widget.row.registrationPaymentStatus == 'pending';
-
-  String get _approveTooltip {
-    if (_canApproveNormally) return 'Luluskan';
-    if (_hasPendingOnlineBill) {
-      return 'Ahli ada bil online — batalkan atau tunggu tamat tempoh dulu';
-    }
-    if (widget.isAdminOrAbove) {
-      return 'Ahli belum bayar - guna butang langkau bayaran untuk ahli lama';
-    }
-    return 'Ahli belum bayar yuran - cuma admin/superadmin boleh langkau';
-  }
-
-  String get _bypassTooltip =>
-      'Luluskan tanpa bayaran (ahli lama, bayar manual sebelum sistem digital)';
 
   Future<void> _confirmApprove() async {
     final ok = await showConfirmDialog(
@@ -344,139 +330,114 @@ class _PendingTileState extends State<_PendingTile> {
     if (ok && mounted) await _run(widget.onReject);
   }
 
-  // Dialog pengesahan + nota wajib dah dikendalikan oleh
-  // `handleApproveBypass` (pending_members_page level) - di sini cuma
-  // gilir `_busy` sekitarnya, sama pola dgn _confirmApprove/_confirmReject.
-  Future<void> _approveBypass() async {
-    await _run(widget.onApproveBypass);
+  Future<void> _handleAction(_PendingAction action) async {
+    switch (action) {
+      case _PendingAction.approve:
+        await _confirmApprove();
+      case _PendingAction.cancelBill:
+        await _run(widget.onCancelBill);
+      case _PendingAction.bypass:
+        await _run(widget.onApproveBypass);
+      case _PendingAction.reject:
+        await _confirmReject();
+    }
   }
 
-  Future<void> _cancelBill() async {
-    await _run(widget.onCancelBill);
+  Future<void> _openActions() async {
+    if (_busy) return;
+
+    final actions = <AppSheetAction<_PendingAction>>[
+      if (_canApproveNormally)
+        const AppSheetAction(
+          value: _PendingAction.approve,
+          label: 'Luluskan',
+          icon: Icons.check_circle_outline,
+          subtitle: 'Yuran pendaftaran telah dibayar',
+        ),
+      if (_hasPendingOnlineBill && widget.isAdminOrAbove)
+        const AppSheetAction(
+          value: _PendingAction.cancelBill,
+          label: 'Batalkan bil online',
+          icon: Icons.link_off_outlined,
+          subtitle: 'Bil ToyyibPay masih aktif (~30 min)',
+          isDestructive: true,
+        ),
+      if (_canBypass)
+        const AppSheetAction(
+          value: _PendingAction.bypass,
+          label: 'Langkau bayaran',
+          icon: Icons.money_off_outlined,
+          subtitle: 'Untuk ahli lama yang dah bayar manual',
+        ),
+      const AppSheetAction(
+        value: _PendingAction.reject,
+        label: 'Tolak pendaftaran',
+        icon: Icons.cancel_outlined,
+        isDestructive: true,
+      ),
+    ];
+
+    final action = await showAppActionSheet<_PendingAction>(
+      context,
+      title: _name,
+      message: widget.row.memberId,
+      actions: actions,
+    );
+    if (action == null || !mounted) return;
+    await _handleAction(action);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Row(
-        children: [
-          MemberAvatar(
-            label: widget.row.displayName ?? widget.row.memberId,
-            avatarUrl: widget.row.avatarUrl,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.row.displayName ?? '(Tiada nama)'),
-                Text(
-                  widget.row.memberId,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                // Skrin ni management-sahaja, jadi emel sepatutnya sentiasa
-                // ada - tapi jangan crash/papar "null" kalau backend
-                // sembunyikannya.
-                if (widget.row.email != null)
-                  Text(
-                    widget.row.email!,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                const SizedBox(height: 4),
-                _PaymentStatusBadge(
-                  status: widget.row.registrationPaymentStatus,
-                ),
-                if (_hasPendingOnlineBill && widget.isAdminOrAbove)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      'Bil online masih aktif — batalkan di bawah, atau '
-                      'tunggu tamat tempoh (~30 min).',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.extension<AppSemanticColors>()!.warning,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (_hasPendingOnlineBill && widget.isAdminOrAbove)
-            IconButton(
-              icon: Icon(Icons.link_off_outlined, color: scheme.error),
-              tooltip: 'Batalkan bil online',
-              onPressed: _busy ? null : _cancelBill,
-            ),
-          if (_canBypass)
-            IconButton(
-              icon: Icon(
-                Icons.money_off_outlined,
-                color: theme.extension<AppSemanticColors>()!.warning,
-              ),
-              tooltip: _bypassTooltip,
-              onPressed: _busy ? null : _approveBypass,
-            ),
-          IconButton(
-            icon: Icon(Icons.check_circle_outline, color: scheme.primary),
-            tooltip: _approveTooltip,
-            onPressed: _busy || !_canApproveNormally ? null : _confirmApprove,
-          ),
-          IconButton(
-            icon: Icon(Icons.cancel_outlined, color: scheme.error),
-            tooltip: 'Tolak',
-            onPressed: _busy ? null : _confirmReject,
-          ),
-        ],
+    final row = widget.row;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      onTap: _busy ? null : _openActions,
+      leading: MemberAvatar(
+        label: row.displayName ?? row.memberId,
+        avatarUrl: row.avatarUrl,
       ),
+      title: Text(row.displayName ?? '(Tiada nama)'),
+      subtitle: Text(
+        row.email == null ? row.memberId : '${row.memberId}\n${row.email}',
+      ),
+      isThreeLine: row.email != null,
+      trailing: _busy
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+            )
+          : _PaymentStatusChip(status: row.registrationPaymentStatus),
     );
   }
 }
 
-/// Badge padat status yuran pendaftaran - versi ringkas
-/// `_PaymentStatusChip` (feed_page.dart) untuk senarai, bukan skrin penuh.
-/// Ditambah 2026-08-15 supaya management nampak siapa dah bayar SEBELUM
-/// tekan Luluskan (server kekal hakim akhir - badge cuma isyarat, gate
-/// `ApproveMember` sedia ada di backend).
-class _PaymentStatusBadge extends StatelessWidget {
-  const _PaymentStatusBadge({required this.status});
+/// Chip status yuran - gaya sama dengan chip role dalam members_page.dart.
+class _PaymentStatusChip extends StatelessWidget {
+  const _PaymentStatusChip({required this.status});
 
-  /// "pending"/"succeeded"/"failed", atau null kalau tak pernah cuba bayar.
   final String? status;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (icon, label, color) = switch (status) {
-      'succeeded' => (
-        Icons.check_circle_outline,
-        'Dibayar',
-        theme.colorScheme.primary,
-      ),
-      'failed' => (
-        Icons.error_outline,
-        'Bayaran gagal',
-        theme.colorScheme.error,
-      ),
-      'pending' => (
-        Icons.hourglass_top,
-        'Bil online belum selesai',
-        theme.extension<AppSemanticColors>()!.warning,
-      ),
-      _ => (
-        Icons.payments_outlined,
-        'Belum bayar',
-        theme.extension<AppSemanticColors>()!.warning,
-      ),
+    final scheme = theme.colorScheme;
+    final warning = theme.extension<AppSemanticColors>()!.warning;
+
+    final (label, color) = switch (status) {
+      'succeeded' => ('Dibayar', scheme.primary),
+      'failed' => ('Gagal', scheme.error),
+      'pending' => ('Bil aktif', warning),
+      _ => ('Belum bayar', warning),
     };
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: color)),
-      ],
+
+    return Chip(
+      label: Text(label),
+      backgroundColor: color.withValues(alpha: 0.12),
+      labelStyle: TextStyle(color: color, fontSize: 12),
+      side: BorderSide.none,
+      visualDensity: VisualDensity.compact,
     );
   }
 }
