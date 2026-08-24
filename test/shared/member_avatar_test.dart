@@ -55,7 +55,7 @@ void main() {
     expect(find.text('H'), findsNothing);
   });
 
-  // radius memandu saiz lukisan DAN lebar nyahkod — avatar comment (14)
+  // radius memandu saiz lukisan DAN lebar nyahkod - avatar comment (14)
   // lwn header profil (30) berbeza lebih empat kali ganda dlm luas piksel.
   testWidgets('radius menentukan diameter yang dilukis', (tester) async {
     for (final radius in [14.0, 30.0]) {

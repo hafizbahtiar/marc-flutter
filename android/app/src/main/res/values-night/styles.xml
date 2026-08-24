@@ -17,15 +17,15 @@
 
          This Theme is only used starting with V2 of Flutter's Android embedding. -->
     <!-- MaterialComponents.LIGHT (bukan dark variant), sengaja sama macam
-         values/styles.xml walaupun ni folder -night — app Flutter ni TAK
+         values/styles.xml walaupun ni folder -night - app Flutter ni TAK
          support dark mode (main.dart cuma set `theme: AppTheme.light`,
          tiada `darkTheme`), jadi UI Flutter kekal light tak kira system
          dark mode. Kalau NormalTheme sini guna dark variant, native
          platform view (CardFormField + dropdown negara dia) jadi gelap
-         sedangkan seluruh UI Flutter sekeliling tetap light — clash. -->
+         sedangkan seluruh UI Flutter sekeliling tetap light - clash. -->
     <style name="NormalTheme" parent="@style/Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowBackground">?android:colorBackground</item>
-        <!-- Force Dark off — lihat values/styles.xml untuk sebab penuh. -->
+        <!-- Force Dark off - lihat values/styles.xml untuk sebab penuh. -->
         <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>

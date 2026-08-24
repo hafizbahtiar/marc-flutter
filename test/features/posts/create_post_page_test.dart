@@ -116,7 +116,7 @@ void main() {
   group('gaya penggubah', () {
     // inputDecorationTheme global set `filled: true` dgn
     // surfaceContainerHighest. Penggubah mesti menolaknya secara
-    // eksplisit — `border: none` sahaja tinggalkan kotak kelabu.
+    // eksplisit - `border: none` sahaja tinggalkan kotak kelabu.
     testWidgets('medan teks tiada isian dan tiada sempadan', (tester) async {
       await tester.pumpWidget(_host(management: false));
       await tester.pumpAndSettle();

@@ -11,7 +11,7 @@ import 'package:marc/core/token_storage.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
 
-/// AuthNotifier subclass yang terus start dalam keadaan log masuk — elak
+/// AuthNotifier subclass yang terus start dalam keadaan log masuk - elak
 /// perlu panggil `hydrate()`/secure storage sebenar dalam unit test.
 class _LoggedInAuthNotifier extends AuthNotifier {
   _LoggedInAuthNotifier() : super(TokenStorage()) {
@@ -19,7 +19,7 @@ class _LoggedInAuthNotifier extends AuthNotifier {
   }
 }
 
-/// HttpClientAdapter palsu — route request ke callback yang test sediakan,
+/// HttpClientAdapter palsu - route request ke callback yang test sediakan,
 /// supaya kita boleh kawal timing (guna Completer) untuk simulate race
 /// condition antara `loadMore`/`refresh`/`toggleLike` tanpa network sebenar.
 class _FakeAdapter implements HttpClientAdapter {
@@ -86,7 +86,7 @@ ProviderContainer _containerWith(Dio dio) {
   return c;
 }
 
-/// Small helper — spin the microtask queue until [check] becomes true, so
+/// Small helper - spin the microtask queue until [check] becomes true, so
 /// we can synchronize with a request that just started without relying on
 /// real wall-clock delays.
 Future<void> _waitUntil(bool Function() check) async {
@@ -141,7 +141,7 @@ void main() {
         .firstWhere((p) => p.id == 'p1');
     expect(p1.likedByMe, isFalse);
 
-    // Kick off optimistic like — request gated, won't resolve yet.
+    // Kick off optimistic like - request gated, won't resolve yet.
     final likeFuture = notifier.toggleLike(p1);
     await _waitUntil(() => likeRequested);
 
@@ -189,7 +189,7 @@ void main() {
               'next_cursor': 'c1',
             });
           }
-          // refresh() — resolves immediately, ahead of the gated
+          // refresh() - resolves immediately, ahead of the gated
           // loadMore next-page request below.
           return _jsonResponse({
             'posts': [_postJson('r1'), _postJson('r2')],
@@ -216,7 +216,7 @@ void main() {
       'p2',
     ]);
 
-    // Start loadMore() — its next-page request is gated, won't resolve
+    // Start loadMore() - its next-page request is gated, won't resolve
     // until we signal.
     final loadMoreFuture = notifier.loadMore();
     await _waitUntil(() => loadMoreRequested);
@@ -237,7 +237,7 @@ void main() {
   });
 
   test('FeedNotifier.patchPost menggantikan satu post sahaja dengan versi '
-      'baru — post lain dalam feed tak terjejas', () async {
+      'baru - post lain dalam feed tak terjejas', () async {
     final dio = _dioWith((options) async {
       if (options.method == 'GET' && options.path == '/posts') {
         return _jsonResponse({

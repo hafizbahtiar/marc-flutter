@@ -59,7 +59,7 @@ class _NoopAdapter implements HttpClientAdapter {
 
 void main() {
   // Jejak audit ialah data paling sensitif dalam app (siapa ubah apa, ID
-  // ahli, kandungan post). Provider mesti kosong sebaik sesi tamat —
+  // ahli, kandungan post). Provider mesti kosong sebaik sesi tamat -
   // pattern sama yang dikuatkuasakan pada feed/notifications/comments
   // selepas audit 2026-08-07.
   test(
@@ -136,7 +136,7 @@ void main() {
   });
 }
 
-/// TokenStorage sebenar tak pernah disentuh — state ditetapkan terus.
+/// TokenStorage sebenar tak pernah disentuh - state ditetapkan terus.
 class _FakeAuth extends AuthNotifier {
   _FakeAuth({required bool loggedIn}) : super(TokenStorage()) {
     state = AuthState(isLoggedIn: loggedIn, accessToken: loggedIn ? 'a' : null);

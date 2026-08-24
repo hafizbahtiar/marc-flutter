@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Label kumpulan kecil di atas setiap [SettingsCard] — dikongsi antara
+/// Label kumpulan kecil di atas setiap [SettingsCard] - dikongsi antara
 /// `profile_page.dart` dan `settings_page.dart` supaya kedua-dua skrin
 /// (info profil + tindakan pengurusan) nampak satu sistem visual yang sama.
 class SettingsGroupLabel extends StatelessWidget {
@@ -23,7 +23,7 @@ class SettingsGroupLabel extends StatelessWidget {
   }
 }
 
-/// Kad kumpulan `ListTile` bergaya sama — asal `_InfoCard` dalam
+/// Kad kumpulan `ListTile` bergaya sama - asal `_InfoCard` dalam
 /// `profile_page.dart`, dikongsi supaya `settings_page.dart` konsisten
 /// tanpa cipta gaya kad baharu.
 class SettingsCard extends StatelessWidget {

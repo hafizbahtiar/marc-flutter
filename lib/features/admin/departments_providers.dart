@@ -22,7 +22,7 @@ final departmentsProvider = FutureProvider<List<Department>>((ref) async {
 
 /// Senarai bahagian/jabatan (baca sahaja) - manager KE ATAS, padanan gate
 /// backend `GET /departments` (`ListForAssignment`). Guna ni utk pemilih
-/// bahagian bila tetapkan bahagian/jawatan seorang ahli — BUKAN
+/// bahagian bila tetapkan bahagian/jawatan seorang ahli - BUKAN
 /// [departmentsProvider] (superadmin sahaja, skrin CRUD).
 final assignableDepartmentsProvider = FutureProvider<List<Department>>((
   ref,

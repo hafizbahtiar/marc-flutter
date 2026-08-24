@@ -59,7 +59,7 @@ ProviderContainer _containerWith(Dio dio) {
   return c;
 }
 
-/// Bentuk sebenar `certificateResponse` — lihat
+/// Bentuk sebenar `certificateResponse` - lihat
 /// internal/http/handlers/activity_certificates.go.
 Map<String, dynamic> _certJson({bool fileReady = true}) => {
   'id': 'cert-1',
@@ -197,7 +197,7 @@ void main() {
       expect(c.activityTitle, 'Kejohanan Badminton');
       expect(c.categoryName, 'Sukan');
       expect(c.fileReady, isFalse);
-      // Tarikh kalendar — TIDAK ditukar zon, jadi 9 Ogos kekal 9 Ogos di
+      // Tarikh kalendar - TIDAK ditukar zon, jadi 9 Ogos kekal 9 Ogos di
       // mana-mana peranti.
       expect(c.activityDate.year, 2026);
       expect(c.activityDate.month, 8);

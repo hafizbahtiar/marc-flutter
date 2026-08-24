@@ -24,7 +24,7 @@ subprojects {
 // classpath, which pulls in Stripe's card-issuing push-provisioning module
 // -> com.google.android.gms:play-services-tapandpay. That artifact lives in
 // a restricted Google Maven repo MARC has no access to (issuing/push
-// provisioning is unused here — no card-issuing feature in this app), so
+// provisioning is unused here - no card-issuing feature in this app), so
 // resolution 404s on every release build regardless of app code. Disabling
 // just the "vital" lint task (not regular lint/analyze) is the documented
 // workaround for this exact stripe_android + AGP interaction.

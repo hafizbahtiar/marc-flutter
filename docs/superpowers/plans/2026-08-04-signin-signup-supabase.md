@@ -4,13 +4,13 @@
 
 **Goal:** Bina halaman log masuk dan pendaftaran (email + kata laluan) yang berintegrasi dengan Supabase Auth, dengan env config via `flutter_dotenv`.
 
-**Architecture:** `flutter_dotenv` muatkan `.env` (URL + publishable key Supabase) sebagai asset. `main.dart` initialize Supabase, lepas tu jalankan `AuthGate` — `StreamBuilder` atas `onAuthStateChange` yang automatik tukar antara `LoginPage`/`RegisterPage` (tiada session) dan `HomePage` (ada session). `AuthService` balut panggilan Supabase dan petik error ke mesej Melayu. UI guna widget boleh guna semula `AuthTextField`.
+**Architecture:** `flutter_dotenv` muatkan `.env` (URL + publishable key Supabase) sebagai asset. `main.dart` initialize Supabase, lepas tu jalankan `AuthGate` - `StreamBuilder` atas `onAuthStateChange` yang automatik tukar antara `LoginPage`/`RegisterPage` (tiada session) dan `HomePage` (ada session). `AuthService` balut panggilan Supabase dan petik error ke mesej Melayu. UI guna widget boleh guna semula `AuthTextField`.
 
 **Tech Stack:** Flutter (SDK ^3.12.2), `supabase_flutter ^2.16.0`, `flutter_dotenv`, Material 3, `flutter_test`.
 
 ## Global Constraints
 
-- `supabase_flutter: ^2.16.0` (sudah ada di pubspec). Gunakan `Supabase.initialize(url:, publishableKey:)` — parameter moden ialah `publishableKey` (bukan `anonKey`). Key ini = "anon public" key dari dashboard Supabase (selamat dilihat di klien, dilindungi RLS di server).
+- `supabase_flutter: ^2.16.0` (sudah ada di pubspec). Gunakan `Supabase.initialize(url:, publishableKey:)` - parameter moden ialah `publishableKey` (bukan `anonKey`). Key ini = "anon public" key dari dashboard Supabase (selamat dilihat di klien, dilindungi RLS di server).
 - Bahasa UI & mesej error: Bahasa Melayu Malaysia.
 - Env vars: `SUPABASE_URL` dan `SUPABASE_ANON_KEY` (di dalam `.env`, di-gitignore). `.env.example` ialah template yang di-commit.
 - Validasi: email tak kosong + format; password minimum 6 aksara.
@@ -115,7 +115,7 @@ git commit -m "chore: setup flutter_dotenv & env config untuk Supabase"
 - Test: `test/auth_text_field_test.dart`
 
 **Interfaces:**
-- Produces: `AuthTextField({required TextEditingController controller, required String label, required IconData icon, bool obscureText, TextInputType keyboardType, String? Function(String?)? validator})` — widget `FormTextField` yang papar icon, label, dan toggle "tunjuk/sembunyi" bila `obscureText: true`.
+- Produces: `AuthTextField({required TextEditingController controller, required String label, required IconData icon, bool obscureText, TextInputType keyboardType, String? Function(String?)? validator})` - widget `FormTextField` yang papar icon, label, dan toggle "tunjuk/sembunyi" bila `obscureText: true`.
 
 - [ ] **Step 1: Tulis widget test yang gagal**
 
@@ -164,7 +164,7 @@ void main() {
 - [ ] **Step 2: Jalankan test, sahkan gagal**
 
 Run: `flutter test test/auth_text_field_test.dart`
-Expected: FAIL — `AuthTextField` tidak dijumpai (import gagal).
+Expected: FAIL - `AuthTextField` tidak dijumpai (import gagal).
 
 - [ ] **Step 3: Implementasi `AuthTextField`**
 
@@ -251,9 +251,9 @@ git commit -m "feat: tambah AuthTextField widget dengan toggle obscure"
 
 **Interfaces:**
 - Produces:
-  - `String? validateEmail(String? value)` — null kalau sah, mesej kalau tak.
-  - `String? validatePassword(String? value)` — null kalai sah, mesej kalau tak.
-  - `String mapAuthErrorToMessage(AuthException e)` — mesej Melayu mengikut kod.
+  - `String? validateEmail(String? value)` - null kalau sah, mesej kalau tak.
+  - `String? validatePassword(String? value)` - null kalai sah, mesej kalau tak.
+  - `String mapAuthErrorToMessage(AuthException e)` - mesej Melayu mengikut kod.
   - `class AuthService` dengan `signIn`, `signUp`, `signOut` (ditambah di Task 4).
 
 - [ ] **Step 1: Tulis unit test yang gagal**
@@ -329,7 +329,7 @@ void main() {
 - [ ] **Step 2: Jalankan test, sahkan gagal**
 
 Run: `flutter test test/auth_service_test.dart`
-Expected: FAIL — `validateEmail` dsb. tidak dijumpai.
+Expected: FAIL - `validateEmail` dsb. tidak dijumpai.
 
 - [ ] **Step 3: Implementasi fungsi pure**
 
@@ -338,7 +338,7 @@ Buat `lib/services/auth_service.dart` dengan fungsi pure sahaja buat masa ini (`
 ```dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Validator email — null = sah.
+/// Validator email - null = sah.
 String? validateEmail(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'Email diperlukan';
@@ -350,7 +350,7 @@ String? validateEmail(String? value) {
   return null;
 }
 
-/// Validator kata laluan — null = sah.
+/// Validator kata laluan - null = sah.
 String? validatePassword(String? value) {
   if (value == null || value.isEmpty) {
     return 'Kata laluan diperlukan';
@@ -469,7 +469,7 @@ git commit -m "feat: AuthService wrapper untuk signIn/signUp/signOut"
 
 **Interfaces:**
 - Consumes: `AuthTextField`, `validateEmail`, `validatePassword`, `AuthService`.
-- Produces: `LoginPage({VoidCallback? onRegisterTap})` — papar form log masuk, link ke pendaftaran.
+- Produces: `LoginPage({VoidCallback? onRegisterTap})` - papar form log masuk, link ke pendaftaran.
 
 - [ ] **Step 1: Implementasi `LoginPage`**
 
@@ -601,7 +601,7 @@ git commit -m "feat: halaman log masuk"
 
 **Interfaces:**
 - Consumes: `AuthTextField`, `validateEmail`, `validatePassword`, `AuthService`.
-- Produces: `RegisterPage({VoidCallback? onLoginTap})` — papar form pendaftaran, link ke log masuk.
+- Produces: `RegisterPage({VoidCallback? onLoginTap})` - papar form pendaftaran, link ke log masuk.
 
 - [ ] **Step 1: Implementasi `RegisterPage`**
 
@@ -893,7 +893,7 @@ git commit -m "feat: AuthGate, HomePage & init Supabase"
 
 ---
 
-## Selepas pelaksanaan — langkah pengguna
+## Selepas pelaksanaan - langkah pengguna
 
 1. Buat project di [supabase.com](https://supabase.com).
 2. Salin **Project URL** dan **anon public key** dari `Settings → API`.
@@ -905,4 +905,4 @@ git commit -m "feat: AuthGate, HomePage & init Supabase"
 
 - **Spec coverage:** sign in ✓ (Task 5), sign up ✓ (Task 6), env setup ✓ (Task 1), AuthService ✓ (Task 4), AuthGate ✓ (Task 7), error Melayu ✓ (Task 3), validasi ✓ (Task 3), testing ✓ (Task 2 & 3). Semua seksyen spec diliputi.
 - **Placeholder scan:** tiada TBD/TODO; semua kod disertakan penuh.
-- **Type consistency:** `AuthResult{success, error}`, `AuthService.signIn/signUp/signOut`, `validateEmail/validatePassword`, `mapAuthErrorToMessage`, `AuthTextField` — nama & tandatangan konsisten antara task.
+- **Type consistency:** `AuthResult{success, error}`, `AuthService.signIn/signUp/signOut`, `validateEmail/validatePassword`, `mapAuthErrorToMessage`, `AuthTextField` - nama & tandatangan konsisten antara task.

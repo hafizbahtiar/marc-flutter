@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Refine the existing Supabase email/password auth to use Riverpod for state, go_router for navigation, and a minimal/editorial UI — without changing the core Supabase auth logic.
+**Goal:** Refine the existing Supabase email/password auth to use Riverpod for state, go_router for navigation, and a minimal/editorial UI - without changing the core Supabase auth logic.
 
 **Architecture:** Reorganise `lib/` into `app/` (theme + router), `features/{auth,home}/`, and `shared/`. State moves from per-widget `setState`/`_loading` to Riverpod providers (`Provider`, `StreamProvider`, `AsyncNotifier`). Navigation moves from `AuthGate`/`_AuthSwitcher` bool toggling to a `GoRouter` with auth-based `redirect`. No codegen / `build_runner`.
 
@@ -57,7 +57,7 @@ git commit -m "chore: add riverpod, go_router, google_fonts"
 **Files:**
 - Create: `lib/shared/validators.dart`
 - Create: `test/shared/validators_test.dart`
-- Modify: `lib/services/auth_service.dart` (remove `validateEmail`/`validatePassword`, keep `mapAuthErrorToMessage`, `AuthResult`, `AuthService`) — done in Task 3's move; here only create the new file + delete the two functions' duplication is avoided by doing this before the move. To keep tasks independent, this task ONLY creates `shared/validators.dart` + test and leaves `auth_service.dart` untouched; the old copies are removed in Task 3.
+- Modify: `lib/services/auth_service.dart` (remove `validateEmail`/`validatePassword`, keep `mapAuthErrorToMessage`, `AuthResult`, `AuthService`) - done in Task 3's move; here only create the new file + delete the two functions' duplication is avoided by doing this before the move. To keep tasks independent, this task ONLY creates `shared/validators.dart` + test and leaves `auth_service.dart` untouched; the old copies are removed in Task 3.
 
 **Interfaces:**
 - Consumes: nothing.
@@ -88,13 +88,13 @@ void main() {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/shared/validators_test.dart`
-Expected: FAIL — `validators.dart` not found.
+Expected: FAIL - `validators.dart` not found.
 
 - [ ] **Step 3: Create the implementation**
 
 Create `lib/shared/validators.dart`:
 ```dart
-/// Validator email — null = sah.
+/// Validator email - null = sah.
 String? validateEmail(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'Email diperlukan';
@@ -106,7 +106,7 @@ String? validateEmail(String? value) {
   return null;
 }
 
-/// Validator kata laluan — null = sah.
+/// Validator kata laluan - null = sah.
 String? validatePassword(String? value) {
   if (value == null || value.isEmpty) {
     return 'Kata laluan diperlukan';
@@ -137,11 +137,11 @@ git commit -m "feat: extract auth validators into shared/"
 **Files:**
 - Create: `lib/features/auth/auth_service.dart`
 - Delete: `lib/services/auth_service.dart`
-- Modify: any importer of the old path (login/register/home pages) — those pages are rewritten in later tasks, so update their imports there. This task only moves the file and deletes the old validators from it.
+- Modify: any importer of the old path (login/register/home pages) - those pages are rewritten in later tasks, so update their imports there. This task only moves the file and deletes the old validators from it.
 
 **Interfaces:**
 - Consumes: nothing new.
-- Produces: `AuthService` with `Future<AuthResult> signIn(String,String)`, `Future<AuthResult> signUp(String,String)`, `Future<void> signOut()`; `class AuthResult{bool success; String? error}`; `String mapAuthErrorToMessage(AuthException)` — all from `package:marc/features/auth/auth_service.dart`.
+- Produces: `AuthService` with `Future<AuthResult> signIn(String,String)`, `Future<AuthResult> signUp(String,String)`, `Future<void> signOut()`; `class AuthResult{bool success; String? error}`; `String mapAuthErrorToMessage(AuthException)` - all from `package:marc/features/auth/auth_service.dart`.
 
 - [ ] **Step 1: Create the moved file (validators removed)**
 
@@ -210,7 +210,7 @@ class AuthService {
 - [ ] **Step 2: Delete the old file**
 
 Run: `git rm lib/services/auth_service.dart`
-Expected: file removed (old pages still reference it but they are rewritten in later tasks — the app will not compile until Task 9; that is acceptable within this branch).
+Expected: file removed (old pages still reference it but they are rewritten in later tasks - the app will not compile until Task 9; that is acceptable within this branch).
 
 - [ ] **Step 3: Verify the new file analyzes**
 
@@ -291,7 +291,7 @@ void main() {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/features/auth/login_controller_test.dart`
-Expected: FAIL — `auth_providers.dart` not found.
+Expected: FAIL - `auth_providers.dart` not found.
 
 - [ ] **Step 3: Create the implementation**
 
@@ -520,7 +520,7 @@ void main() {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/features/auth/auth_field_test.dart`
-Expected: FAIL — `auth_field.dart` not found.
+Expected: FAIL - `auth_field.dart` not found.
 
 - [ ] **Step 3: Create the widget**
 
@@ -607,7 +607,7 @@ git commit -m "feat: editorial AuthField, replace AuthTextField"
 
 **Interfaces:**
 - Consumes: `loginControllerProvider`, `registerControllerProvider` (Task 4); `AuthField` (Task 6); `validateEmail`, `validatePassword` (Task 2).
-- Produces: `LoginPage` (route `/login`), `RegisterPage` (route `/register`) — both `ConsumerStatefulWidget`, no constructor callbacks.
+- Produces: `LoginPage` (route `/login`), `RegisterPage` (route `/register`) - both `ConsumerStatefulWidget`, no constructor callbacks.
 
 - [ ] **Step 1: Create LoginPage**
 
@@ -1051,7 +1051,7 @@ Future<void> main() async {
   try {
     await dotenv.load(fileName: '.env');
   } catch (_) {
-    // .env belum diisi — salin .env.example ke .env dan isi kredential.
+    // .env belum diisi - salin .env.example ke .env dan isi kredential.
   }
   await Supabase.initialize(
     url: dotenv.get('SUPABASE_URL'),
@@ -1107,7 +1107,7 @@ git commit -m "feat: go_router with auth redirect, wire ProviderScope + Material
 ## Self-Review Notes
 
 - **Spec coverage:** UI editorial (T5,6,7,8), Riverpod manual (T4,7,8), go_router manual redirect (T9), validators moved (T2), AuthService moved (T3). All spec sections mapped.
-- **Compile gap:** Tasks 3/6/7 delete files still referenced by not-yet-rewritten code; the tree only compiles again at Task 9. This is intentional for small, reviewable commits on a feature branch — `flutter analyze`/`flutter test` for the whole app is gated at Task 9 Steps 4–5. Per-file `flutter analyze <path>` checks keep each task honest before then.
+- **Compile gap:** Tasks 3/6/7 delete files still referenced by not-yet-rewritten code; the tree only compiles again at Task 9. This is intentional for small, reviewable commits on a feature branch - `flutter analyze`/`flutter test` for the whole app is gated at Task 9 Steps 4–5. Per-file `flutter analyze <path>` checks keep each task honest before then.
 - **Type consistency:** `loginControllerProvider` (AsyncNotifier<void>, `submit` returns `Future<void>`) and `registerControllerProvider` (`submit` returns `Future<bool>`) used consistently in T7. `AuthField` signature identical in T6 and consumers in T7. `AppColors`/`AppTheme.light` from T5 used in T9.
 - **No placeholders:** every code step has full code.
 ```

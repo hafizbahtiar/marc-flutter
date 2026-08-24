@@ -57,7 +57,7 @@ void main() {
 
     // Regresi: dulu MANA-MANA respons tanpa `{"error": ...}` dilaporkan
     // sebagai masalah internet. Respons WUJUD bermakna permintaan sampai ke
-    // server dan ditolak — menyalahkan WiFi menghantar orang menyiasat
+    // server dan ditolak - menyalahkan WiFi menghantar orang menyiasat
     // perkara yang salah sama sekali.
     test('respons tanpa field error → sebut status, bukan internet', () {
       final e = _errorWithResponse(500, {'something': 'else'});
@@ -65,7 +65,7 @@ void main() {
     });
 
     // Punca sebenar bug "post bergambar gagal": R2 tolak PUT dengan 403 dan
-    // badan XML (String, bukan Map) — dilaporkan sebagai "semak internet".
+    // badan XML (String, bukan Map) - dilaporkan sebagai "semak internet".
     test('403 XML dari R2 → mesej akses ditolak, bukan internet', () {
       final requestOptions = RequestOptions(path: 'https://r2.example/obj');
       final e = DioException(

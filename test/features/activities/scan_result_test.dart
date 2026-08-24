@@ -22,7 +22,7 @@ void main() {
   });
 
   // Sudah hadir BUKAN ralat. Kalau ia dipaparkan merah, pengurusan akan
-  // fikir imbasan gagal dan cuba lagi — atau lebih teruk, tanda manual
+  // fikir imbasan gagal dan cuba lagi - atau lebih teruk, tanda manual
   // atas kehadiran yang sudah wujud.
   test('sudah hadir ialah keadaan tersendiri, bukan ralat', () {
     final r = ScanResult.fromResponse({
@@ -88,7 +88,7 @@ void main() {
   });
 
   // Backend memulangkan display_name kosong bila profil gagal dibaca
-  // (lihat `memberOf` dalam activity_attendance.go) — check-in itu SUDAH
+  // (lihat `memberOf` dalam activity_attendance.go) - check-in itu SUDAH
   // commit, jadi skrin tidak boleh memaparkan "null hadir".
   test('nama kosong berundur ke label generik', () {
     final r = ScanResult.fromResponse({
@@ -105,7 +105,7 @@ void main() {
   });
 
   // 500 daripada server bukan masalah rangkaian, tetapi ia juga bukan salah
-  // satu daripada empat keadaan bernama — ia jatuh ke baldi merah generik
+  // satu daripada empat keadaan bernama - ia jatuh ke baldi merah generik
   // dan MESTI membawa mesej server, bukan "tiada sambungan".
   test('ralat pelayan membawa mesejnya sendiri', () {
     final r = ScanResult.fromError(ralat(500, 'gagal tanda kehadiran'));

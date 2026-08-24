@@ -3,7 +3,7 @@ import 'package:marc/core/app_log.dart';
 
 void main() {
   // URL presigned R2 bawa X-Amz-Signature. Ia kredential jangka pendek,
-  // tapi tetap kredential — jangan tulis ke log peranti.
+  // tapi tetap kredential - jangan tulis ke log peranti.
   test('query string ditapis daripada URL yang dilog', () {
     final uri = Uri.parse(
       'https://bucket.acct.r2.cloudflarestorage.com/posts/abc.jpg'

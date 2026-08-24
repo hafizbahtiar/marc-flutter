@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# setup.sh — bina APK/AAB dengan konfigurasi interaktif.
+# setup.sh - bina APK/AAB dengan konfigurasi interaktif.
 #
 # Aliran:
 #   1) Tanya semua soalan dahulu
@@ -25,7 +25,7 @@ else
 fi
 
 echo "==================================================="
-echo " Setup build — $APP_NAME"
+echo " Setup build - $APP_NAME"
 echo " Versi semasa: ${CUR_NAME}+${CUR_BUILD}"
 echo "==================================================="
 echo
@@ -90,7 +90,7 @@ if [[ "$Q_GEN" =~ ^[Yy]$ ]]; then
     echo "→ dart run build_runner build --delete-conflicting-outputs"
     dart run build_runner build --delete-conflicting-outputs
   else
-    echo "⚠ build_runner tiada dalam pubspec — langkau."
+    echo "⚠ build_runner tiada dalam pubspec - langkau."
   fi
 fi
 

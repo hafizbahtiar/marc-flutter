@@ -14,7 +14,7 @@ Widget _host(int n) => MaterialApp(
 );
 
 void main() {
-  // Susun atur dikongsi antara feed dan penggubah post — kalau ia
+  // Susun atur dikongsi antara feed dan penggubah post - kalau ia
   // terpesong, pratonton semasa mengarang tak lagi padan dgn hasil.
   for (final n in [1, 2, 3, 4]) {
     testWidgets('$n jubin dirender semua', (tester) async {

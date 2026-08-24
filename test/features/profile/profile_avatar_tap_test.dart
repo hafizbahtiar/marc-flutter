@@ -36,7 +36,7 @@ Widget _host(Profile? profile) => ProviderScope(
   child: MaterialApp(theme: AppTheme.light, home: const ProfilePage()),
 );
 
-/// Regresi: avatar header pernah dirender TANPA `onTap` sama sekali —
+/// Regresi: avatar header pernah dirender TANPA `onTap` sama sekali -
 /// `onTapAvatar` dihantar ke `_Header` tapi tak pernah disambung ke
 /// `MemberAvatar`. Ketuk gambar profil tak buat apa-apa, dan
 /// `flutter analyze` senyap sebab medan instance yang tak diguna bukan

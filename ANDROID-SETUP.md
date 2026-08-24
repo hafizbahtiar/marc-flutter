@@ -1,8 +1,8 @@
-# Android Setup — Play Store Listing
+# Android Setup - Play Store Listing
 
 Teks untuk medan **Short description** dan **Full description** dalam Play
 Console (Store presence → Main store listing). Kekalkan disclaimer "bukan
-rasmi MAIWP" — ini WAJIB konsisten dengan `about_page.dart`, `faq_page.dart`
+rasmi MAIWP" - ini WAJIB konsisten dengan `about_page.dart`, `faq_page.dart`
 dan `PAYMENT-STRIPE.md` (lihat `TODO.md`).
 
 ## Short description
@@ -21,24 +21,24 @@ Had: 4000 aksara.
 
 ```
 MARC ialah aplikasi komuniti untuk ahli berkongsi maklumat, pengumuman,
-dan berhubung sesama ahli — dari feed perkongsian hinggalah pendaftaran
+dan berhubung sesama ahli - dari feed perkongsian hinggalah pendaftaran
 aktiviti dan sumbangan derma.
 
 Ciri utama:
 
-• Feed & pengumuman — kongsi post dengan teks dan gambar (sehingga 4
+• Feed & pengumuman - kongsi post dengan teks dan gambar (sehingga 4
   keping), lihat kemas kini terkini komuniti dalam satu tempat.
-• Direktori ahli — semak senarai ahli berdaftar, dengan giliran kelulusan
+• Direktori ahli - semak senarai ahli berdaftar, dengan giliran kelulusan
   keahlian baharu diuruskan oleh pihak pengurusan.
-• Peranan & kebenaran — hierarki Ahli, Supervisor, Manager, dan Super
+• Peranan & kebenaran - hierarki Ahli, Supervisor, Manager, dan Super
   Admin, setiap satu dengan kebenaran yang sesuai.
-• Aktiviti & daftar hadir — lihat aktiviti akan datang, daftar penyertaan,
+• Aktiviti & daftar hadir - lihat aktiviti akan datang, daftar penyertaan,
   dan check-in menggunakan kod QR (untuk pihak pengurusan).
-• Sumbangan/derma — sokong pembangunan app secara sukarela melalui kad,
+• Sumbangan/derma - sokong pembangunan app secara sukarela melalui kad,
   FPX, atau kaedah pembayaran lain yang disediakan.
-• Pemberitahuan — terima notifikasi push untuk pengumuman dan aktiviti
+• Pemberitahuan - terima notifikasi push untuk pengumuman dan aktiviti
   penting.
-• Jejak audit — pihak pengurusan boleh menyemak sejarah tindakan penting
+• Jejak audit - pihak pengurusan boleh menyemak sejarah tindakan penting
   dalam app untuk ketelusan.
 
 PENAFIAN: MARC BUKAN aplikasi rasmi MAIWP. Ia dibangunkan secara sukarela

@@ -45,7 +45,7 @@ void main() {
             ..write(jsonEncode({'error': 'token tidak sah'}))
             ..close();
         } else if (req.uri.path == '/auth/refresh') {
-          // 500 = gagal di server (timeout DB, dsb) — BUKAN 401 (server
+          // 500 = gagal di server (timeout DB, dsb) - BUKAN 401 (server
           // tolak refresh token secara definitif). Ini kes yang patut
           // TAK clear sesi (fix untuk finding #1).
           req.response
@@ -80,9 +80,9 @@ void main() {
 
       try {
         await dio.get('/me');
-        fail('sepatutnya throw — /me 401 dan refresh pun gagal 500');
+        fail('sepatutnya throw - /me 401 dan refresh pun gagal 500');
       } on DioException catch (_) {
-        // expected — request asal tetap gagal (refresh tak berjaya jadi
+        // expected - request asal tetap gagal (refresh tak berjaya jadi
         // tak boleh retry), tapi itu bukan yang kita test kat sini.
       }
 
@@ -91,7 +91,7 @@ void main() {
         isTrue,
         reason:
             'refresh gagal 500 (bukan 401) = server bermasalah sementara, '
-            'BUKAN bukti refresh token tak sah. Sesi tak patut di-clear — '
+            'BUKAN bukti refresh token tak sah. Sesi tak patut di-clear - '
             'user akan cuba lagi bila server/network pulih.',
       );
     },
@@ -139,7 +139,7 @@ void main() {
         container.read(authNotifierProvider).isLoggedIn,
         isFalse,
         reason:
-            'refresh token betul-betul ditolak server (401) — sesi '
+            'refresh token betul-betul ditolak server (401) - sesi '
             'memang tak sah, patut di-clear.',
       );
     },

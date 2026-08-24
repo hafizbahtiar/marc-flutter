@@ -64,7 +64,7 @@ void main() {
 
   // Gerbang TUNGGAL. `canRegister` diterbitkan daripada
   // `registrationBlocker`, dan halaman detail memetakan enum yang sama
-  // kepada teks — jadi ujian ini memagar kedua-duanya sekali gus.
+  // kepada teks - jadi ujian ini memagar kedua-duanya sekali gus.
   group('registrationBlocker satu gerbang untuk setiap status', () {
     test('published dan terbuka → tiada sekatan', () {
       expect(
@@ -76,7 +76,7 @@ void main() {
     test('completed → tamat, BUKAN "belum dibuka"', () {
       // Regresi: tab "Lepas" penuh dengan aktiviti `completed` (backend
       // defaultListStatuses = published, cancelled, completed), dan versi
-      // lama memaparkan "Pendaftaran belum dibuka." pada setiap satunya —
+      // lama memaparkan "Pendaftaran belum dibuka." pada setiap satunya -
       // bertentangan dengan kebenaran.
       final a = buatAktiviti(capacity: 10, status: 'completed');
       expect(a.registrationBlocker, RegistrationBlocker.completed);
@@ -132,7 +132,7 @@ void main() {
       );
     });
 
-    test('sudah berdaftar bukan SEKATAN — ia keadaan berbeza', () {
+    test('sudah berdaftar bukan SEKATAN - ia keadaan berbeza', () {
       // Ahli yang sudah berdaftar melihat butang "Batal", bukan butang
       // "Daftar" yang dilumpuhkan dengan sebab. Jadi blocker mesti null
       // walaupun canRegister false.
@@ -214,7 +214,7 @@ void main() {
     });
 
     test('baris senarai tanpa sessions/is_registered masih sah', () {
-      // GET /activities tidak membawa dua medan itu — lalai mesti
+      // GET /activities tidak membawa dua medan itu - lalai mesti
       // menampungnya, bukan membaling.
       final json = detailJson()
         ..remove('sessions')

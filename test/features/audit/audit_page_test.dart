@@ -76,7 +76,7 @@ Map<String, dynamic> _log(int id, {String action = 'update'}) => {
   'created_at': DateTime.now().toIso8601String(),
 };
 
-/// Sesi log masuk — `auditLogsProvider` sengaja pulang kosong tanpa ni
+/// Sesi log masuk - `auditLogsProvider` sengaja pulang kosong tanpa ni
 /// (guard auth; lihat audit_auth_guard_test.dart).
 class _LoggedInAuth extends AuthNotifier {
   _LoggedInAuth() : super(TokenStorage()) {

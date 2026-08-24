@@ -15,7 +15,7 @@ void main() {
     );
 
     final qr = tester.widget<QrImageView>(find.byType(QrImageView));
-    // `data` peribadi dalam qr_flutter — yang boleh (dan perlu) diperiksa
+    // `data` peribadi dalam qr_flutter - yang boleh (dan perlu) diperiksa
     // di sini ialah warnanya.
     expect(qr.backgroundColor, Colors.white);
     expect(qr.eyeStyle.color, Colors.black);

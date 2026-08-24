@@ -25,7 +25,7 @@
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<!-- Redirect balik ke app lepas payment method FPX (bank Malaysia)
-		     authenticate di luar app — Stripe.urlScheme 'marc'
+		     authenticate di luar app - Stripe.urlScheme 'marc'
 		     (lib/app/stripe.dart) mesti padan scheme sini. -->
 		<key>CFBundleURLTypes</key>
 		<array>
@@ -46,7 +46,7 @@
 		<!-- iOS memaparkan SATU rangkap ini untuk setiap penggunaan kamera dalam
 	     app, jadi ia mesti menyebut kedua-dua sebab. Menyebut gambar post
 	     sahaja bermakna pengurus yang membuka pengimbas QR nampak sebab
-	     yang tidak berkaitan dengan apa yang dia sedang buat — itu tepat
+	     yang tidak berkaitan dengan apa yang dia sedang buat - itu tepat
 	     bila orang menekan "Jangan benarkan". -->
 		<string>MARC perlukan akses kamera untuk ambil gambar bagi post anda, dan untuk mengimbas QR kehadiran peserta aktiviti.</string>
 		<key>NSPhotoLibraryUsageDescription</key>

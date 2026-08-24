@@ -16,14 +16,14 @@
          running.
 
          This Theme is only used starting with V2 of Flutter's Android embedding. -->
-    <!-- MaterialComponents (bukan platform Theme.Light biasa) —
+    <!-- MaterialComponents (bukan platform Theme.Light biasa) -
          flutter_stripe punya CardFormField guna MaterialCardView,
          yang requires descendant Theme.MaterialComponents, kalau
          tidak crash inflate ("app theme to be Theme.MaterialComponents"). -->
     <style name="NormalTheme" parent="@style/Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowBackground">?android:colorBackground</item>
         <!-- Android "Force Dark" (API 29+) re-warna native View (bukan
-             kanvas Flutter) bila system dark mode ON — boleh gelapkan
+             kanvas Flutter) bila system dark mode ON - boleh gelapkan
              popup/dropdown CardFormField walaupun tema ni sendiri Light.
              App Flutter tiada darkTheme, jadi native view kena disable
              force-dark eksplisit supaya sentiasa konsisten light. -->

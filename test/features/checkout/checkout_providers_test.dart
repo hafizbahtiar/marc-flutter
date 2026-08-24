@@ -8,7 +8,7 @@ import 'package:marc/core/api_client.dart';
 import 'package:marc/features/checkout/checkout_providers.dart';
 
 /// Padan pola `_FakeAdapter` di `test/features/posts/feed_notifier_test.dart`
-/// — duplikasi sengaja (helper test kecil, satu tapak panggilan setiap
+/// - duplikasi sengaja (helper test kecil, satu tapak panggilan setiap
 /// fail), bukan diekstrak jadi kebergantungan silang-fail.
 class _FakeAdapter implements HttpClientAdapter {
   _FakeAdapter(this._onFetch);
@@ -54,7 +54,7 @@ void main() {
     expect(result, 250);
   });
 
-  test('medan gateway_charge_cents tiada — fallback kDefaultGatewayChargeCents', () async {
+  test('medan gateway_charge_cents tiada - fallback kDefaultGatewayChargeCents', () async {
     final dio = _dioWith(
       (options) async => ResponseBody.fromString(
         jsonEncode(<String, dynamic>{}), // medan tiada dalam respons
@@ -73,7 +73,7 @@ void main() {
     expect(result, kDefaultGatewayChargeCents);
   });
 
-  test('ralat network — fallback kDefaultGatewayChargeCents, tak throw', () async {
+  test('ralat network - fallback kDefaultGatewayChargeCents, tak throw', () async {
     final dio = _dioWith((options) async {
       throw DioException(
         requestOptions: options,
@@ -89,7 +89,7 @@ void main() {
     expect(result, kDefaultGatewayChargeCents);
   });
 
-  test('backend lama (404, route tiada) — fallback kDefaultGatewayChargeCents', () async {
+  test('backend lama (404, route tiada) - fallback kDefaultGatewayChargeCents', () async {
     final dio = _dioWith(
       (options) async => ResponseBody.fromString(
         jsonEncode({'error': 'not found'}),

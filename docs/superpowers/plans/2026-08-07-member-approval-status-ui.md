@@ -1,18 +1,18 @@
-# Stage 11 Frontend Implementation Plan — Member Approval Status UI
+# Stage 11 Frontend Implementation Plan - Member Approval Status UI
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Give the Flutter client awareness of the backend's Stage 11 member-approval status: gate pending/rejected users to a clear status screen, let management approve/reject from a dedicated screen, and render the 3 new notification types without crashing.
 
-**Architecture:** Content-level gating in `FeedPage` (no router changes for the gate itself — `myProfileProvider` is async, so the check lives where the data is already consumed), one new page for the management approve/reject flow, and small additive changes to two existing data models.
+**Architecture:** Content-level gating in `FeedPage` (no router changes for the gate itself - `myProfileProvider` is async, so the check lives where the data is already consumed), one new page for the management approve/reject flow, and small additive changes to two existing data models.
 
 **Tech Stack:** Flutter, Riverpod (`FutureProvider`, `Provider`), `go_router`, `dio` (via the existing `dioProvider`/`ProfileRepository` pattern).
 
 ## Global Constraints
 
 - All new user-facing strings are in Malay, matching every existing screen in this app.
-- This codebase has no widget/unit tests for the Posts/Members/Notifications features (verified via `flutter analyze` + manual/contract testing against a real backend in prior stages, not `_test.go`-equivalent files — see `marc_flutter/TODO.md` Stage 10's own verification notes). This plan follows that same convention: verification is `flutter analyze` (must be 0 issues) + `dart format` (must be clean) + `flutter test` (existing suite must stay green) for every task; there is no new widget-test-writing step.
-- Follow existing patterns exactly: `Skeletonizer` for list loading states, `RefreshIndicator.adaptive` + a `ListView` empty-state for empty lists, an error-card (`OutlinedButton` "Cuba lagi") for fetch failures, `MySnackBar.success`/`.error` for action feedback — all copied from `members_page.dart` and `notifications_page.dart`'s existing code, not reinvented.
+- This codebase has no widget/unit tests for the Posts/Members/Notifications features (verified via `flutter analyze` + manual/contract testing against a real backend in prior stages, not `_test.go`-equivalent files - see `marc_flutter/TODO.md` Stage 10's own verification notes). This plan follows that same convention: verification is `flutter analyze` (must be 0 issues) + `dart format` (must be clean) + `flutter test` (existing suite must stay green) for every task; there is no new widget-test-writing step.
+- Follow existing patterns exactly: `Skeletonizer` for list loading states, `RefreshIndicator.adaptive` + a `ListView` empty-state for empty lists, an error-card (`OutlinedButton` "Cuba lagi") for fetch failures, `MySnackBar.success`/`.error` for action feedback - all copied from `members_page.dart` and `notifications_page.dart`'s existing code, not reinvented.
 - Do not touch `ios/Podfile.lock` or any file unrelated to this plan's scope.
 
 ---
@@ -75,7 +75,7 @@ class Profile {
   }
 }
 
-/// Profil user semasa. Reaktif pada status log masuk — jadi ia re-fetch
+/// Profil user semasa. Reaktif pada status log masuk - jadi ia re-fetch
 /// sebaik sahaja sesi wujud (tak perlu hot restart).
 final myProfileProvider = FutureProvider<Profile?>((ref) async {
   final isLoggedIn = ref.watch(
@@ -105,13 +105,13 @@ class ProfileRepository {
     await dio.patch('/me', data: {'display_name': displayName, 'phone': phone});
 
     _ref.invalidate(myProfileProvider);
-    // membersProvider papar display_name yang sama — tanpa invalidate ni,
+    // membersProvider papar display_name yang sama - tanpa invalidate ni,
     // tab Ahli kekal papar nama lama sampai logout/restart (non-autoDispose,
     // cuma recompute bila isLoggedIn berubah).
     _ref.invalidate(membersProvider);
   }
 
-  /// Luluskan pendaftaran ahli (Stage 11) — management sahaja, backend
+  /// Luluskan pendaftaran ahli (Stage 11) - management sahaja, backend
   /// tolak 403 kalau bukan.
   Future<void> approveMember(String userId) async {
     final dio = _ref.read(dioProvider);
@@ -120,7 +120,7 @@ class ProfileRepository {
     _ref.invalidate(pendingMembersProvider);
   }
 
-  /// Tolak pendaftaran ahli (Stage 11) — row KEKAL di backend (bukan
+  /// Tolak pendaftaran ahli (Stage 11) - row KEKAL di backend (bukan
   /// padam), boleh diluluskan semula lain kali.
   Future<void> rejectMember(String userId) async {
     final dio = _ref.read(dioProvider);
@@ -174,7 +174,7 @@ final membersProvider = FutureProvider<List<MemberRow>>((ref) async {
       .toList();
 });
 
-/// Ahli status=pending sahaja (Stage 11) — untuk skrin approve/reject
+/// Ahli status=pending sahaja (Stage 11) - untuk skrin approve/reject
 /// management. Backend 403 kalau caller bukan management.
 final pendingMembersProvider = FutureProvider<List<MemberRow>>((ref) async {
   final isLoggedIn = ref.watch(
@@ -234,7 +234,7 @@ class AppNotification {
 }
 ```
 
-(Only `postId`'s declared type and its `fromJson` cast change — from `String`/`json['post_id'] as String` to `String?`/`json['post_id'] as String?` — plus the 3 new getters. Nothing else in this class changes.)
+(Only `postId`'s declared type and its `fromJson` cast change - from `String`/`json['post_id'] as String` to `String?`/`json['post_id'] as String?` - plus the 3 new getters. Nothing else in this class changes.)
 
 - [ ] **Step 3: Fix the now-broken placeholder in `lib/features/members/members_page.dart`**
 
@@ -282,7 +282,7 @@ git commit -m "Add member approval status to Profile/MemberRow, nullable postId 
 - Modify: `lib/features/posts/feed_page.dart` (entire file)
 
 **Interfaces:**
-- Consumes: `myProfileProvider` (`FutureProvider<Profile?>`, from Task 1 — reads `Profile.status`).
+- Consumes: `myProfileProvider` (`FutureProvider<Profile?>`, from Task 1 - reads `Profile.status`).
 - Produces: nothing consumed by later tasks (self-contained UI change).
 
 - [ ] **Step 1: Rewrite `lib/features/posts/feed_page.dart`**
@@ -334,9 +334,9 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   Widget build(BuildContext context) {
     // Stage 11: user pending/rejected tak boleh akses Feed (backend 403
     // semua endpoint selain /me). Gate content-level di sini (bukan
-    // router redirect) sebab myProfileProvider async — lihat design spec
+    // router redirect) sebab myProfileProvider async - lihat design spec
     // untuk rasional penuh. Fail-open kalau /me gagal fetch (error state)
-    // — jangan block user approved sebab isu rangkaian sekejap.
+    // - jangan block user approved sebab isu rangkaian sekejap.
     final profileStatus = ref.watch(
       myProfileProvider.select((p) => p.valueOrNull?.status),
     );
@@ -739,7 +739,7 @@ class _PendingTile extends StatelessWidget {
 - [ ] **Step 2: Verify**
 
 Run: `flutter analyze && dart format --set-exit-if-changed lib/features/members/pending_members_page.dart && flutter test`
-Expected: clean. Note `PendingMembersPage` is not yet referenced anywhere (Task 4 wires it up) — an unreferenced public class is not a `flutter analyze` warning in this codebase's default lint config, so this should still be clean; if analyze does flag it, report as a concern rather than adding a suppression.
+Expected: clean. Note `PendingMembersPage` is not yet referenced anywhere (Task 4 wires it up) - an unreferenced public class is not a `flutter analyze` warning in this codebase's default lint config, so this should still be clean; if analyze does flag it, report as a concern rather than adding a suppression.
 
 - [ ] **Step 3: Commit**
 
@@ -761,7 +761,7 @@ git commit -m "Add PendingMembersPage (Stage 11 management approve/reject UI)"
 
 - [ ] **Step 1: Add the route in `lib/app/router.dart`**
 
-Add the import (alphabetically with the other `features/members` import — there's currently only `members_page.dart`, so add just below it):
+Add the import (alphabetically with the other `features/members` import - there's currently only `members_page.dart`, so add just below it):
 
 ```dart
 import 'package:marc/features/members/members_page.dart';
@@ -786,7 +786,7 @@ Add an import at the top of the file:
 import 'package:go_router/go_router.dart';
 ```
 
-(this file currently has no `go_router` import — needed for `context.push`)
+(this file currently has no `go_router` import - needed for `context.push`)
 
 Change the `AppBar` from:
 
@@ -840,7 +840,7 @@ git commit -m "Wire PendingMembersPage into router + Members AppBar (Stage 11)"
 import 'package:marc/features/posts/post_models.dart';
 ```
 
-(needed to reference the `AppNotification` type explicitly in the new helper functions below — currently only reached transitively via `notifications_providers.dart`)
+(needed to reference the `AppNotification` type explicitly in the new helper functions below - currently only reached transitively via `notifications_providers.dart`)
 
 - [ ] **Step 2: Add 3 helper functions**
 
@@ -977,27 +977,27 @@ dart format --set-exit-if-changed lib/
 flutter test
 ```
 
-Expected: `flutter analyze` — "No issues found!"; `dart format` — no output (nothing to reformat); `flutter test` — all existing tests pass (same count as before this plan started; this plan added no new test files, per the Global Constraints note on why).
+Expected: `flutter analyze` - "No issues found!"; `dart format` - no output (nothing to reformat); `flutter test` - all existing tests pass (same count as before this plan started; this plan added no new test files, per the Global Constraints note on why).
 
-- [ ] **Step 2: Manual reasoning check (no live device/backend run required for this task — already a known gap tracked separately)**
+- [ ] **Step 2: Manual reasoning check (no live device/backend run required for this task - already a known gap tracked separately)**
 
 Read through the 5 implemented pieces once more against the design spec (`docs/superpowers/specs/2026-08-07-member-approval-status-ui-design.md`) and confirm each maps to a task:
-- Feed gate (pending/rejected full-screen state, fail-open on error) — Task 2
-- Pending approvals screen + management-only entry point — Tasks 3-4
-- Notification rendering for the 3 new types, nullable `postId` tap-guard — Task 5
-- Data model additions — Task 1
+- Feed gate (pending/rejected full-screen state, fail-open on error) - Task 2
+- Pending approvals screen + management-only entry point - Tasks 3-4
+- Notification rendering for the 3 new types, nullable `postId` tap-guard - Task 5
+- Data model additions - Task 1
 
 Note in the report if anything from the spec was missed.
 
 - [ ] **Step 3: Update `TODO.md`**
 
-In `TODO.md`, replace the Stage 11 section (currently reads "belum design", listing open questions) with a done write-up, following the exact style of the existing "Stage 10 — Posts feature UI" entry immediately above it in the same file (a short paragraph of what was built, referencing the design spec, then what's still open). Content:
+In `TODO.md`, replace the Stage 11 section (currently reads "belum design", listing open questions) with a done write-up, following the exact style of the existing "Stage 10 - Posts feature UI" entry immediately above it in the same file (a short paragraph of what was built, referencing the design spec, then what's still open). Content:
 
 ```markdown
-- **Stage 11 — Member approval status UI** ✅ (done)
+- **Stage 11 - Member approval status UI** ✅ (done)
   Design penuh di `docs/superpowers/specs/2026-08-07-member-approval-status-ui-design.md`.
   Feed content-gated (bukan router-level) bila `profile.status != 'approved'`
-  — skrin "menunggu kelulusan"/"ditolak" dengan butang semak semula.
+  - skrin "menunggu kelulusan"/"ditolak" dengan butang semak semula.
   `PendingMembersPage` baru (management-only, icon button kat AppBar
   Ahli) untuk approve/reject. `AppNotification.postId` kini nullable +
   3 jenis notification baru (`member_pending`/`member_approved`/
@@ -1005,7 +1005,7 @@ In `TODO.md`, replace the Stage 11 section (currently reads "belum design", list
   navigate ke post yang tak wujud.
 ```
 
-Also remove the old "Stage 11 — Status pendaftaran ahli (approval MAIWP) — belum design" section (superseded by the above) and its 4 `- [ ]` bullets, since they're now implemented.
+Also remove the old "Stage 11 - Status pendaftaran ahli (approval MAIWP) - belum design" section (superseded by the above) and its 4 `- [ ]` bullets, since they're now implemented.
 
 - [ ] **Step 4: Commit**
 
@@ -1016,6 +1016,6 @@ git commit -m "Stage 11 frontend: member approval status UI done"
 
 ## Self-Review Notes
 
-- **Spec coverage:** data model changes (Task 1), Feed gate incl. fail-open-on-error behavior (Task 2), management approve/reject screen + entry point (Tasks 3-4), notification rendering + nullable postId fix (Task 5) — all covered. The spec's "out of scope" items (member_pending tap-to-navigate, router-level gating, ProfilePage changes, bulk-approve) are correctly absent from every task.
-- **Cross-task dependency check:** unlike the backend plan, no task here deliberately leaves `flutter analyze` broken between tasks — Task 3 (new file) is created before Task 4 wires it into the router, so every task's own verification step is a real, clean check, not a "expected failure" step.
-- **Known pre-existing gap, not this plan's job to close:** `marc_flutter/TODO.md` already tracks "Test app betul-betul di simulator/device" as an open item predating this plan — this plan's verification (analyze/format/test) matches that existing convention rather than introducing new device-testing scope.
+- **Spec coverage:** data model changes (Task 1), Feed gate incl. fail-open-on-error behavior (Task 2), management approve/reject screen + entry point (Tasks 3-4), notification rendering + nullable postId fix (Task 5) - all covered. The spec's "out of scope" items (member_pending tap-to-navigate, router-level gating, ProfilePage changes, bulk-approve) are correctly absent from every task.
+- **Cross-task dependency check:** unlike the backend plan, no task here deliberately leaves `flutter analyze` broken between tasks - Task 3 (new file) is created before Task 4 wires it into the router, so every task's own verification step is a real, clean check, not a "expected failure" step.
+- **Known pre-existing gap, not this plan's job to close:** `marc_flutter/TODO.md` already tracks "Test app betul-betul di simulator/device" as an open item predating this plan - this plan's verification (analyze/format/test) matches that existing convention rather than introducing new device-testing scope.

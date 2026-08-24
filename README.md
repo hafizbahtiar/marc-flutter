@@ -1,25 +1,25 @@
 # MARC (Flutter)
 
-App komuniti MARC. Backend: repo `marc_go` (sibling) — Go + Gin + Postgres.
+App komuniti MARC. Backend: repo `marc_go` (sibling) - Go + Gin + Postgres.
 
 [`TODO.md`](./TODO.md) untuk kerja yang belum siap.
 [`PAYMENT-STRIPE.md`](./PAYMENT-STRIPE.md) untuk aliran donation.
 
 > **MARC bukan aplikasi rasmi MAIWP.** Ia dibangunkan secara sukarela sebagai
 > projek peribadi, dan tidak diurus, ditaja atau disahkan oleh MAIWP. Framing
-> ni mesti kekal konsisten merentas halaman Tentang, FAQ, dan resit donation —
+> ni mesti kekal konsisten merentas halaman Tentang, FAQ, dan resit donation -
 > lihat nota dalam `PAYMENT-STRIPE.md`.
 
 ## Stack
 
 - **Flutter 3.44** / Dart 3.12
-- **Riverpod** — state (`NotifierProvider`, `AsyncNotifier`, `FutureProvider.family`)
-- **GoRouter** — routing, dengan `StatefulShellRoute` untuk bottom nav
-- **Dio** — HTTP + interceptor auto-refresh token
-- **flutter_secure_storage** — token (Keychain/Keystore)
-- **flutter_stripe** — PaymentSheet (kad + FPX)
-- **extended_image** — cache gambar + zum/leret-tutup
-- **OneSignal** — push
+- **Riverpod** - state (`NotifierProvider`, `AsyncNotifier`, `FutureProvider.family`)
+- **GoRouter** - routing, dengan `StatefulShellRoute` untuk bottom nav
+- **Dio** - HTTP + interceptor auto-refresh token
+- **flutter_secure_storage** - token (Keychain/Keystore)
+- **flutter_stripe** - PaymentSheet (kad + FPX)
+- **extended_image** - cache gambar + zum/leret-tutup
+- **OneSignal** - push
 
 ## Setup
 
@@ -45,18 +45,18 @@ flutter run
 
 ```
 lib/
-  app/          — theme (light/dark + AppSemanticColors), router, init Stripe
-  core/         — api_client (Dio + auth interceptor), auth_state,
+  app/          - theme (light/dark + AppSemanticColors), router, init Stripe
+  core/         - api_client (Dio + auth interceptor), auth_state,
                   token_storage, error_utils, app_log, theme_mode_provider
   features/
-    auth/       — login, register, sesi
-    posts/      — feed, detail, karang, grid gambar + pemapar skrin penuh
-    members/    — direktori ahli, barisan kelulusan, tukar role
-    profile/    — profil, tentang, FAQ, edit
-    donation/   — borang sokongan + handler gateway (Strategy)
-    audit/      — pemapar jejak audit (management sahaja)
+    auth/       - login, register, sesi
+    posts/      - feed, detail, karang, grid gambar + pemapar skrin penuh
+    members/    - direktori ahli, barisan kelulusan, tukar role
+    profile/    - profil, tentang, FAQ, edit
+    donation/   - borang sokongan + handler gateway (Strategy)
+    audit/      - pemapar jejak audit (management sahaja)
     notifications/
-  shared/widgets/ — AppDialogShell, AppActionSheet, AppNetworkImage,
+  shared/widgets/ - AppDialogShell, AppActionSheet, AppNetworkImage,
                     EditedBadge, MySnackBar, ConfirmDialog
 ```
 
@@ -80,7 +80,7 @@ Perkara yang pernah jadi bug di sini, jadi ia bukan sekadar gaya:
   melukis garis bawah berganda kuning, dan menetapkan `color` pada
   `TextStyle` tak membuangnya.
 - **Gambar rangkaian: guna `AppNetworkImage`.** Ia mengekang saiz nyahkod.
-  `Image.network` mentah menyahkod pada resolusi penuh — sumber 3456×4608
+  `Image.network` mentah menyahkod pada resolusi penuh - sumber 3456×4608
   ialah ~64MB dalam memori untuk satu gambar.
 - **Butang dalam susun atur tak berhad**: `filledButtonTheme` global
   menetapkan `minimumSize: Size.fromHeight(54)`, iaitu lebar TAK TERHINGGA.
@@ -95,7 +95,7 @@ dart format lib/ test/
 ```
 
 Nota: `pumpAndSettle()` tak pernah selesai pada skrin yang ada gambar
-rangkaian — spinner "memuat" berpusing selamanya sebab muat turun tak
+rangkaian - spinner "memuat" berpusing selamanya sebab muat turun tak
 berlaku dalam ujian. Guna `pump(Duration(...))` berjadual.
 
 ## Build
@@ -107,5 +107,5 @@ flutter build apk --release
 
 Android: `MainActivity` mesti `FlutterFragmentActivity` (keperluan
 flutter_stripe), dan tema mesti `Theme.MaterialComponents.*`.
-`permission_handler` dipin ke 12.0.3 — 13.x tarik transitive yang perlukan
+`permission_handler` dipin ke 12.0.3 - 13.x tarik transitive yang perlukan
 compileSdk 37 yang AGP semasa tak dapat resolve.

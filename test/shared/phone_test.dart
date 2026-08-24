@@ -26,7 +26,7 @@ void main() {
       '0123456789012',
       'abcdefghij',
       '03-12345678',
-      '0111234567', // "011"+7 digit (10 digit) — mesti tolak, lihat phone.dart
+      '0111234567', // "011"+7 digit (10 digit) - mesti tolak, lihat phone.dart
     ];
 
     for (final input in invalidCases) {

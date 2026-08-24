@@ -6,12 +6,12 @@ import 'package:marc/features/posts/post_models.dart';
 ///
 /// Sumbernya: handler post/keahlian sedia ada, tambah tiga jenis modul
 /// aktiviti (`activities.go`, `activity_certificates.go`). Senarai ini ialah
-/// kontrak — ujian di bawah menuntut setiap satunya dipetakan secara
+/// kontrak - ujian di bawah menuntut setiap satunya dipetakan secara
 /// eksplisit, jadi jenis server yang baharu akan menjeritkan `assert` di
 /// sini dan bukan mewarisi ayat orang lain secara senyap.
 /// Sumber kebenaran: kekangan `notifications_type_check` dalam
 /// `../marc_go/internal/db/migrations`. Bila migration meluaskan
-/// kekangan itu, senarai ni MESTI diluaskan sama — kalau tidak jenis
+/// kekangan itu, senarai ni MESTI diluaskan sama - kalau tidak jenis
 /// baharu mendarat di `default`, `assert` menembak dalam binaan debug,
 /// dan pengguna release nampak ayat neutral.
 ///
@@ -107,7 +107,7 @@ void main() {
       );
     });
 
-    test('certificate_ready membawa KEDUA-DUA id — sijil menang', () {
+    test('certificate_ready membawa KEDUA-DUA id - sijil menang', () {
       expect(
         notificationDestination(
           _n('certificate_ready', activityId: 'a1', certificateId: 'c1'),

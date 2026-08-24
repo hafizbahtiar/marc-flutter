@@ -160,7 +160,7 @@ class _DepartmentsBody extends ConsumerWidget {
     final ok = await showConfirmDialog(
       context,
       title: 'Buang bahagian',
-      message: 'Buang "${d.code} — ${d.name}"?',
+      message: 'Buang "${d.code} - ${d.name}"?',
       confirmLabel: 'Buang',
       isDestructive: true,
     );

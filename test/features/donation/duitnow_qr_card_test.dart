@@ -19,7 +19,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  // Bayaran QR memintas backend sepenuhnya — tiada baris donations, tiada
+  // Bayaran QR memintas backend sepenuhnya - tiada baris donations, tiada
   // resit. Pengguna yang menjangka resit dan tak menerimanya akan fikir
   // duit mereka hilang, jadi amaran ni mesti kekal.
   testWidgets('nyatakan dengan jelas tiada resit automatik', (tester) async {
@@ -34,7 +34,7 @@ void main() {
     expect(find.textContaining('Tiada yuran'), findsOneWidget);
   });
 
-  // Aset mesti benar-benar wujud dan boleh dinyahkod — kalau tersalah nama
+  // Aset mesti benar-benar wujud dan boleh dinyahkod - kalau tersalah nama
   // atau tak didaftar dalam pubspec, errorBuilder akan tunjuk teks ganti.
   testWidgets('aset QR dimuat, bukan fallback ralat', (tester) async {
     await tester.pumpWidget(_host());
@@ -58,8 +58,8 @@ void main() {
   });
 
   // FPX `available: false` pada akaun Stripe kita (perlukan BRN/SSM), jadi
-  // PaymentSheet tak pernah paparkannya. Menyenaraikannya dalam UI —
-  // sebagai pilihan sedia ada MAHUPUN "akan datang" — ialah janji yang
+  // PaymentSheet tak pernah paparkannya. Menyenaraikannya dalam UI -
+  // sebagai pilihan sedia ada MAHUPUN "akan datang" - ialah janji yang
   // bergantung pada pendaftaran perniagaan yang belum wujud.
   testWidgets('tiada dakwaan FPX dalam UI', (tester) async {
     await tester.pumpWidget(_host());

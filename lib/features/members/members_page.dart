@@ -204,7 +204,7 @@ class _DepartmentPositionFormState extends State<_DepartmentPositionForm> {
                 child: Text('$_departmentCode (tidak sah lagi)'),
               ),
             for (final d in widget.departments)
-              DropdownMenuItem(value: d.code, child: Text('${d.code} — ${d.name}')),
+              DropdownMenuItem(value: d.code, child: Text('${d.code} - ${d.name}')),
           ],
           onChanged: (v) => setState(() => _departmentCode = v),
         ),

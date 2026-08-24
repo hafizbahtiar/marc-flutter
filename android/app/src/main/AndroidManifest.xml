@@ -11,7 +11,7 @@
   <application android:label="@string/app_name" android:name="${applicationName}" android:icon="@mipmap/ic_launcher" android:allowBackup="false">
     <!-- allowBackup="false": Android Auto Backup lain masa upload
              FlutterSecureStorage.xml ke cloud tapi bukan kunci Keystore
-             yang bungkus dia — restore pada peranti baru/lepas Keystore
+             yang bungkus dia - restore pada peranti baru/lepas Keystore
              invalid bawa blob yang tak boleh dinyahsulit langsung
              (PlatformException bila baca). Tiada data lain app ni yang
              perlu Auto Backup. -->
@@ -26,7 +26,7 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
       <!-- Redirect balik ke app lepas payment method FPX (bank
-                 Malaysia) authenticate di luar app — Stripe.urlScheme
+                 Malaysia) authenticate di luar app - Stripe.urlScheme
                  'marc' (lib/app/stripe.dart) mesti padan scheme sini. -->
       <intent-filter>
         <action android:name="android.intent.action.VIEW"/>

@@ -53,7 +53,7 @@ void main() {
       findsOneWidget,
     );
 
-    // Kelulusan pendaftaran dibuat oleh pengurusan MARC, bukan MAIWP —
+    // Kelulusan pendaftaran dibuat oleh pengurusan MARC, bukan MAIWP -
     // menyebut MAIWP di sini menyiratkan pengendalian rasmi.
     expect(
       find.textContaining('diluluskan oleh pihak pengurusan MAIWP'),

@@ -102,7 +102,7 @@ void main() {
         if (read != null) return read;
         if (options.method == 'PUT' &&
             options.path == '/activities/a1/sessions') {
-          // Bentuk sebenar backend — activities.go:1109.
+          // Bentuk sebenar backend - activities.go:1109.
           return _jsonResponse({
             'error': 'sesi yang sudah ada kehadiran tidak boleh diganti',
           }, status: 409);
@@ -247,7 +247,7 @@ void main() {
       expect(result.message, 'di luar tetingkap check-in');
     });
 
-    test('created:false bukan ralat — sudah ditanda hadir', () async {
+    test('created:false bukan ralat - sudah ditanda hadir', () async {
       final dio = _dioWith((options) async {
         return _jsonResponse({'created': false, 'member': <String, dynamic>{}});
       });
@@ -530,7 +530,7 @@ void main() {
       expect(rows.first.name, 'MARC-001');
       expect(rows.last.name, 'Zainal');
 
-      // Kehadiran disemai daripada SATU permintaan — inilah yang
+      // Kehadiran disemai daripada SATU permintaan - inilah yang
       // membenarkan suis bermula pada keadaan sebenar dan laluan buang
       // kehadiran dicapai untuk silap tanda semalam.
       expect(rows.first.attendedSessionIds, isEmpty);

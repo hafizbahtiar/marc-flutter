@@ -19,7 +19,7 @@ class AuditLog {
   final String entityId;
   final String action;
 
-  /// UUID pelaku (admin/management) — lajur actor_id dari API.
+  /// UUID pelaku (admin/management) - lajur actor_id dari API.
   final String? actorId;
 
   /// Snapshot pada masa tindakan - bukan role semasa pelaku.

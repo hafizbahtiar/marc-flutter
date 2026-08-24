@@ -9,7 +9,7 @@ Membina halaman log masuk (sign in) dan pendaftaran (sign up) menggunakan email 
 ## Keputusan
 - Skop: sign in + sign up (tiada reset kata laluan buat masa ini).
 - Kaedah auth: email + kata laluan sahaja.
-- Env: Pendekatan A — `flutter_dotenv` (fail `.env` sebagai asset, `.gitignore`).
+- Env: Pendekatan A - `flutter_dotenv` (fail `.env` sebagai asset, `.gitignore`).
 - Bahasa UI: Bahasa Melayu Malaysia.
 
 ## Senibina & Struktur Fail

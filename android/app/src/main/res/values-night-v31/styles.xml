@@ -15,12 +15,12 @@
          running.
          
          This Theme is only used starting with V2 of Flutter's Android embedding. -->
-    <!-- MaterialComponents.LIGHT — lihat values-night/styles.xml untuk
+    <!-- MaterialComponents.LIGHT - lihat values-night/styles.xml untuk
          sebab penuh (app Flutter ni tiada darkTheme, kekal light tak
          kira system dark mode; native platform view kena ikut sama). -->
     <style name="NormalTheme" parent="@style/Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowBackground">?android:colorBackground</item>
-        <!-- Force Dark off — lihat values/styles.xml untuk sebab penuh. -->
+        <!-- Force Dark off - lihat values/styles.xml untuk sebab penuh. -->
         <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>

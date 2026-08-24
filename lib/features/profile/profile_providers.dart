@@ -271,7 +271,7 @@ class ProfileRepository {
     _ref.invalidate(pendingMembersProvider);
   }
 
-  /// Batalkan bil yuran pendaftaran 'pending' ahli — admin/superadmin
+  /// Batalkan bil yuran pendaftaran 'pending' ahli - admin/superadmin
   /// sahaja. Supaya laluan langkau bayaran boleh digunakan selepas bil
   /// online tamat/dibatalkan (backend semak gateway dulu).
   Future<void> cancelRegistrationPayment(String userId) async {

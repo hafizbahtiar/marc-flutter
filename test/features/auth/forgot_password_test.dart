@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/features/auth/forgot_password_page.dart';
 
-/// Mesej selepas hantar MESTI neutral — ia sama sama ada akaun wujud
+/// Mesej selepas hantar MESTI neutral - ia sama sama ada akaun wujud
 /// atau tidak. Kalau ia berbeza, UI membocorkan apa yang backend sengaja
 /// sembunyikan (lihat L32: request pulang 204 sentiasa).
 void main() {

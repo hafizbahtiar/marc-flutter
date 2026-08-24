@@ -35,7 +35,7 @@ void main() {
     expect(find.byType(AppNetworkImage), findsNothing);
   });
 
-  // Grid mesti tak mengembang tanpa had dalam ListView — ia dihadkan oleh
+  // Grid mesti tak mengembang tanpa had dalam ListView - ia dihadkan oleh
   // AspectRatio, bukan saiz semula jadi gambar (yang tak diketahui sebelum
   // dimuat turun).
   testWidgets('grid ada tinggi terhad walau gambar belum dimuat', (
@@ -67,7 +67,7 @@ void main() {
     expect(viewer.urls, hasLength(3));
   });
 
-  // Tag Hero mesti unik setiap URL — tag berulang dalam satu pokok
+  // Tag Hero mesti unik setiap URL - tag berulang dalam satu pokok
   // menyebabkan Flutter tegaskan ralat semasa peralihan.
   testWidgets('setiap jubin ada tag Hero unik', (tester) async {
     await tester.pumpWidget(_host(_urls(4)));
@@ -84,7 +84,7 @@ void main() {
   // bar) manakala `/posts/:id` route peringkat atas. `Navigator.of(context)`
   // tanpa `rootNavigator: true` menyelesai ke navigator berlainan di
   // kedua-dua tempat, jadi pemapar dibuka DALAM shell bila dilancarkan dari
-  // feed — bar navigasi kekal nampak, tinggi mengecil, dan kaunter
+  // feed - bar navigasi kekal nampak, tinggi mengecil, dan kaunter
   // kanan-atas beralih. Mesti skrin penuh di mana-mana ia dibuka.
   testWidgets('pemapar skrin penuh walau dibuka dari navigator bersarang', (
     tester,
@@ -127,7 +127,7 @@ void main() {
   });
 
   // Kawalan putih atas gambar sembarangan tak boleh dibaca tanpa skrim/
-  // latar — sebab "counter jadi buruk". Kekalkan latar tu.
+  // latar - sebab "counter jadi buruk". Kekalkan latar tu.
   testWidgets('kawalan pemapar ada latar kontras, bukan teks kosong', (
     tester,
   ) async {

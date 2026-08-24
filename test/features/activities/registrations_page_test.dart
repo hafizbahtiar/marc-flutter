@@ -124,7 +124,7 @@ Widget _app(Dio dio) {
 ///
 /// Menanda kehadiran membatalkan cache senarai peserta, yang memulakan
 /// bacaan semula. Bacaan itu tidak menjadualkan bingkai, jadi
-/// `pumpAndSettle` boleh kembali sementara pemasa dio masih tertunggu — dan
+/// `pumpAndSettle` boleh kembali sementara pemasa dio masih tertunggu - dan
 /// ujian kemudiannya gagal dengan "A Timer is still pending".
 Future<void> _drain(WidgetTester tester) async {
   for (var i = 0; i < 5; i++) {
@@ -169,7 +169,7 @@ void main() {
     await tester.pumpWidget(_app(dio));
     await tester.pumpAndSettle();
 
-    // Sesi 1 dipilih automatik, dan Ali memang ditanda hadir untuknya —
+    // Sesi 1 dipilih automatik, dan Ali memang ditanda hadir untuknya -
     // tanpa menekan apa-apa.
     expect(_switchValue(tester), isTrue);
 
@@ -210,7 +210,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(_switchValue(tester), isFalse);
 
-      // Tanda hadir untuk SESI 1 — permintaan tergantung pada pintu.
+      // Tanda hadir untuk SESI 1 - permintaan tergantung pada pintu.
       await tester.tap(find.byType(Switch));
       // Dipam sehingga permintaan benar-benar bermula; dio melalui
       // beberapa lapisan async sebelum adapter dimasuki.
@@ -224,7 +224,7 @@ void main() {
 
       // Biarkan POST sesi 1 selesai SEKARANG. `pumpAndSettle` selamat di
       // sini: laluan yang dibuang mengosongkan entri busy, jadi tiada
-      // spinner yang beranimasi selamanya — dan ia turut menghabiskan
+      // spinner yang beranimasi selamanya - dan ia turut menghabiskan
       // bacaan semula senarai yang dicetuskan oleh pembatalan cache.
       gate.complete();
       await tester.pumpAndSettle();
@@ -232,7 +232,7 @@ void main() {
 
       // Ali TIDAK hadir untuk sesi 2. Sebelum pembetulan ini, penyelesaian
       // sesi 1 menulis `_marked['r1'] = true` dan sesi 2 memaparkannya
-      // sebagai hadir — pembohongan yang kelihatan berwibawa kerana suis
+      // sebagai hadir - pembohongan yang kelihatan berwibawa kerana suis
       // yang lain semuanya data sebenar.
       expect(
         _switchValue(tester),
@@ -251,7 +251,7 @@ void main() {
       // Cache provider HIDUP LEBIH LAMA daripada skrin (FutureProvider
       // .family bukan autoDispose). Tanpa pembatalan selepas menanda,
       // kemasukan kedua membina State baharu dengan tindihan kosong dan
-      // memainkan semula respons LAMA — 30 suis OFF untuk orang yang hadir.
+      // memainkan semula respons LAMA - 30 suis OFF untuk orang yang hadir.
       final attended = <String>[];
       var registrationReads = 0;
 
@@ -280,7 +280,7 @@ void main() {
       // kemasukan. `ProviderScope` biasa tidak memadai: melepaskannya
       // daripada pokok widget MELUPUSKAN containernya, jadi kemasukan kedua
       // akan mendapat cache kosong dan ujian akan lulus walaupun pepijat
-      // masih ada. Ini memodelkan app sebenar — satu container seumur hayat
+      // masih ada. Ini memodelkan app sebenar - satu container seumur hayat
       // app, skrin ditolak dan ditutup di dalamnya.
       final container = ProviderContainer(
         overrides: [
@@ -306,7 +306,7 @@ void main() {
       expect(_switchValue(tester), isTrue);
 
       // "Tekan kembali": skrin dilupuskan, State (dan tindihannya) hilang.
-      // Container — dan cachenya — kekal hidup.
+      // Container - dan cachenya - kekal hidup.
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: Text('lain'))),
       );

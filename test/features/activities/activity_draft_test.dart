@@ -41,7 +41,7 @@ ActivitySession _session({
 );
 
 void main() {
-  group('buildActivityPatch — hanya medan yang BERUBAH', () {
+  group('buildActivityPatch - hanya medan yang BERUBAH', () {
     test('tiada suntingan → badan kosong, jadi tiada PATCH dihantar', () {
       final before = ActivityDraft.fromActivity(_activity());
       final after = before.copy();
@@ -131,7 +131,7 @@ void main() {
     });
   });
 
-  group('sessionsChanged — gerbang bagi PUT sesi', () {
+  group('sessionsChanged - gerbang bagi PUT sesi', () {
     final start = DateTime.utc(2099, 1, 1, 1);
     final end = DateTime.utc(2099, 1, 1, 4);
 
@@ -170,7 +170,7 @@ void main() {
         () {
       // Aktiviti lama boleh ada `seq` yang tidak mengikut kronologi. Kalau
       // itu dikira sebagai perubahan, membuka borang dan menekan Simpan
-      // akan menghantar PUT yang tidak diminta — dan ditolak 409 sebaik ada
+      // akan menghantar PUT yang tidak diminta - dan ditolak 409 sebaik ada
       // kehadiran.
       final a = SessionDraft(
         title: 'Pagi',
@@ -187,7 +187,7 @@ void main() {
     });
   });
 
-  group('buildSessionsList — seq daripada kedudukan', () {
+  group('buildSessionsList - seq daripada kedudukan', () {
     test('nombor urutan 1..n dan tidak pernah berulang', () {
       final start = DateTime.utc(2099, 1, 1, 1);
       final sessions = [
@@ -208,7 +208,7 @@ void main() {
 
     test('seq mengikut KRONOLOGI, bukan urutan taip', () {
       final start = DateTime.utc(2099, 1, 10, 1);
-      // Ditambah terakhir tetapi berlaku dahulu — pemilih kehadiran melabel
+      // Ditambah terakhir tetapi berlaku dahulu - pemilih kehadiran melabel
       // "Sesi ${seq}", jadi urutan taip akan membacanya sebagai sesi
       // terakhir pada pagi pertama kursus.
       final sessions = [
@@ -259,7 +259,7 @@ void main() {
       expect(validateDraft(okDraft(), [okSession()]), isNull);
     });
 
-    test('tanpa sesi ditolak — backend juga menolaknya 400', () {
+    test('tanpa sesi ditolak - backend juga menolaknya 400', () {
       expect(validateDraft(okDraft(), const []), isNotNull);
     });
 

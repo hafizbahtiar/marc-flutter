@@ -44,7 +44,7 @@ dependencies:
   skeletonizer: ^2.1.3
   image_picker: ^1.1.2
   intl: ^0.20.2
-  # Dipin ke 12.0.3 (bukan ^13.0.0) — versi 13.x tarik
+  # Dipin ke 12.0.3 (bukan ^13.0.0) - versi 13.x tarik
   # permission_handler_android 14.x yang perlukan compileSdk 37 (Android
   # SDK 37.0/"Android 17", bleeding-edge, folder platform "android-37.0"
   # tak sepadan dgn hash "android-37" yang AGP semasa cari). 12.0.3 guna
@@ -57,7 +57,7 @@ dependencies:
   extended_image: ^10.1.0
   gal: ^2.3.3
   image: ^4.9.1
-  # Rendering QR tulen Dart (CustomPainter) — tiada kod Android/iOS, jadi
+  # Rendering QR tulen Dart (CustomPainter) - tiada kod Android/iOS, jadi
   # ia tidak menyentuh siling compileSdk 35 macam permission_handler di
   # atas. Disahkan: `flutter build apk --debug` lulus pada 4.1.0.
   qr_flutter: ^4.1.0
@@ -66,7 +66,7 @@ dependencies:
   # sebenar terhadap siling compileSdk 35 projek ini (lihat komen
   # permission_handler di atas).
   #
-  # Disahkan: 7.4.0 membina pada compileSdk 35 — `flutter build apk --debug`
+  # Disahkan: 7.4.0 membina pada compileSdk 35 - `flutter build apk --debug`
   # lulus tanpa ralat AGP/compileSdk (hanya amaran KGP yang sama seperti
   # package_info_plus dan stripe_android sudah beri hari ini). Tiada versi
   # lebih lama perlu dicuba.
@@ -78,7 +78,7 @@ dependencies:
   mobile_scanner: ^7.4.0
   webview_flutter: ^4.13.0
   # Resit PDF (yuran pendaftaran/aktiviti/donation) kini di-stream TERUS
-  # dari backend (bukan URL R2 lagi, 2026-08-24) — `printing` buka
+  # dari backend (bukan URL R2 lagi, 2026-08-24) - `printing` buka
   # dialog preview/simpan/kongsi/cetak native drpd bait PDF terus,
   # elak perlu path_provider+open_filex+share_plus berasingan. Disahkan
   # `flutter build apk --debug` lulus pada compileSdk 35 (lihat nota
@@ -119,7 +119,7 @@ flutter_native_splash:
   android_12:
     color: "#FFFFFF"
     # full_logo.png (bbox 1000x854 atas kanvas 1052x1054) penuh sampai
-    # tepi macam logo.png lama — Android 12+ splash mask ikon dalam
+    # tepi macam logo.png lama - Android 12+ splash mask ikon dalam
     # bulatan 768px atas kanvas 1152x1152, jadi tanpa padding tepi/penjuru
     # logo kena potong oleh mask tu. full_logo_android12.png ialah versi
     # berkanvas 1152x1152 dgn logo diskalakan ke ~620px (padanan skala

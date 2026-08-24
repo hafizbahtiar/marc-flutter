@@ -46,7 +46,7 @@ Widget _wrap(Widget child) => ProviderScope(
 
 void main() {
   // Regresi: dulu `showEditTextDialog` buang TextEditingController dalam
-  // blok `finally` sebaik `showDialog` selesai — tapi dialog masih
+  // blok `finally` sebaik `showDialog` selesai - tapi dialog masih
   // beranimasi keluar dan TextField masih dibina, jadi tekan Simpan/Batal
   // crash dengan "A TextEditingController was used after being disposed".
   group('showEditTextDialog tak guna controller selepas dispose', () {
@@ -91,7 +91,7 @@ void main() {
   });
 
   group('sheet tindakan comment', () {
-    // Edit/Padam bukan lagi butang teks dalam baris comment — ia di
+    // Edit/Padam bukan lagi butang teks dalam baris comment - ia di
     // belakang satu ikon "lagi" yang buka sheet.
     testWidgets('Edit/Padam tak terpampang dalam baris', (tester) async {
       await tester.pumpWidget(

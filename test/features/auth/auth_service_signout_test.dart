@@ -47,7 +47,7 @@ class _RecordingPushService implements PushService {
 }
 
 void main() {
-  // signOut() sekarang panggil clearMemoryImageCache() (extended_image) —
+  // signOut() sekarang panggil clearMemoryImageCache() (extended_image) -
   // itu baca PaintingBinding.instance, yang perlu binding flutter_test
   // diinit dulu (bukan idle dalam test 'unit' murni macam sebelum ni).
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -63,13 +63,13 @@ void main() {
 
       final pushService = _RecordingPushService();
       // dio null-safe: signOut hanya guna _dio.post untuk revoke di
-      // background (unawaited) — tak perlu network sebenar untuk assert
+      // background (unawaited) - tak perlu network sebenar untuk assert
       // ordering ni, cuma perlu ia tak throw sebelum unawaited() dipanggil.
       final service = AuthService(_NoopDio(), notifier, storage, pushService);
 
       await service.signOut();
 
-      // signOut() sepatutnya tak `await` unlinkDevice/logout — tapi
+      // signOut() sepatutnya tak `await` unlinkDevice/logout - tapi
       // panggilan sync sebelum await pertama di dalam unlinkDevice tetap
       // jalan serta-merta bila unawaited() dipanggil, jadi assert ini sah
       // walaupun keseluruhan Future tak ditunggu.
@@ -78,7 +78,7 @@ void main() {
         'seed-access',
         reason:
             'access token mesti ditangkap SEBELUM clear() dan dihantar '
-            'terus ke unlinkDevice() — bukan bergantung pada interceptor '
+            'terus ke unlinkDevice() - bukan bergantung pada interceptor '
             'menarik token tersimpan yang dah tiada lepas clear()',
       );
       expect(
@@ -90,7 +90,7 @@ void main() {
   );
 }
 
-// Dio palsu minimum — signOut() cuma panggil _dio.post(...).catchError(...)
+// Dio palsu minimum - signOut() cuma panggil _dio.post(...).catchError(...)
 // dalam unawaited(), jadi ni tak perlu benar-benar network, cuma tak throw
 // secara synchronous.
 class _NoopDio implements Dio {

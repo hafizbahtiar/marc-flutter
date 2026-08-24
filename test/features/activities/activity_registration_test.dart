@@ -70,7 +70,7 @@ Dio _dioWith(Future<ResponseBody> Function(RequestOptions options) onFetch) {
   return dio;
 }
 
-/// Pusing baris gilir microtask sehingga [check] benar — segerak dengan
+/// Pusing baris gilir microtask sehingga [check] benar - segerak dengan
 /// permintaan yang baru bermula tanpa bergantung pada masa jam sebenar.
 Future<void> _waitUntil(bool Function() check) async {
   while (!check()) {
@@ -136,7 +136,7 @@ void main() {
   test('409 dari server → kiraan optimistik digulung semula dan mesej '
       'Bahasa Melayu dipulangkan', () async {
     // Pintu supaya kita boleh MEMERHATI keadaan optimistik di tengah
-    // penerbangan. Tanpa ini, hanya keadaan akhir yang diuji — dan
+    // penerbangan. Tanpa ini, hanya keadaan akhir yang diuji - dan
     // keadaan akhir yang betul juga akan berlaku kalau kemas kini
     // optimistik itu dipadam terus, jadi ujian tidak akan memagar apa-apa.
     final gate = Completer<void>();
@@ -153,7 +153,7 @@ void main() {
           options.path == '/activities/a1/registration') {
         registerRequested = true;
         await gate.future;
-        // Bentuk sebenar yang backend hantar — lihat
+        // Bentuk sebenar yang backend hantar - lihat
         // internal/http/handlers/activity_registrations.go:170.
         return _jsonResponse({'error': 'aktiviti sudah penuh'}, status: 409);
       }

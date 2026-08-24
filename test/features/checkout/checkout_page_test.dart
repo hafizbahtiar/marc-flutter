@@ -8,7 +8,7 @@ import 'package:marc/features/registration_payment/registration_payment_provider
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
-/// Palsukan `UrlLauncherPlatform.instance` — `extends` (bukan `implements`)
+/// Palsukan `UrlLauncherPlatform.instance` - `extends` (bukan `implements`)
 /// sebab konstruktor asal `super(token: _token)` yang membolehkan
 /// `PlatformInterface.verify` lulus bila kita set `instance =` di bawah.
 class _FakeUrlLauncher extends UrlLauncherPlatform {
@@ -39,11 +39,11 @@ void main() {
   });
 
   /// `MaterialApp` + skrin awal dengan butang "buka" yang push
-  /// `CheckoutPage` — padan corak `test/shared/app_dialog_test.dart`.
+  /// `CheckoutPage` - padan corak `test/shared/app_dialog_test.dart`.
   /// `platform: TargetPlatform.android` MEMASTIKAN dialog nombor
   /// telefon guna `TextField` Material (bukan `CupertinoTextField`).
   /// `paymentConfigProvider` di-override (bukan dibiar panggil
-  /// `dioProvider` sebenar) — elak percubaan network sebenar dalam
+  /// `dioProvider` sebenar) - elak percubaan network sebenar dalam
   /// ujian, dan jadikan `gatewayChargeCents` deterministik.
   Widget host(CheckoutRequest request, {int gatewayChargeCents = 100}) {
     return ProviderScope(
@@ -74,7 +74,7 @@ void main() {
     'papar breakdown invoice (yuran + caj gateway = jumlah) dan description',
     (tester) async {
       // `gatewayChargeCents: 250` (BUKAN 100/`kDefaultGatewayChargeCents`)
-      // sengaja — nilai berbeza drpd fallback supaya ujian ni benar-benar
+      // sengaja - nilai berbeza drpd fallback supaya ujian ni benar-benar
       // buktikan CheckoutPage guna nilai DIFETCH (provider override), bukan
       // sekadar fallback yang kebetulan sama (Opus verify 2026-08-24).
       await tester.pumpWidget(
@@ -110,7 +110,7 @@ void main() {
         host(
           CheckoutRequest(
             title: 'Yuran Aktiviti',
-            amountCents: 100, // RM1.00 — sama dgn caj gateway
+            amountCents: 100, // RM1.00 - sama dgn caj gateway
             currency: 'myr',
             onCheckout: ({phone}) async => 'https://toyyibpay.com/abc',
           ),
@@ -147,7 +147,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(fakeLauncher.lastUrl, 'https://toyyibpay.com/abc');
-    // `externalApplication`, bukan `platformDefault`/`inAppWebView` —
+    // `externalApplication`, bukan `platformDefault`/`inAppWebView` -
     // regresi mod pelancaran akan lulus test lain tanpa assertion ni
     // (Opus verify 2026-08-24).
     expect(
@@ -179,7 +179,7 @@ void main() {
     expect(find.textContaining('MYR'), findsNothing);
   });
 
-  testWidgets('launchUrl pulang false — snackbar ralat, tak pop', (
+  testWidgets('launchUrl pulang false - snackbar ralat, tak pop', (
     tester,
   ) async {
     fakeLauncher.shouldSucceed = false;
@@ -203,7 +203,7 @@ void main() {
     expect(find.text('Bayar Sekarang'), findsOneWidget); // tak pop
   });
 
-  testWidgets('URL bukan https ditolak — snackbar ralat, tak pop', (
+  testWidgets('URL bukan https ditolak - snackbar ralat, tak pop', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -251,7 +251,7 @@ void main() {
       await tester.tap(find.text('buka'));
       await tester.pumpAndSettle();
 
-      // Bukan `pumpAndSettle` — butang "Bayar Sekarang" tunjuk
+      // Bukan `pumpAndSettle` - butang "Bayar Sekarang" tunjuk
       // `CircularProgressIndicator.adaptive()` (animasi tak berhenti)
       // sepanjang dialog nombor telefon menunggu input pengguna, jadi
       // `pumpAndSettle` akan timeout menunggu ia berhenti.
@@ -294,7 +294,7 @@ void main() {
     await tester.tap(find.text('buka'));
     await tester.pumpAndSettle();
 
-    // Lihat komen sama dalam ujian "PhoneRequiredException" di atas —
+    // Lihat komen sama dalam ujian "PhoneRequiredException" di atas -
     // spinner tak berhenti sepanjang dialog menunggu, elak `pumpAndSettle`.
     await tester.tap(find.text('Bayar Sekarang'));
     await tester.pump();

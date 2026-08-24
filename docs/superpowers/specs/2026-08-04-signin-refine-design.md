@@ -1,4 +1,4 @@
-# Design: Refine Auth — Riverpod + go_router + UI Editorial
+# Design: Refine Auth - Riverpod + go_router + UI Editorial
 
 Tarikh: 2026-08-04
 Projek: `marc` (Flutter, `supabase_flutter: ^2.16.0`)
@@ -6,17 +6,17 @@ Status: refine ke atas kerja sedia ada (sign in / sign up Supabase)
 
 ## Tujuan
 Memperhalusi ciri auth sedia ada tanpa mengubah logik Supabase teras. Tiga matlamat:
-1. **UI/UX** — buang rupa "template AI"; gaya minimal/editorial yang matang.
-2. **Riverpod** — ganti `setState` + `AuthService()` per-widget dengan provider (manual, tiada codegen).
-3. **Routing** — ganti `AuthGate`/`_AuthSwitcher` (`setState` bool) dengan `go_router` (manual, redirect berasaskan auth state).
+1. **UI/UX** - buang rupa "template AI"; gaya minimal/editorial yang matang.
+2. **Riverpod** - ganti `setState` + `AuthService()` per-widget dengan provider (manual, tiada codegen).
+3. **Routing** - ganti `AuthGate`/`_AuthSwitcher` (`setState` bool) dengan `go_router` (manual, redirect berasaskan auth state).
 
 Prinsip: **tiada `build_runner`/codegen** untuk mana-mana bahagian.
 
 ## Keputusan (disahkan pengguna)
 - Routing: `go_router` **manual** (senarai `GoRoute`, tiada `go_router_builder`).
 - State: Riverpod **manual** (`Provider` / `StreamProvider` / `AsyncNotifier`), tiada `riverpod_generator`.
-- Gaya UI: **minimal / editorial** — kiri-align, hero besar, aksen matang (bukan ungu), banyak ruang putih.
-- Typography: `google_fonts` — serif (Fraunces) untuk hero, sans (Inter) untuk badan.
+- Gaya UI: **minimal / editorial** - kiri-align, hero besar, aksen matang (bukan ungu), banyak ruang putih.
+- Typography: `google_fonts` - serif (Fraunces) untuk hero, sans (Inter) untuk badan.
 - Bahasa UI: kekal Bahasa Melayu.
 - Skop kekal: sign in + sign up sahaja. Tiada reset password, tiada dwibahasa, tiada deep-link parametrik.
 
@@ -41,7 +41,7 @@ lib/
 │   └── theme.dart                  # AppTheme: warna, textTheme google_fonts, input/button theme
 ├── features/
 │   ├── auth/
-│   │   ├── auth_service.dart        # (dipindah dari lib/services/) wrapper Supabase — kekal
+│   │   ├── auth_service.dart        # (dipindah dari lib/services/) wrapper Supabase - kekal
 │   │   ├── auth_providers.dart      # authServiceProvider, authStateProvider, login/registerController
 │   │   ├── login_page.dart          # (dipindah + reka semula editorial)
 │   │   ├── register_page.dart       # (dipindah + reka semula editorial)
@@ -65,29 +65,29 @@ Fail dibuang: `lib/pages/auth_gate.dart` (digantikan router redirect), `lib/page
 - `MyApp` guna `MaterialApp.router(routerConfig: ref.watch(routerProvider), theme: AppTheme.light)`.
 
 ### app/theme.dart
-- `AppTheme.light` — `ColorScheme` dibina manual dari palet di atas (bukan `fromSeed(deepPurple)`).
+- `AppTheme.light` - `ColorScheme` dibina manual dari palet di atas (bukan `fromSeed(deepPurple)`).
 - `textTheme` = gabungan `GoogleFonts.frauncesTextTheme` (display/headline) + `GoogleFonts.inter` (body/label).
 - `InputDecorationTheme` (filled, radius, warna fokus aksen), `FilledButtonTheme` / `ElevatedButtonTheme` seragam supaya page tak ulang styling.
 
 ### app/router.dart
 - `routerProvider = Provider<GoRouter>((ref) {...})`.
 - Route: `/login`, `/register`, `/home`. `initialLocation: '/login'`.
-- `refreshListenable`: `GoRouterRefreshStream(ref.watch(authStateProvider.stream))` atau setara — router refresh bila auth berubah.
+- `refreshListenable`: `GoRouterRefreshStream(ref.watch(authStateProvider.stream))` atau setara - router refresh bila auth berubah.
 - `redirect(context, state)`:
   - `loggedIn = ref.read(authStateProvider).value?.session != null` (atau baca `currentSession`).
   - Jika `loggedIn` dan lokasi ∈ {`/login`,`/register`} → `/home`.
   - Jika `!loggedIn` dan lokasi = `/home` → `/login`.
   - Selainnya `null`.
-- Navigasi Login↔Register: `context.push('/register')` / `context.pop()` — ada transisi + butang back.
+- Navigasi Login↔Register: `context.push('/register')` / `context.pop()` - ada transisi + butang back.
 
 ### features/auth/auth_providers.dart
 - `authServiceProvider = Provider((ref) => AuthService());`
 - `authStateProvider = StreamProvider<AuthState>((ref) => Supabase.instance.client.auth.onAuthStateChange);`
-  — sumber kebenaran redirect.
+  - sumber kebenaran redirect.
 - `loginControllerProvider = AsyncNotifierProvider<LoginController, void>(LoginController.new);`
   - `LoginController extends AsyncNotifier<void>`; `build()` kembali `void`/null (idle).
   - `Future<void> submit(email, password)`: set `state = AsyncLoading()`, panggil `authService.signIn`, jika `!success` → `state = AsyncError(mesej)`; jika berjaya → `state = AsyncData(null)` (redirect diuruskan router).
-- `registerControllerProvider` — corak sama guna `signUp`; kejayaan → sampaikan mesej "semak email" + pop ke `/login`.
+- `registerControllerProvider` - corak sama guna `signUp`; kejayaan → sampaikan mesej "semak email" + pop ke `/login`.
 
 ### features/auth/login_page.dart & register_page.dart
 - `ConsumerStatefulWidget` (perlu `TextEditingController` + `dispose`).
@@ -134,9 +134,9 @@ HomePage butang log keluar → authService.signOut()
 - Ralat auth dipapar via `SnackBar` (bukan inline) melalui `ref.listen`.
 
 ## Testing
-- Unit: `validators.dart` — kes kosong / format salah / sah.
-- Unit: `LoginController`/`RegisterController` dengan `AuthService` palsu (inject melalui override provider) — sahkan peralihan `loading → error` dan `loading → data`.
-- Widget: `AuthField` — toggle tunjuk/sembunyi menukar `obscureText`.
+- Unit: `validators.dart` - kes kosong / format salah / sah.
+- Unit: `LoginController`/`RegisterController` dengan `AuthService` palsu (inject melalui override provider) - sahkan peralihan `loading → error` dan `loading → data`.
+- Widget: `AuthField` - toggle tunjuk/sembunyi menukar `obscureText`.
 - Tidak menguji panggilan Supabase sebenar (perlukan projek/rangkaian).
 
 ## Kebergantungan Baharu (pubspec)

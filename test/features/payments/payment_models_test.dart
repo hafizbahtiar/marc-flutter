@@ -3,7 +3,7 @@ import 'package:marc/features/payments/payment_models.dart';
 
 /// `MyPaymentHistory` ialah sempadan silang-repo: bentuknya ditetapkan
 /// oleh `PaymentsHandler.Mine` dalam `../marc_go`. Yang diuji di sini
-/// ialah nyahsiri, bukan UI — khususnya kelakuan bila server dan app
+/// ialah nyahsiri, bukan UI - khususnya kelakuan bila server dan app
 /// TAK sebaya, yang berlaku pada setiap deploy.
 
 Map<String, dynamic> _regEntry() => {
@@ -42,7 +42,7 @@ void main() {
 
     // Deploy berperingkat: app BAHARU boleh mencapai backend LAMA yang
     // belum menghantar kunci `donations` (backend L33). Ia mesti
-    // menyahsiri kepada senarai kosong, bukan terhempas — kalau tidak
+    // menyahsiri kepada senarai kosong, bukan terhempas - kalau tidak
     // skrin "Bayaran Saya" mati sepenuhnya sepanjang tetingkap deploy.
     test('kunci donations TIADA → senarai kosong, bukan terhempas', () {
       final h = MyPaymentHistory.fromJson({
@@ -72,7 +72,7 @@ void main() {
       expect(e.createdAt, DateTime.parse('2026-08-22T11:00:00Z').toLocal());
     });
 
-    // Status BUKAN 'succeeded' turut dipulangkan backend dgn sengaja —
+    // Status BUKAN 'succeeded' turut dipulangkan backend dgn sengaja -
     // sejarah patut menunjukkan percubaan yang gagal, bukan senyap
     // menghilangkannya. Gating butang resit berlaku di UI, jadi model
     // mesti membawa status apa pun tanpa menapisnya.
