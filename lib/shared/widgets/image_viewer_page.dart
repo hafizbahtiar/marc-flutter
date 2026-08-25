@@ -2,8 +2,24 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Pemapar gambar skrin penuh: cubit-untuk-zum, leret kiri/kanan antara
-/// gambar dalam post yang sama, leret ke bawah untuk tutup.
+/// Tag Hero lalai untuk [ImageViewerPage] - satu gambar post boleh
+/// dipadankan balik ke jubin asal dalam [PostImageGrid] semata-mata
+/// dengan URL sebab URL gambar post unik per post.
+///
+/// TAK sesuai untuk avatar: avatar penulis yang sama boleh terpapar pada
+/// BERBILANG kad serentak (cth beberapa post oleh orang sama dalam
+/// feed) - dua `Hero` dengan tag sama dalam satu route punca Flutter
+/// exception "multiple heroes share the same tag". Pemanggil macam tu
+/// MESTI beri [ImageViewerPage.heroTagBuilder] tersendiri yang
+/// menggabungkan sesuatu unik-per-widget (cth ID post/comment), bukan
+/// URL semata-mata.
+String defaultImageViewerHeroTag(String url, int index) => 'post-image-$url';
+
+/// Pemapar gambar skrin penuh yang boleh guna semula: cubit-untuk-zum,
+/// leret kiri/kanan antara gambar dalam senarai yang sama, leret ke
+/// bawah untuk tutup. Guna untuk galeri post MAHUPUN gambar tunggal
+/// (avatar) - [urls] satu item pun sah, kaunter/leret galeri hanya
+/// terpapar bila lebih daripada satu.
 ///
 /// Dibuka melalui [open] dan bukan `GoRouter`: laluan ni MESTI legap-palsu
 /// (`opaque: false`) supaya latar boleh pudar mengikut leretan tutup -
@@ -14,15 +30,23 @@ class ImageViewerPage extends StatefulWidget {
     super.key,
     required this.urls,
     required this.initialIndex,
+    this.heroTagBuilder = defaultImageViewerHeroTag,
   });
 
   final List<String> urls;
   final int initialIndex;
 
+  /// Bina tag Hero untuk gambar pada `index` - lihat nota
+  /// [defaultImageViewerHeroTag] tentang keunikan tag bila sumber ada
+  /// berbilang salinan gambar sama di skrin serentak.
+  final String Function(String url, int index) heroTagBuilder;
+
   static Future<void> open(
     BuildContext context, {
     required List<String> urls,
     required int initialIndex,
+    String Function(String url, int index) heroTagBuilder =
+        defaultImageViewerHeroTag,
   }) {
     // rootNavigator: true WAJIB. `/feed` tinggal dalam StatefulShellRoute
     // (shell dengan bottom navigation bar), manakala `/posts/:id` ialah
@@ -37,8 +61,11 @@ class ImageViewerPage extends StatefulWidget {
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.transparent,
-        pageBuilder: (_, _, _) =>
-            ImageViewerPage(urls: urls, initialIndex: initialIndex),
+        pageBuilder: (_, _, _) => ImageViewerPage(
+          urls: urls,
+          initialIndex: initialIndex,
+          heroTagBuilder: heroTagBuilder,
+        ),
       ),
     );
   }
@@ -80,12 +107,18 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
 
   Widget _buildViewer(BuildContext context) {
     return ExtendedImageSlidePage(
-      slideAxis: SlideAxis.vertical,
+      // both (bukan vertical sahaja) - lepas leretan tutup bermula, jari
+      // boleh gerak bebas ke mana-mana arah (atas/bawah/serong) dan
+      // gambar terus ikut, bukan terkunci pada satu paksi menegak.
+      // Package tak konflik dengan leret galeri antara gambar (dx
+      // dominan + boundary check dalam gesture.dart handle dua-dua serentak).
+      slideAxis: SlideAxis.both,
       slideType: SlideType.onlyImage,
-      // Latar pudar mengikut jarak leretan - maklum balas yang buat gerak
-      // isyarat tutup terasa langsung dan bukan bertukar tiba-tiba.
+      // Latar pudar mengikut JARAK leretan (magnitud, bukan dy sahaja) -
+      // sepadan dengan slideAxis.both: leretan serong/mendatar pun patut
+      // pudarkan latar, bukan cuma leretan menegak tulen.
       slidePageBackgroundHandler: (offset, size) {
-        final progress = (offset.dy.abs() / (size.height * 0.5)).clamp(
+        final progress = (offset.distance / (size.height * 0.5)).clamp(
           0.0,
           1.0,
         );
@@ -117,7 +150,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                   enableSlideOutPage: true,
                   mode: ExtendedImageMode.gesture,
                   heroBuilderForSlidingPage: (widgetChild) => Hero(
-                    tag: 'post-image-${widget.urls[i]}',
+                    tag: widget.heroTagBuilder(widget.urls[i], i),
                     child: widgetChild,
                   ),
                   initGestureConfigHandler: (state) => GestureConfig(

@@ -10,6 +10,7 @@ import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/edited_badge.dart';
+import 'package:marc/shared/widgets/image_viewer_page.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 
@@ -165,6 +166,15 @@ class _CommentRow extends ConsumerWidget {
             label: comment.author.label,
             avatarUrl: comment.author.avatarUrl,
             radius: 14,
+            heroTag: 'avatar-comment-${comment.id}',
+            onTap: comment.author.avatarUrl == null
+                ? null
+                : () => ImageViewerPage.open(
+                    context,
+                    urls: [comment.author.avatarUrl!],
+                    initialIndex: 0,
+                    heroTagBuilder: (_, _) => 'avatar-comment-${comment.id}',
+                  ),
           ),
           const SizedBox(width: 10),
           Expanded(

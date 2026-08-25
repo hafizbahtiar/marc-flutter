@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
-import 'package:marc/features/posts/widgets/image_viewer_page.dart';
 import 'package:marc/features/posts/widgets/post_image_grid.dart';
 import 'package:marc/shared/widgets/app_network_image.dart';
+import 'package:marc/shared/widgets/image_viewer_page.dart';
 
 List<String> _urls(int n) =>
     List.generate(n, (i) => 'https://pub-test.r2.dev/posts/img$i.jpg');

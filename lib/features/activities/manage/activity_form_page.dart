@@ -9,6 +9,7 @@ import 'package:marc/features/activities/manage/activity_draft.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
 import 'package:marc/shared/widgets/app_action_sheet.dart';
+import 'package:marc/shared/widgets/app_dialog.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
 
@@ -324,7 +325,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
       message:
           'Sebab ini dihantar kepada setiap ahli yang berdaftar. '
           'Pembatalan tidak boleh diundur.',
-      confirmLabel: 'Batalkan aktiviti',
+      confirmLabel: 'Batalkan',
       hint: 'Contoh: dewan tidak tersedia',
       isDestructive: true,
     );
@@ -708,97 +709,18 @@ Future<String?> showReasonDialog(
   String hint = 'Sebab',
   bool isDestructive = false,
 }) {
-  return showDialog<String>(
-    context: context,
-    builder: (_) => _ReasonDialog(
-      title: title,
-      message: message,
-      confirmLabel: confirmLabel,
-      hint: hint,
-      isDestructive: isDestructive,
-    ),
+  // Butang mati sehingga ada sebab: backend menolak sebab kosong 400, dan
+  // mesej ralat selepas fakta lebih teruk daripada butang yang jelas belum
+  // boleh ditekan (lihat validator lalai showAppInputDialog).
+  return showAppInputDialog(
+    context,
+    title: title,
+    message: message,
+    positiveLabel: confirmLabel,
+    hint: hint,
+    maxLines: 3,
+    isDestructive: isDestructive,
   );
-}
-
-class _ReasonDialog extends StatefulWidget {
-  const _ReasonDialog({
-    required this.title,
-    required this.message,
-    required this.confirmLabel,
-    required this.hint,
-    required this.isDestructive,
-  });
-
-  final String title;
-  final String message;
-  final String confirmLabel;
-  final String hint;
-  final bool isDestructive;
-
-  @override
-  State<_ReasonDialog> createState() => _ReasonDialogState();
-}
-
-class _ReasonDialogState extends State<_ReasonDialog> {
-  /// StatefulWidget, bukan controller tempatan dalam fungsi show*: lihat
-  /// nota pemilikan controller dalam `edit_text_dialog.dart`.
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final reason = _controller.text.trim();
-
-    return AlertDialog(
-      title: Text(widget.title),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.message),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            maxLines: 3,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              hintText: widget.hint,
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          // Butang mati sehingga ada sebab: backend menolak sebab kosong
-          // 400, dan mesej ralat selepas fakta lebih teruk daripada butang
-          // yang jelas belum boleh ditekan.
-          onPressed: reason.isEmpty
-              ? null
-              : () => Navigator.of(context).pop(reason),
-          style: widget.isDestructive
-              ? FilledButton.styleFrom(
-                  backgroundColor: theme.colorScheme.error,
-                  foregroundColor: theme.colorScheme.onError,
-                )
-              : null,
-          child: Text(widget.confirmLabel),
-        ),
-      ],
-    );
-  }
 }
 
 class _StatusBanner extends StatelessWidget {

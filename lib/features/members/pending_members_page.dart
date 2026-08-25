@@ -112,7 +112,7 @@ class PendingMembersPage extends ConsumerWidget {
             'Batalkan bil yuran pendaftaran $name yang masih aktif? '
             'Guna ni sebelum langkau bayaran untuk ahli lama. '
             'Bil juga tamat tempoh automatik ~30 minit.',
-        confirmLabel: 'Batalkan bil',
+        confirmLabel: 'Batalkan',
         isDestructive: true,
       );
       if (!ok || !context.mounted) return;

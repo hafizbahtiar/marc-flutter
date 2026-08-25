@@ -23,6 +23,17 @@ class FeedPage extends ConsumerStatefulWidget {
 class _FeedPageState extends ConsumerState<FeedPage> {
   final _scrollController = ScrollController();
 
+  /// Tag Hero FAB - Object UNIK PER STATE (bukan String tetap). String
+  /// tetap ('feed-fab') cukup untuk elak clash DENGAN FAB skrin lain,
+  /// tapi tak elak clash dengan DIRINYA SENDIRI kalau `FeedPage` sempat
+  /// termount dua kali serentak (cth semasa transisi push/pop go_router
+  /// yang tindih dengan StatefulShellRoute.indexedStack) - dilihat
+  /// (2026-08-25) sebagai "multiple heroes share the same tag: feed-fab"
+  /// bila buka /edit-profile. Object() per State jamin setiap instance
+  /// FeedPage, walau berapa banyak sekalipun wujud serentak, ada tag
+  /// tersendiri.
+  final _fabHeroTag = UniqueKey();
+
   @override
   void initState() {
     super.initState();
@@ -136,8 +147,8 @@ class _FeedPageState extends ConsumerState<FeedPage> {
         // jadi FAB tab ni dan FAB ActivitiesPage (dua-dua default tag
         // sebelum ni) wujud serentak dalam tree → Flutter Hero animation
         // "multiple heroes share same tag" crash bila kedua-dua tab
-        // pernah dilawati dalam satu sesi.
-        heroTag: 'feed-fab',
+        // pernah dilawati dalam satu sesi. Lihat nota [_fabHeroTag].
+        heroTag: _fabHeroTag,
         onPressed: () => context.push('/posts/new'),
         child: const Icon(Icons.add),
       ),

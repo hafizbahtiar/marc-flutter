@@ -53,6 +53,12 @@ class _ActivitiesContent extends ConsumerStatefulWidget {
 class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
   final _scrollController = ScrollController();
 
+  /// Object unik per State (bukan String tetap) - lihat nota
+  /// `_fabHeroTag` dalam `feed_page.dart` tentang kenapa String tetap tak
+  /// cukup untuk elak "multiple heroes share the same tag" dengan
+  /// dirinya sendiri.
+  final _fabHeroTag = UniqueKey();
+
   @override
   void initState() {
     super.initState();
@@ -85,7 +91,7 @@ class _ActivitiesPageState extends ConsumerState<_ActivitiesContent> {
       floatingActionButton: isManagement
           ? FloatingActionButton.extended(
               // heroTag unik - lihat komen padanan di feed_page.dart.
-              heroTag: 'activities-fab',
+              heroTag: _fabHeroTag,
               onPressed: () => context.push('/activities/new'),
               icon: const Icon(Icons.add),
               label: const Text('Aktiviti'),

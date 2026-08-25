@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:marc/features/posts/widgets/image_viewer_page.dart';
 import 'package:marc/shared/widgets/app_network_image.dart';
 import 'package:marc/shared/widgets/image_grid_layout.dart';
+import 'package:marc/shared/widgets/image_viewer_page.dart';
 
 /// Grid gambar post gaya Twitter (lama).
 ///
@@ -36,7 +36,7 @@ class PostImageGrid extends StatelessWidget {
       onTap: () =>
           ImageViewerPage.open(context, urls: urls, initialIndex: index),
       child: Hero(
-        tag: 'post-image-${urls[index]}',
+        tag: defaultImageViewerHeroTag(urls[index], index),
         child: AppNetworkImage(url: urls[index], decodeWidth: decodeWidth),
       ),
     );

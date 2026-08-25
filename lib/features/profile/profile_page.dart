@@ -13,9 +13,15 @@ import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/profile/widgets/verify_email_banner.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/widgets/image_viewer_page.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 import 'package:marc/shared/widgets/pending_status_view.dart';
 import 'package:marc/shared/widgets/settings_section.dart';
+
+/// Tag Hero avatar profil sendiri - selamat guna string tetap sebab
+/// avatar sendiri cuma terpapar SEKALI pada satu-satu masa di skrin ni
+/// (bukan macam avatar penulis post yang boleh berulang dalam feed).
+const _profileAvatarHeroTag = 'avatar-profile-me';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -42,6 +48,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context,
       title: 'Gambar profil',
       actions: [
+        if (profile.avatarUrl != null)
+          const AppSheetAction(
+            value: _AvatarAction.view,
+            label: 'Lihat gambar',
+            icon: Icons.image_outlined,
+          ),
         const AppSheetAction(
           value: _AvatarAction.pick,
           label: 'Pilih dari galeri',
@@ -57,6 +69,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ],
     );
     if (action == null || !mounted) return;
+
+    if (action == _AvatarAction.view) {
+      await ImageViewerPage.open(
+        context,
+        urls: [profile.avatarUrl!],
+        initialIndex: 0,
+        heroTagBuilder: (_, _) => _profileAvatarHeroTag,
+      );
+      return;
+    }
 
     setState(() => _avatarBusy = true);
     try {
@@ -447,6 +469,7 @@ class _Header extends StatelessWidget {
               avatarUrl: avatarUrl,
               radius: 30,
               onTap: avatarBusy ? null : onTapAvatar,
+              heroTag: _profileAvatarHeroTag,
             ),
             if (avatarBusy)
               const SizedBox(
@@ -588,4 +611,4 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-enum _AvatarAction { pick, remove }
+enum _AvatarAction { view, pick, remove }

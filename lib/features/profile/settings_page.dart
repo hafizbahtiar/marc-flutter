@@ -50,7 +50,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           'Ini menghantar PERMINTAAN pemadaman akaun - bukan padam '
           'serta-merta. Pasukan MARC akan proses & hubungi anda. '
           'Anda pasti mahu teruskan?',
-      confirmLabel: 'Hantar permintaan',
+      confirmLabel: 'Hantar',
       isDestructive: true,
     );
     if (!ok || !mounted) return;

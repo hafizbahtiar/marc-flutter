@@ -6,6 +6,7 @@ import 'package:marc/features/posts/widgets/post_image_grid.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/edited_badge.dart';
+import 'package:marc/shared/widgets/image_viewer_page.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 
 class PostCard extends ConsumerWidget {
@@ -51,6 +52,18 @@ class PostCard extends ConsumerWidget {
                   label: post.author.label,
                   avatarUrl: post.author.avatarUrl,
                   radius: 18,
+                  // Tag disatukan dengan ID post (bukan URL avatar semata)
+                  // - penulis sama boleh ada beberapa post kelihatan
+                  // serentak dalam feed, jadi URL semata-mata berlanggar.
+                  heroTag: 'avatar-post-${post.id}',
+                  onTap: post.author.avatarUrl == null
+                      ? null
+                      : () => ImageViewerPage.open(
+                          context,
+                          urls: [post.author.avatarUrl!],
+                          initialIndex: 0,
+                          heroTagBuilder: (_, _) => 'avatar-post-${post.id}',
+                        ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(

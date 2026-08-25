@@ -53,6 +53,12 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
   /// selepas itu server yang menjadi kebenaran semula.
   final Map<String, bool> _marked = {};
 
+  /// Object unik per State (bukan String tetap) - lihat nota
+  /// `_fabHeroTag` dalam `feed_page.dart` tentang kenapa String tetap tak
+  /// cukup untuk elak "multiple heroes share the same tag" dengan
+  /// dirinya sendiri.
+  final _fabHeroTag = UniqueKey();
+
   /// Baris yang permintaannya dalam penerbangan, dikunci pada
   /// SESI + pendaftaran.
   ///
@@ -185,7 +191,7 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
         message:
             '${result.message} Tandakan sebagai pindaan? Sebab akan '
             'direkodkan dalam jejak audit sebagai pembetulan.',
-        confirmLabel: 'Tanda sebagai pindaan',
+        confirmLabel: 'Tandakan',
         hint: 'Contoh: lupa scan semasa sesi',
       );
       if (reason == null || !mounted) return nothing;
@@ -270,7 +276,7 @@ class _RegistrationsBodyState extends ConsumerState<_RegistrationsBody> {
         // heroTag unik - lihat komen padanan di feed_page.dart (elak
         // clash Hero dgn FAB tab shell yang tetap mounted di belakang
         // route push ni).
-        heroTag: 'registrations-fab',
+        heroTag: _fabHeroTag,
         onPressed: selected == null ? null : () => _openScanner(selected),
         icon: const Icon(Icons.qr_code_scanner),
         label: const Text('Imbas QR'),
