@@ -26,7 +26,6 @@ class CreatePostPage extends ConsumerStatefulWidget {
 
 const _maxImagesPerPost = 4;
 const _maxImageSizeBytes = 5 * 1024 * 1024;
-const _draftKey = 'new_post';
 
 /// Dimensi maksimum yang dinaikkan, dalam piksel (sisi panjang).
 ///
@@ -59,7 +58,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   }
 
   Future<void> _restoreDraft() async {
-    final draft = await ref.read(draftRepositoryProvider).get(_draftKey);
+    final draft = await ref.read(draftRepositoryProvider).get(newPostDraftKey);
     if (draft == null || !mounted) return;
     _contentController.text = draft.content;
     setState(() => _isAnnouncement = draft.isAnnouncement ?? false);
@@ -233,7 +232,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
 
       appLog('create_post', 'POST /posts berjaya');
       ref.invalidate(feedProvider);
-      await ref.read(draftRepositoryProvider).delete(_draftKey);
+      await ref.read(draftRepositoryProvider).delete(newPostDraftKey);
       if (!mounted) return;
       MySnackBar.success(context, 'Post dihantar.');
       context.pop();
@@ -268,13 +267,13 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     try {
       if (choice == _ExitDraftChoice.save) {
         await repo.save(
-          _draftKey,
+          newPostDraftKey,
           kind: 'post',
           content: _contentController.text.trim(),
           isAnnouncement: _isAnnouncement,
         );
       } else {
-        await repo.delete(_draftKey);
+        await repo.delete(newPostDraftKey);
       }
     } catch (_) {
       // Draf ialah kemudahan best-effort - kegagalan storan tempatan

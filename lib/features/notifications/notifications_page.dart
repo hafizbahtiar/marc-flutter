@@ -45,6 +45,31 @@ IconData notificationIcon(AppNotification n) {
   }
 }
 
+/// Jenis notifikasi yang punya "pelaku" sebenar berbaloi dilawati -
+/// `post_like`/`comment_like`/`post_comment` dicetuskan oleh SATU ahli lain
+/// yang buat sesuatu pada kandungan penerima, padanan corak "ketik nama
+/// buka profil" di `post_card.dart`/`comment_tile.dart`.
+///
+/// Jenis lain (`member_*`, `activity_*`, `certificate_ready`) turut bawa
+/// `actorId` (lajur itu NOT NULL di skema), tapi nilainya BUKAN "seseorang
+/// yang bertindak ke atas kandungan anda": ia sama ada pengurus yang
+/// meluluskan/menolak/menerbitkan (backend L pelbagai fail handlers), atau -
+/// bagi `activity_reminder` - PENERIMA SENDIRI (`activitylifecycle.go`,
+/// `notifyOne`: "actor_id diset kepada PENERIMA SENDIRI ... tiada akaun
+/// sistem wujud dlm skema ni"). Navigasi profil untuk jenis-jenis itu tidak
+/// bermakna (menekannya boleh bawa ahli ke profil dia sendiri), jadi
+/// sengaja tidak dipetakan di sini.
+bool isPersonTriggeredNotification(AppNotification n) {
+  switch (n.type) {
+    case 'post_like':
+    case 'comment_like':
+    case 'post_comment':
+      return true;
+    default:
+      return false;
+  }
+}
+
 Color notificationColor(BuildContext context, AppNotification n) {
   final scheme = Theme.of(context).colorScheme;
   switch (n.type) {
@@ -325,10 +350,29 @@ class _NotificationsPageState extends ConsumerState<_NotificationsContent> {
                       vertical: 4,
                     ),
                     tileColor: n.read ? null : scheme.surfaceContainerHighest,
-                    leading: Icon(
-                      notificationIcon(n),
-                      color: notificationColor(context, n),
-                    ),
+                    // Ikon jadi sasaran ketuk kedua (berasingan daripada
+                    // `onTap` baris) BILA jenis notifikasi ini punya
+                    // pelaku sebenar - padanan corak "ketik avatar/nama"
+                    // di post_card.dart/comment_tile.dart. `InkWell` di
+                    // sini, bukan `GestureDetector`, supaya ada affordans
+                    // riak bulat (`CircleBorder`) atas ikon.
+                    leading: isPersonTriggeredNotification(n)
+                        ? InkWell(
+                            key: ValueKey('notif-actor-tap-${n.id}'),
+                            customBorder: const CircleBorder(),
+                            onTap: () => context.push('/members/${n.actorId}'),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                notificationIcon(n),
+                                color: notificationColor(context, n),
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            notificationIcon(n),
+                            color: notificationColor(context, n),
+                          ),
                     title: Text(
                       notificationTitle(n),
                       style: TextStyle(

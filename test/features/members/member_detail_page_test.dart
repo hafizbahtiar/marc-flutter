@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/members/member_detail_model.dart';
 import 'package:marc/features/members/member_detail_page.dart';
 import 'package:marc/features/members/member_providers.dart';
+import 'package:marc/features/members/members_page.dart';
 import 'package:marc/features/profile/address_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 
@@ -201,6 +203,109 @@ void main() {
 
       expect(find.text('Alamat'), findsOneWidget);
       expect(find.text('Tiada alamat.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ketuk chip bahagian navigasi ke direktori ahli (/members) tertapis kpd bahagian tu',
+    (tester) async {
+      final detail = MemberDetail(
+        userId: 'user-1',
+        memberId: 'MARC2026/08/0002',
+        displayName: 'Aina',
+        avatarUrl: null,
+        roleKey: 'ahli',
+        roleName: 'Ahli',
+        roleRank: 10,
+        category: 'ahli',
+        status: 'approved',
+        isActive: true,
+        departmentCode: 'BKP',
+        departmentName: 'Bahagian Kewangan',
+        position: 'Setiausaha',
+        email: null,
+        phone: null,
+        registrationPaymentStatus: null,
+        emergencyContactName: null,
+        emergencyContactPhone: null,
+        healthNotes: null,
+        telegramLinked: null,
+        telegramUsername: null,
+        addresses: null,
+      );
+      final sameDept = MemberRow(
+        userId: 'user-1',
+        memberId: 'MARC2026/08/0002',
+        displayName: 'Aina',
+        email: null,
+        roleKey: 'ahli',
+        roleName: 'Ahli',
+        roleRank: 10,
+        category: 'ahli',
+        status: 'approved',
+        departmentCode: 'BKP',
+        departmentName: 'Bahagian Kewangan',
+      );
+      final otherDept = MemberRow(
+        userId: 'user-2',
+        memberId: 'MARC2026/08/0003',
+        displayName: 'Busu',
+        email: null,
+        roleKey: 'ahli',
+        roleName: 'Ahli',
+        roleRank: 10,
+        category: 'ahli',
+        status: 'approved',
+        departmentCode: 'BPK',
+        departmentName: 'Bahagian Pembangunan',
+      );
+
+      // Router sebenar - laluan `/members` padan pola `router.dart` (baca
+      // `state.extra` sbg `initialDepartmentCode`), supaya ujian ni
+      // mengesahkan mekanisme navigasi sebenar, bukan stub.
+      final router = GoRouter(
+        initialLocation: '/members/user-1',
+        routes: [
+          GoRoute(
+            path: '/members/:userId',
+            builder: (_, state) =>
+                MemberDetailPage(userId: state.pathParameters['userId']!),
+          ),
+          GoRoute(
+            path: '/members',
+            builder: (_, state) =>
+                MembersPage(initialDepartmentCode: state.extra as String?),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            myProfileProvider.overrideWith((ref) async => _viewerProfile),
+            memberDetailProvider.overrideWith((ref, userId) async => detail),
+            membersProvider.overrideWith((ref) async => [sameDept, otherDept]),
+          ],
+          child: MaterialApp.router(
+            theme: AppTheme.light,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // "BKP · Setiausaha" - chip gabungan kod bahagian + jawatan.
+      await tester.tap(find.text('BKP · Setiausaha'));
+      await tester.pumpAndSettle();
+
+      // Direktori ahli terpapar (AppBar 'Ahli', beza drpd 'Profil Ahli'
+      // skrin profil), tertapis kepada BKP sahaja - Busu (BPK) TIDAK
+      // dipapar walaupun ada dlm senarai penuh. (Tak semak "Aina"
+      // findsOneWidget di sini - skrin profil sebelum ni kekal dlm pokok
+      // widget di bawah `Navigator`/`Overlay`, jadi teksnya turut kekal
+      // "onstage" mengikut `find.text`, bukan cuma satu kew wujudan.)
+      expect(find.widgetWithText(AppBar, 'Ahli'), findsOneWidget);
+      expect(find.text('Busu'), findsNothing);
     },
   );
 }

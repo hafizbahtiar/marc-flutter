@@ -5,6 +5,23 @@ import 'package:marc/core/api_client.dart';
 import 'package:marc/core/app_log.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/posts/post_models.dart';
+import 'package:marc/shared/local_drafts_repository.dart';
+
+/// Kunci draf penggubah post baru - SATU sumber kebenaran, dikongsi
+/// dengan `create_post_page.dart` (diimport dari sini, bukan disalin -
+/// elak dua nilai berlainan berlanggar senyap-senyap).
+const newPostDraftKey = 'new_post';
+
+/// Wujud/tidak draf 'new_post' - digunakan oleh badge pada Feed FAB
+/// (`feed_page.dart`) supaya user nampak isyarat "ada draf belum
+/// dihantar" tanpa perlu buka penggubah dahulu. FutureProvider (bukan
+/// autoDispose) - dibaca semula secara eksplisit lepas
+/// `context.push('/posts/new')` resolve (lihat feed_page.dart), bukan
+/// polling/stream, sebab draf hanya berubah semasa penggubah dibuka.
+final hasNewPostDraftProvider = FutureProvider<bool>((ref) async {
+  final draft = await ref.watch(draftRepositoryProvider).get(newPostDraftKey);
+  return draft != null;
+});
 
 /// State feed: senarai post + cursor untuk load-more (infinite scroll).
 class FeedState {

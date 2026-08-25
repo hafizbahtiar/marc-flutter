@@ -138,6 +138,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     }
 
     final feed = ref.watch(feedProvider);
+    final hasDraft = ref.watch(hasNewPostDraftProvider).valueOrNull ?? false;
 
     return Scaffold(
       appBar: AppBar(title: const Text('MARC')),
@@ -149,8 +150,23 @@ class _FeedPageState extends ConsumerState<FeedPage> {
         // "multiple heroes share same tag" crash bila kedua-dua tab
         // pernah dilawati dalam satu sesi. Lihat nota [_fabHeroTag].
         heroTag: _fabHeroTag,
-        onPressed: () => context.push('/posts/new'),
-        child: const Icon(Icons.add),
+        onPressed: () {
+          // Draf boleh berubah (disimpan/dipadam/dihantar) semasa
+          // penggubah dibuka - invalidate lepas route ditutup (bukan
+          // polling/stream) supaya badge FAB betul serta-merta bila user
+          // kembali ke Feed. `context.push` pulangkan Future yang
+          // resolve bila route dipop.
+          context.push('/posts/new').then((_) {
+            if (context.mounted) ref.invalidate(hasNewPostDraftProvider);
+          });
+        },
+        child: Badge(
+          // Titik kecil sahaja (tiada label/count) - kewujudan draf,
+          // bukan bilangan, yang penting di sini.
+          isLabelVisible: hasDraft,
+          smallSize: 8,
+          child: const Icon(Icons.add),
+        ),
       ),
       body: SafeArea(
         child: feed.when(

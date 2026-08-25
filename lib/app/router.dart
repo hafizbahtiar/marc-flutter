@@ -32,6 +32,7 @@ import 'package:marc/features/posts/create_post_page.dart';
 import 'package:marc/features/posts/feed_page.dart';
 import 'package:marc/features/posts/post_detail_page.dart';
 import 'package:marc/features/profile/about_page.dart';
+import 'package:marc/features/profile/active_sessions_page.dart';
 import 'package:marc/features/profile/address_form_page.dart';
 import 'package:marc/features/profile/address_providers.dart';
 import 'package:marc/features/profile/edit_profile_page.dart';
@@ -105,6 +106,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) =>
             AddressFormPage(existing: state.extra! as AddressRow),
       ),
+      GoRoute(
+        path: '/profile/sessions',
+        builder: (_, _) => const ActiveSessionsPage(),
+      ),
       GoRoute(path: '/about', builder: (_, _) => const AboutPage()),
       GoRoute(path: '/faq', builder: (_, _) => const FaqPage()),
       GoRoute(
@@ -140,7 +145,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/telegram-link',
         builder: (_, _) => const TelegramLinkPage(),
       ),
-      GoRoute(path: '/members', builder: (_, _) => const MembersPage()),
+      GoRoute(
+        path: '/members',
+        // `extra` (opsyenal) - kod bahagian awal utk penapis direktori,
+        // dihantar drpd chip bahagian di `MemberDetailPage`. Nullable
+        // (BUKAN `!`) sebab `/members` boleh dicapai tanpa `extra` sama
+        // sekali (navigasi biasa drpd nav bawah/menu) - beza dgn
+        // `/checkout` di atas yang mesti ada `extra`.
+        builder: (_, state) =>
+            MembersPage(initialDepartmentCode: state.extra as String?),
+      ),
       GoRoute(path: '/audit-logs', builder: (_, _) => const AuditPage()),
       GoRoute(
         path: '/admin/blocked-email-domains',

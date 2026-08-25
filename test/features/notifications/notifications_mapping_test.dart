@@ -186,4 +186,32 @@ void main() {
       expect(unknownNotificationTitle, isNot(contains('diluluskan')));
     });
   });
+
+  group('isPersonTriggeredNotification (ketik ikon buka profil)', () {
+    test('post_like, comment_like, post_comment ada pelaku sebenar', () {
+      expect(isPersonTriggeredNotification(_n('post_like')), isTrue);
+      expect(isPersonTriggeredNotification(_n('comment_like')), isTrue);
+      expect(isPersonTriggeredNotification(_n('post_comment')), isTrue);
+    });
+
+    test('jenis sistem (kelulusan/aktiviti/sijil) bukan pelaku bererti - '
+        'actor_id backend ialah pengurus/diri sendiri, bukan seseorang yang '
+        'bertindak ke atas kandungan penerima', () {
+      for (final type in [
+        'member_pending',
+        'member_approved',
+        'member_rejected',
+        'activity_published',
+        'activity_cancelled',
+        'activity_reminder',
+        'certificate_ready',
+      ]) {
+        expect(
+          isPersonTriggeredNotification(_n(type)),
+          isFalse,
+          reason: '$type tak patut ada sasaran ketuk profil',
+        );
+      }
+    });
+  });
 }

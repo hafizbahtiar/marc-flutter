@@ -163,10 +163,26 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             SettingsGroupLabel('Akaun'),
             SettingsCard(
               children: [
+                // Sesi aktif - self-service "log keluar device ni",
+                // beza drpd butang Log keluar di bawah (device ini
+                // sahaja) dan drpd logout-all.
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: Icon(Icons.person_remove_outlined, color: scheme.error),
-                  title: Text('Padam Akaun', style: TextStyle(color: scheme.error)),
+                  leading: const Icon(Icons.devices_outlined),
+                  title: const Text('Sesi Aktif'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/profile/sessions'),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: Icon(
+                    Icons.person_remove_outlined,
+                    color: scheme.error,
+                  ),
+                  title: Text(
+                    'Padam Akaun',
+                    style: TextStyle(color: scheme.error),
+                  ),
                   trailing: _requestingDeletion
                       ? const SizedBox(
                           width: 18,

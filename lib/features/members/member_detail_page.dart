@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
@@ -601,13 +602,32 @@ class _Header extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
               if (deptPositionLine != null)
-                Chip(
-                  label: Text(deptPositionLine),
-                  backgroundColor: scheme.surfaceContainerHighest,
-                  labelStyle: const TextStyle(fontSize: 12),
-                  side: BorderSide.none,
-                  visualDensity: VisualDensity.compact,
-                ),
+                // Ketuk chip - buka direktori ahli (`/members`) tertapis
+                // kepada bahagian ni (`extra`, dibaca oleh `MembersPage`
+                // sbg `initialDepartmentCode`). Cuma tappable bila
+                // `departmentCode` wujud - `deptPositionLine` boleh
+                // terbentuk drpd jawatan sahaja (tanpa kod bahagian),
+                // dalam kes tu tiada apa nak ditapis jadi kekal `Chip`
+                // biasa (tak boleh ketuk).
+                detail.departmentCode != null
+                    ? ActionChip(
+                        label: Text(deptPositionLine),
+                        backgroundColor: scheme.surfaceContainerHighest,
+                        labelStyle: const TextStyle(fontSize: 12),
+                        side: BorderSide.none,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => context.push(
+                          '/members',
+                          extra: detail.departmentCode,
+                        ),
+                      )
+                    : Chip(
+                        label: Text(deptPositionLine),
+                        backgroundColor: scheme.surfaceContainerHighest,
+                        labelStyle: const TextStyle(fontSize: 12),
+                        side: BorderSide.none,
+                        visualDensity: VisualDensity.compact,
+                      ),
               Chip(
                 label: Text(detail.isActive ? 'Aktif' : 'Tidak aktif'),
                 backgroundColor: detail.isActive
