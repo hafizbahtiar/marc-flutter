@@ -10,12 +10,17 @@ import 'package:marc/app/router.dart';
 import 'package:marc/app/stripe.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/auth_state.dart';
+import 'package:marc/core/device_label.dart';
 import 'package:marc/core/jwt.dart';
 import 'package:marc/core/theme_mode_provider.dart';
 import 'package:marc/features/notifications/push_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Isi cache label peranti awal - elak login/refresh block pada
+  // platform channel device_info_plus (lihat api_client.dart).
+  unawaited(getDeviceLabel());
 
   // Pastikan trace PENUH sentiasa masuk console, bukan cuma ringkasan
   // mesej - susulan ralat "Looking up a deactivated widget's ancestor"

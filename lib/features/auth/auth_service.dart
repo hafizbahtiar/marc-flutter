@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:marc/core/app_log.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/core/token_storage.dart';
@@ -42,6 +43,7 @@ class AuthService {
       );
       return const AuthResult(success: true);
     } on DioException catch (e) {
+      appLogDioError('auth', 'login', e);
       return AuthResult(success: false, error: extractErrorMessage(e));
     } on PlatformException catch (e) {
       return _storageCorruptResult(e);

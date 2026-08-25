@@ -87,6 +87,7 @@ dependencies:
   # mobile_scanner/permission_handler di atas utk sebab siling ni
   # penting).
   printing: ^5.14.3
+  device_info_plus: ^12.4.0
 
 dev_dependencies:
   flutter_test:

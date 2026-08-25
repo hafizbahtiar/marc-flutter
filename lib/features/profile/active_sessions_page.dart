@@ -10,27 +10,68 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 
 final _placeholderSession = SessionRow(
   id: '00000000-0000-0000-0000-000000000000',
-  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+  userAgent: 'iPhone Hafiz · iOS 18.0',
   createdIp: '203.0.113.7',
   createdAt: DateTime(2026),
   expiresAt: DateTime(2026, 2),
 );
 
-/// Senarai sesi log masuk aktif + "log keluar device ni".
+/// Senarai sesi log masuk aktif + log keluar per device atau beramai-ramai.
 ///
 /// Sengaja TIADA penanda "sesi semasa" - lihat nota `SessionRow` di
 /// `session_providers.dart`: backend tak boleh tentukannya daripada
 /// access token, dan meneka akan mengelirukan (ahli log keluar device
 /// salah). Untuk "log keluar SEMUA", butang log keluar biasa di Tetapan
 /// kekal jalan yang betul.
-class ActiveSessionsPage extends ConsumerWidget {
+class ActiveSessionsPage extends ConsumerStatefulWidget {
   const ActiveSessionsPage({super.key});
 
-  Future<void> _revoke(
-    BuildContext context,
-    WidgetRef ref,
-    SessionRow row,
-  ) async {
+  @override
+  ConsumerState<ActiveSessionsPage> createState() => _ActiveSessionsPageState();
+}
+
+class _ActiveSessionsPageState extends ConsumerState<ActiveSessionsPage> {
+  bool _selectionMode = false;
+  final _selectedIds = <String>{};
+
+  void _enterSelectionMode() => setState(() => _selectionMode = true);
+
+  void _exitSelectionMode() => setState(() {
+    _selectionMode = false;
+    _selectedIds.clear();
+  });
+
+  void _toggleRow(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+        if (_selectedIds.isEmpty) _selectionMode = false;
+      } else {
+        _selectionMode = true;
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _startSelectionWith(SessionRow row) {
+    setState(() {
+      _selectionMode = true;
+      _selectedIds
+        ..clear()
+        ..add(row.id);
+    });
+  }
+
+  void _selectAll(List<SessionRow> rows) {
+    setState(() {
+      _selectionMode = true;
+      _selectedIds
+        ..clear()
+        ..addAll(rows.map((r) => r.id));
+    });
+  }
+
+  Future<void> _revokeOne(SessionRow row) async {
     final ok = await showConfirmDialog(
       context,
       title: 'Log keluar sesi',
@@ -38,13 +79,13 @@ class ActiveSessionsPage extends ConsumerWidget {
       confirmLabel: 'Log keluar',
       isDestructive: true,
     );
-    if (!ok || !context.mounted) return;
+    if (!ok || !mounted) return;
 
     try {
       await ref.read(sessionRepositoryProvider).revoke(row.id);
-      if (context.mounted) MySnackBar.success(context, 'Sesi dilog keluar.');
+      if (mounted) MySnackBar.success(context, 'Sesi dilog keluar.');
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         MySnackBar.error(
           context,
           e is DioException ? extractErrorMessage(e) : 'Gagal log keluar sesi.',
@@ -53,20 +94,105 @@ class ActiveSessionsPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _revokeSelected() async {
+    if (_selectedIds.isEmpty) return;
+    final count = _selectedIds.length;
+    final ok = await showConfirmDialog(
+      context,
+      title: 'Log keluar sesi',
+      message: count == 1
+          ? 'Log keluar device ini? Device tersebut perlu log masuk semula.'
+          : 'Log keluar $count device? Semua device terpilih perlu log masuk semula.',
+      confirmLabel: count == 1 ? 'Log keluar' : 'Log keluar ($count)',
+      isDestructive: true,
+    );
+    if (!ok || !mounted) return;
+
+    final ids = _selectedIds.toList(growable: false);
+    try {
+      await ref.read(sessionRepositoryProvider).revokeMany(ids);
+      if (!mounted) return;
+      _exitSelectionMode();
+      MySnackBar.success(
+        context,
+        count == 1 ? 'Sesi dilog keluar.' : '$count sesi dilog keluar.',
+      );
+    } catch (e) {
+      if (mounted) {
+        MySnackBar.error(
+          context,
+          e is DioException ? extractErrorMessage(e) : 'Gagal log keluar sesi.',
+        );
+      }
+    }
+  }
+
+  PreferredSizeWidget _appBar(List<SessionRow> rows) {
+    if (!_selectionMode) {
+      return AppBar(
+        title: const Text('Sesi Aktif'),
+        actions: [
+          if (rows.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.checklist),
+              tooltip: 'Pilih sesi',
+              onPressed: _enterSelectionMode,
+            ),
+        ],
+      );
+    }
+
+    final allSelected = rows.isNotEmpty && _selectedIds.length == rows.length;
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        tooltip: 'Batal',
+        onPressed: _exitSelectionMode,
+      ),
+      title: Text('${_selectedIds.length} dipilih'),
+      actions: [
+        TextButton(
+          onPressed: rows.isEmpty
+              ? null
+              : () {
+                  if (allSelected) {
+                    setState(_selectedIds.clear);
+                  } else {
+                    _selectAll(rows);
+                  }
+                },
+          child: Text(allSelected ? 'Nyahpilih semua' : 'Pilih semua'),
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Log keluar terpilih',
+          onPressed: _selectedIds.isEmpty ? null : _revokeSelected,
+        ),
+      ],
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final sessions = ref.watch(sessionsProvider);
 
     Future<void> onRefresh() => ref.refresh(sessionsProvider.future);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sesi Aktif')),
+      appBar: sessions.maybeWhen(
+        data: (rows) => _appBar(rows),
+        orElse: () => AppBar(title: const Text('Sesi Aktif')),
+      ),
       body: SafeArea(
         child: sessions.when(
           loading: () => Skeletonizer(
             enabled: true,
             child: _SessionList(
               rows: List.filled(3, _placeholderSession),
+              selectionMode: false,
+              selectedIds: const {},
+              onToggle: (_) {},
+              onLongPress: (_) {},
               onRevoke: (_) {},
             ),
           ),
@@ -108,7 +234,11 @@ class ActiveSessionsPage extends ConsumerWidget {
                 else
                   _SessionList(
                     rows: rows,
-                    onRevoke: (row) => _revoke(context, ref, row),
+                    selectionMode: _selectionMode,
+                    selectedIds: _selectedIds,
+                    onToggle: _toggleRow,
+                    onLongPress: _startSelectionWith,
+                    onRevoke: _revokeOne,
                   ),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -127,9 +257,20 @@ class ActiveSessionsPage extends ConsumerWidget {
 }
 
 class _SessionList extends StatelessWidget {
-  const _SessionList({required this.rows, required this.onRevoke});
+  const _SessionList({
+    required this.rows,
+    required this.selectionMode,
+    required this.selectedIds,
+    required this.onToggle,
+    required this.onLongPress,
+    required this.onRevoke,
+  });
 
   final List<SessionRow> rows;
+  final bool selectionMode;
+  final Set<String> selectedIds;
+  final void Function(String id) onToggle;
+  final void Function(SessionRow row) onLongPress;
   final void Function(SessionRow row) onRevoke;
 
   @override
@@ -140,16 +281,33 @@ class _SessionList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: rows.length,
       separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (_, i) =>
-          _SessionTile(row: rows[i], onRevoke: () => onRevoke(rows[i])),
+      itemBuilder: (_, i) => _SessionTile(
+        row: rows[i],
+        selectionMode: selectionMode,
+        selected: selectedIds.contains(rows[i].id),
+        onToggle: () => onToggle(rows[i].id),
+        onLongPress: () => onLongPress(rows[i]),
+        onRevoke: () => onRevoke(rows[i]),
+      ),
     );
   }
 }
 
 class _SessionTile extends StatelessWidget {
-  const _SessionTile({required this.row, required this.onRevoke});
+  const _SessionTile({
+    required this.row,
+    required this.selectionMode,
+    required this.selected,
+    required this.onToggle,
+    required this.onLongPress,
+    required this.onRevoke,
+  });
 
   final SessionRow row;
+  final bool selectionMode;
+  final bool selected;
+  final VoidCallback onToggle;
+  final VoidCallback onLongPress;
   final VoidCallback onRevoke;
 
   @override
@@ -157,7 +315,7 @@ class _SessionTile extends StatelessWidget {
     // Sesi lama (sebelum backend rakam metadata) tiada user_agent/ip -
     // papar "Tidak diketahui", jangan sembunyikan barisnya: ia tetap
     // sesi hidup yang ahli patut boleh log keluar.
-    final ua = row.userAgent?.isNotEmpty == true
+    final device = row.userAgent?.isNotEmpty == true
         ? row.userAgent!
         : 'Peranti tidak diketahui';
     final ip = row.createdIp?.isNotEmpty == true
@@ -165,16 +323,25 @@ class _SessionTile extends StatelessWidget {
         : 'IP tidak diketahui';
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      leading: const Icon(Icons.devices_outlined),
-      title: Text(ua),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: selectionMode
+          ? Checkbox(
+              value: selected,
+              onChanged: (_) => onToggle(),
+            )
+          : const Icon(Icons.devices_outlined),
+      title: Text(device),
       subtitle: Text('$ip · ${relativeTime(row.createdAt)}'),
       isThreeLine: true,
-      trailing: IconButton(
-        icon: const Icon(Icons.logout),
-        tooltip: 'Log keluar',
-        onPressed: onRevoke,
-      ),
+      trailing: selectionMode
+          ? null
+          : IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'Log keluar',
+              onPressed: onRevoke,
+            ),
+      onTap: selectionMode ? onToggle : null,
+      onLongPress: selectionMode ? null : onLongPress,
     );
   }
 }

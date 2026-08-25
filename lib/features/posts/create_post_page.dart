@@ -12,6 +12,7 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/local_drafts_repository.dart';
 import 'package:marc/shared/widgets/app_action_sheet.dart';
 import 'package:marc/shared/widgets/app_dialog.dart';
+import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/image_grid_layout.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
 import 'package:marc/shared/widgets/my_snackbar.dart';
@@ -50,6 +51,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   final List<String> _uploadedKeys = [];
   bool _isAnnouncement = false;
   bool _submitting = false;
+  bool _draftOnDisk = false;
 
   @override
   void initState() {
@@ -61,7 +63,10 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     final draft = await ref.read(draftRepositoryProvider).get(newPostDraftKey);
     if (draft == null || !mounted) return;
     _contentController.text = draft.content;
-    setState(() => _isAnnouncement = draft.isAnnouncement ?? false);
+    setState(() {
+      _isAnnouncement = draft.isAnnouncement ?? false;
+      _draftOnDisk = true;
+    });
   }
 
   @override
@@ -272,8 +277,10 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
           content: _contentController.text.trim(),
           isAnnouncement: _isAnnouncement,
         );
+        if (mounted) setState(() => _draftOnDisk = true);
       } else {
         await repo.delete(newPostDraftKey);
+        if (mounted) setState(() => _draftOnDisk = false);
       }
     } catch (_) {
       // Draf ialah kemudahan best-effort - kegagalan storan tempatan
@@ -292,6 +299,34 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     });
   }
 
+  Future<void> _deleteDraft() async {
+    final ok = await showConfirmDialog(
+      context,
+      title: 'Padam draf?',
+      message:
+          'Draf post ini akan dipadam dari peranti. Tindakan ini tidak '
+          'boleh dibatalkan.',
+      confirmLabel: 'Padam draf',
+      isDestructive: true,
+    );
+    if (!ok || !mounted) return;
+
+    try {
+      await ref.read(draftRepositoryProvider).delete(newPostDraftKey);
+      ref.invalidate(hasNewPostDraftProvider);
+    } catch (_) {
+      if (mounted) MySnackBar.error(context, 'Gagal padam draf.');
+      return;
+    }
+
+    _contentController.clear();
+    setState(() {
+      _isAnnouncement = false;
+      _draftOnDisk = false;
+    });
+    if (mounted) MySnackBar.success(context, 'Draf dipadam.');
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(myProfileProvider).valueOrNull;
@@ -308,6 +343,14 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
             // Garisan bawah dibuang: penggubah sepatutnya terasa seperti
             // satu helaian berterusan, bukan borang berkotak.
             scrolledUnderElevation: 0,
+            actions: [
+              if (_draftOnDisk)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: 'Padam draf',
+                  onPressed: _submitting ? null : _deleteDraft,
+                ),
+            ],
           ),
           bottomNavigationBar: _ComposerBar(
             imageCount: _images.length,

@@ -268,6 +268,33 @@ void main() {
       },
     );
 
+    testWidgets('padam draf dari menu AppBar kosongkan medan & buang dari storan', (
+      tester,
+    ) async {
+      final repo = FakeDraftRepository();
+      await repo.save('new_post', kind: 'post', content: 'draf lama saya');
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(_host(management: false, draftRepository: repo));
+      await tester.tap(find.text('buka'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('draf lama saya'), findsOneWidget);
+      expect(find.byTooltip('Padam draf'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Padam draf'));
+      await tester.pumpAndSettle();
+      expect(find.text('Padam draf?'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Padam draf'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('draf lama saya'), findsNothing);
+      expect(find.byTooltip('Padam draf'), findsNothing);
+      expect(await repo.get('new_post'), isNull);
+      expect(find.text('Draf dipadam.'), findsOneWidget);
+    });
+
     testWidgets(
       'kegagalan storan draf tak perangkap pengguna - snackbar dipapar, composer tetap tutup',
       (tester) async {

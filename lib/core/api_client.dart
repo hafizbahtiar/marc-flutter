@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/auth_state.dart';
+import 'package:marc/core/device_label.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
@@ -51,6 +54,20 @@ class _AuthInterceptor extends Interceptor {
     final token = _ref.read(authNotifierProvider).accessToken;
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    if (_isAuthFlowPath(options.path)) {
+      // JANGAN `await getDeviceLabel()` di sini - platform channel boleh
+      // lambat/gagal pada sesetengah peranti Android dan request auth
+      // (login) kelihatan macam "Sambungan gagal" walaupun internet OK.
+      // Label dicache awal dalam main(); kalau belum sedia, auth call ni
+      // jalan tanpa header (sesi label "tidak diketahui" - lebih baik drpd
+      // block log masuk).
+      final label = cachedDeviceLabel;
+      if (label != null) {
+        options.headers['X-MARC-Device-Label'] = label;
+      } else {
+        unawaited(getDeviceLabel());
+      }
     }
     handler.next(options);
   }

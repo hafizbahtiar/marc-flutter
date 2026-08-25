@@ -76,4 +76,12 @@ class SessionRepository {
     await dio.delete('/me/sessions/$id');
     _ref.invalidate(sessionsProvider);
   }
+
+  /// Log keluar beberapa sesi sekaligus - POST /me/sessions/revoke.
+  Future<void> revokeMany(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final dio = _ref.read(dioProvider);
+    await dio.post('/me/sessions/revoke', data: {'ids': ids});
+    _ref.invalidate(sessionsProvider);
+  }
 }

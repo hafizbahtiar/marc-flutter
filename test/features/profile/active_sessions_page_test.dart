@@ -31,7 +31,7 @@ class _FakeAdapter implements HttpClientAdapter {
 
 SessionRow _row({
   String id = 'sesi-1',
-  String? userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)',
+  String? userAgent = 'iPhone Hafiz · iOS 18.0',
   String? createdIp = '203.0.113.7',
 }) => SessionRow(
   id: id,
@@ -57,7 +57,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)'),
+      find.text('iPhone Hafiz · iOS 18.0'),
       findsOneWidget,
     );
     // relativeTime(3 jam lepas) == '3j'
@@ -133,5 +133,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(calls, ['DELETE /me/sessions/sesi-abc']);
+  });
+
+  testWidgets('mod pilih: pilih semua + log keluar hantar POST bulk revoke', (
+    tester,
+  ) async {
+    final calls = <String>[];
+    final dio = Dio(BaseOptions(baseUrl: 'http://test'))
+      ..httpClientAdapter = _FakeAdapter((options) async {
+        calls.add('${options.method} ${options.path}');
+        return ResponseBody.fromString('{"deleted":2}', 200);
+      });
+
+    await tester.pumpWidget(
+      _wrap(
+        rows: [
+          _row(id: 'sesi-a'),
+          _row(id: 'sesi-b'),
+        ],
+        dio: dio,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Pilih sesi'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pilih semua'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 dipilih'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Log keluar terpilih'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Log keluar (2)'));
+    await tester.pumpAndSettle();
+
+    expect(calls, ['POST /me/sessions/revoke']);
   });
 }
