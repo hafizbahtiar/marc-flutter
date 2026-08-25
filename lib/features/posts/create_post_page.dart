@@ -9,6 +9,7 @@ import 'package:marc/core/app_log.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/local_drafts_repository.dart';
 import 'package:marc/shared/widgets/app_dialog.dart';
 import 'package:marc/shared/widgets/image_grid_layout.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
@@ -24,6 +25,7 @@ class CreatePostPage extends ConsumerStatefulWidget {
 
 const _maxImagesPerPost = 4;
 const _maxImageSizeBytes = 5 * 1024 * 1024;
+const _draftKey = 'new_post';
 
 /// Dimensi maksimum yang dinaikkan, dalam piksel (sisi panjang).
 ///
@@ -48,6 +50,19 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   final List<String> _uploadedKeys = [];
   bool _isAnnouncement = false;
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreDraft();
+  }
+
+  Future<void> _restoreDraft() async {
+    final draft = await ref.read(draftRepositoryProvider).get(_draftKey);
+    if (draft == null || !mounted) return;
+    _contentController.text = draft.content;
+    setState(() => _isAnnouncement = draft.isAnnouncement ?? false);
+  }
 
   @override
   void dispose() {
@@ -217,6 +232,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
 
       appLog('create_post', 'POST /posts berjaya');
       ref.invalidate(feedProvider);
+      await ref.read(draftRepositoryProvider).delete(_draftKey);
       if (!mounted) return;
       MySnackBar.success(context, 'Post dihantar.');
       context.pop();
@@ -236,6 +252,37 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   bool get _canSubmit =>
       _contentController.text.trim().isNotEmpty || _images.isNotEmpty;
 
+  bool get _hasUnsavedContent =>
+      _contentController.text.trim().isNotEmpty || _images.isNotEmpty;
+
+  Future<void> _handlePopAttempt(bool didPop, Object? result) async {
+    if (didPop) return;
+    final choice = await _confirmExitWithDraft(
+      context,
+      hasImages: _images.isNotEmpty,
+    );
+    if (choice == null || !mounted) return;
+
+    final repo = ref.read(draftRepositoryProvider);
+    try {
+      if (choice == _ExitDraftChoice.save) {
+        await repo.save(
+          _draftKey,
+          kind: 'post',
+          content: _contentController.text.trim(),
+          isAnnouncement: _isAnnouncement,
+        );
+      } else {
+        await repo.delete(_draftKey);
+      }
+    } catch (_) {
+      // Draf ialah kemudahan best-effort - kegagalan storan tempatan
+      // TIDAK sepatutnya memerangkap pengguna pada skrin ini.
+      if (mounted) MySnackBar.error(context, 'Gagal simpan draf.');
+    }
+    if (mounted) Navigator.of(context).pop();
+  }
+
   void _removeImage(int i) {
     setState(() {
       _images.removeAt(i);
@@ -250,107 +297,114 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
     final profile = ref.watch(myProfileProvider).valueOrNull;
     final isManagement = profile?.isManagement ?? false;
 
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Post baru'),
-          // Garisan bawah dibuang: penggubah sepatutnya terasa seperti
-          // satu helaian berterusan, bukan borang berkotak.
-          scrolledUnderElevation: 0,
-        ),
-        bottomNavigationBar: _ComposerBar(
-          imageCount: _images.length,
-          maxImages: _maxImagesPerPost,
-          submitting: _submitting,
-          onPickImages: _images.length >= _maxImagesPerPost
-              ? null
-              : _pickImages,
-          onTakePhoto: _images.length >= _maxImagesPerPost ? null : _takePhoto,
-          onSubmit: (_submitting || !_canSubmit) ? null : _submit,
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar penulis di sebelah penggubah - corak yang sama
-                // macam kad post, jadi mengarang terasa seperti melihat
-                // pratonton post kau sendiri.
-                MemberAvatar(
-                  label: profile?.displayName ?? profile?.memberId ?? '?',
-                  avatarUrl: profile?.avatarUrl,
-                  radius: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (isManagement) ...[
-                        _AnnouncementChip(
-                          value: _isAnnouncement,
-                          onChanged: (v) => setState(() => _isAnnouncement = v),
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                      TextField(
-                        controller: _contentController,
-                        autofocus: true,
-                        maxLines: null,
-                        minLines: 3,
-                        keyboardType: TextInputType.multiline,
-                        textCapitalization: TextCapitalization.sentences,
-                        // Butang hantar bergantung pada sama ada ada teks;
-                        // tanpa ni ia kekal mati sampai rebuild lain.
-                        onChanged: (_) => setState(() {}),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              height: 1.4,
-                              fontWeight: FontWeight.w400,
-                            ),
-                        decoration: InputDecoration(
-                          hintText: 'Apa yang berlaku?',
-                          // filled: false MESTI eksplisit -
-                          // inputDecorationTheme global set `filled: true`
-                          // dgn surfaceContainerHighest, jadi `border:
-                          // none` sahaja tinggalkan kotak kelabu. Penggubah
-                          // patut duduk atas permukaan yang sama macam
-                          // seluruh halaman.
-                          filled: false,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                          hintStyle: Theme.of(context).textTheme.titleMedium
+    return PopScope(
+      canPop: !_hasUnsavedContent,
+      onPopInvokedWithResult: _handlePopAttempt,
+      child: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Post baru'),
+            // Garisan bawah dibuang: penggubah sepatutnya terasa seperti
+            // satu helaian berterusan, bukan borang berkotak.
+            scrolledUnderElevation: 0,
+          ),
+          bottomNavigationBar: _ComposerBar(
+            imageCount: _images.length,
+            maxImages: _maxImagesPerPost,
+            submitting: _submitting,
+            onPickImages: _images.length >= _maxImagesPerPost
+                ? null
+                : _pickImages,
+            onTakePhoto: _images.length >= _maxImagesPerPost
+                ? null
+                : _takePhoto,
+            onSubmit: (_submitting || !_canSubmit) ? null : _submit,
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Avatar penulis di sebelah penggubah - corak yang sama
+                  // macam kad post, jadi mengarang terasa seperti melihat
+                  // pratonton post kau sendiri.
+                  MemberAvatar(
+                    label: profile?.displayName ?? profile?.memberId ?? '?',
+                    avatarUrl: profile?.avatarUrl,
+                    radius: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (isManagement) ...[
+                          _AnnouncementChip(
+                            value: _isAnnouncement,
+                            onChanged: (v) =>
+                                setState(() => _isAnnouncement = v),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        TextField(
+                          controller: _contentController,
+                          autofocus: true,
+                          maxLines: null,
+                          minLines: 3,
+                          keyboardType: TextInputType.multiline,
+                          textCapitalization: TextCapitalization.sentences,
+                          // Butang hantar bergantung pada sama ada ada teks;
+                          // tanpa ni ia kekal mati sampai rebuild lain.
+                          onChanged: (_) => setState(() {}),
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                                height: 1.4,
                                 fontWeight: FontWeight.w400,
                               ),
+                          decoration: InputDecoration(
+                            hintText: 'Apa yang berlaku?',
+                            // filled: false MESTI eksplisit -
+                            // inputDecorationTheme global set `filled: true`
+                            // dgn surfaceContainerHighest, jadi `border:
+                            // none` sahaja tinggalkan kotak kelabu. Penggubah
+                            // patut duduk atas permukaan yang sama macam
+                            // seluruh halaman.
+                            filled: false,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            hintStyle: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                          ),
                         ),
-                      ),
-                      if (_images.isNotEmpty) ...[
-                        const SizedBox(height: 14),
-                        // Susun atur SAMA dengan feed - penulis nampak
-                        // betul-betul rupa post nanti.
-                        ImageGridLayout(
-                          tiles: [
-                            for (var i = 0; i < _images.length; i++)
-                              _ImageThumb(
-                                image: _images[i],
-                                onRemove: () => _removeImage(i),
-                              ),
-                          ],
-                        ),
+                        if (_images.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          // Susun atur SAMA dengan feed - penulis nampak
+                          // betul-betul rupa post nanti.
+                          ImageGridLayout(
+                            tiles: [
+                              for (var i = 0; i < _images.length; i++)
+                                _ImageThumb(
+                                  image: _images[i],
+                                  onRemove: () => _removeImage(i),
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -561,4 +615,36 @@ class _ImageThumbState extends State<_ImageThumb> {
       ],
     );
   }
+}
+
+enum _ExitDraftChoice { save, discard }
+
+/// Dialog keluar gaya Twitter - tindakan simpan/buang gambar sengaja
+/// diletak dalam mesej (bukan label butang): label butang mesti pendek
+/// (lihat corak sedia ada showReasonDialog/showAppInputDialog).
+Future<_ExitDraftChoice?> _confirmExitWithDraft(
+  BuildContext context, {
+  required bool hasImages,
+}) {
+  return showAppDialog<_ExitDraftChoice>(
+    context,
+    title: 'Simpan sebagai draf?',
+    message: hasImages
+        ? 'Anda ada kandungan belum dihantar. Gambar yang dipilih TIDAK '
+              'disimpan dalam draf - pilih semula bila sambung nanti.'
+        : 'Anda ada kandungan belum dihantar.',
+    actions: (ctx) => [
+      AppDialogAction(label: 'Batal', onPressed: () => Navigator.pop(ctx)),
+      AppDialogAction(
+        label: 'Buang',
+        isDestructive: true,
+        onPressed: () => Navigator.pop(ctx, _ExitDraftChoice.discard),
+      ),
+      AppDialogAction(
+        label: 'Simpan draf',
+        isPrimary: true,
+        onPressed: () => Navigator.pop(ctx, _ExitDraftChoice.save),
+      ),
+    ],
+  );
 }
