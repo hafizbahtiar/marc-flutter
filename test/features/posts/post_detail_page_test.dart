@@ -16,7 +16,11 @@ Comment _comment(String id) => Comment(
   content: 'comment $id',
   createdAt: DateTime(2026, 8, 25),
   editedAt: null,
-  author: const Author(memberId: 'MARC2026/08/0003', displayName: 'Zul'),
+  author: const Author(
+    userId: 'user-zul',
+    memberId: 'MARC2026/08/0003',
+    displayName: 'Zul',
+  ),
   likeCount: 0,
   likedByMe: false,
 );
@@ -27,7 +31,11 @@ Post _post() => Post(
   content: 'Post asal',
   createdAt: DateTime(2026, 8, 25),
   editedAt: null,
-  author: const Author(memberId: 'MARC2026/08/0002', displayName: 'Aina'),
+  author: const Author(
+    userId: 'user-aina',
+    memberId: 'MARC2026/08/0002',
+    displayName: 'Aina',
+  ),
   images: const [],
   likeCount: 0,
   commentCount: 0,

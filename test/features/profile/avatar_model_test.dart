@@ -32,6 +32,7 @@ void main() {
 
     test('Author: dihantar pada setiap post/comment (elak N+1)', () {
       final a = Author.fromJson({
+        'user_id': 'user-ali',
         'member_id': 'MARC2026/08/0002',
         'display_name': 'Ali',
         'avatar_url': 'https://x/b.jpg',
@@ -39,6 +40,7 @@ void main() {
       expect(a.avatarUrl, 'https://x/b.jpg');
 
       final none = Author.fromJson({
+        'user_id': 'user-ali',
         'member_id': 'MARC2026/08/0002',
         'display_name': 'Ali',
       });

@@ -208,7 +208,10 @@ void main() {
 
         expect(find.text('Simpan sebagai draf?'), findsOneWidget);
 
-        await tester.tap(find.text('Batal'));
+        // Sheet Material tak ada baris "Batal" eksplisit (beza dgn
+        // Cupertino) - ketik luar sheet (barrier) ialah cara batal, sama
+        // makna dgn Batal (showAppActionSheet pulangkan null).
+        await tester.tapAt(const Offset(20, 20));
         await tester.pumpAndSettle();
 
         expect(find.byType(CreatePostPage), findsOneWidget);

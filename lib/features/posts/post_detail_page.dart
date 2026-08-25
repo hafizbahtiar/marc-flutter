@@ -9,7 +9,7 @@ import 'package:marc/features/posts/widgets/comment_tile.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/local_drafts_repository.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
+import 'package:marc/shared/widgets/app_action_sheet.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
 import 'package:marc/shared/widgets/edit_text_dialog.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
@@ -370,22 +370,24 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
 
 enum _ExitDraftChoice { save, discard }
 
+/// "Batal" ialah cancelLabel lalai [showAppActionSheet] - leret
+/// bawah/ketik luar sheet pun sama makna dengan Batal (pulang null).
 Future<_ExitDraftChoice?> _confirmExitWithDraft(BuildContext context) {
-  return showAppDialog<_ExitDraftChoice>(
+  return showAppActionSheet<_ExitDraftChoice>(
     context,
     title: 'Simpan sebagai draf?',
     message: 'Anda ada comment belum dihantar.',
-    actions: (ctx) => [
-      AppDialogAction(label: 'Batal', onPressed: () => Navigator.pop(ctx)),
-      AppDialogAction(
-        label: 'Buang',
-        isDestructive: true,
-        onPressed: () => Navigator.pop(ctx, _ExitDraftChoice.discard),
-      ),
-      AppDialogAction(
+    actions: const [
+      AppSheetAction(
+        value: _ExitDraftChoice.save,
         label: 'Simpan draf',
-        isPrimary: true,
-        onPressed: () => Navigator.pop(ctx, _ExitDraftChoice.save),
+        icon: Icons.bookmark_add_outlined,
+      ),
+      AppSheetAction(
+        value: _ExitDraftChoice.discard,
+        label: 'Buang',
+        icon: Icons.delete_outline,
+        isDestructive: true,
       ),
     ],
   );

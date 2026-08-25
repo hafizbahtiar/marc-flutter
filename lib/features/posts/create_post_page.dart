@@ -10,6 +10,7 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/local_drafts_repository.dart';
+import 'package:marc/shared/widgets/app_action_sheet.dart';
 import 'package:marc/shared/widgets/app_dialog.dart';
 import 'package:marc/shared/widgets/image_grid_layout.dart';
 import 'package:marc/shared/widgets/member_avatar.dart';
@@ -619,31 +620,33 @@ class _ImageThumbState extends State<_ImageThumb> {
 
 enum _ExitDraftChoice { save, discard }
 
-/// Dialog keluar gaya Twitter - tindakan simpan/buang gambar sengaja
-/// diletak dalam mesej (bukan label butang): label butang mesti pendek
-/// (lihat corak sedia ada showReasonDialog/showAppInputDialog).
+/// Sheet keluar gaya Twitter - tindakan simpan/buang gambar sengaja
+/// diletak dalam mesej (bukan label pilihan): label mesti pendek (lihat
+/// corak sedia ada showReasonDialog/showAppInputDialog). "Batal" ialah
+/// cancelLabel lalai [showAppActionSheet] - leret bawah/ketik luar sheet
+/// pun sama makna dengan Batal (pulang null).
 Future<_ExitDraftChoice?> _confirmExitWithDraft(
   BuildContext context, {
   required bool hasImages,
 }) {
-  return showAppDialog<_ExitDraftChoice>(
+  return showAppActionSheet<_ExitDraftChoice>(
     context,
     title: 'Simpan sebagai draf?',
     message: hasImages
         ? 'Anda ada kandungan belum dihantar. Gambar yang dipilih TIDAK '
               'disimpan dalam draf - pilih semula bila sambung nanti.'
         : 'Anda ada kandungan belum dihantar.',
-    actions: (ctx) => [
-      AppDialogAction(label: 'Batal', onPressed: () => Navigator.pop(ctx)),
-      AppDialogAction(
-        label: 'Buang',
-        isDestructive: true,
-        onPressed: () => Navigator.pop(ctx, _ExitDraftChoice.discard),
-      ),
-      AppDialogAction(
+    actions: const [
+      AppSheetAction(
+        value: _ExitDraftChoice.save,
         label: 'Simpan draf',
-        isPrimary: true,
-        onPressed: () => Navigator.pop(ctx, _ExitDraftChoice.save),
+        icon: Icons.bookmark_add_outlined,
+      ),
+      AppSheetAction(
+        value: _ExitDraftChoice.discard,
+        label: 'Buang',
+        icon: Icons.delete_outline,
+        isDestructive: true,
       ),
     ],
   );

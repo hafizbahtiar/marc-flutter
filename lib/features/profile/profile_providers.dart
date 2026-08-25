@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
+import 'package:marc/features/members/member_providers.dart';
 
 class Profile {
   const Profile({
@@ -218,6 +219,7 @@ class ProfileRepository {
     final dio = _ref.read(dioProvider);
     await dio.patch('/members/$userId/active', data: {'is_active': isActive});
     _ref.invalidate(membersProvider);
+    _ref.invalidate(memberDetailProvider(userId));
   }
 
   /// Tukar bahagian/jawatan ahli - manager ke atas SAHAJA (backend
@@ -240,6 +242,7 @@ class ProfileRepository {
     );
     _ref.invalidate(membersProvider);
     _ref.invalidate(myProfileProvider);
+    _ref.invalidate(memberDetailProvider(userId));
   }
 
   /// Luluskan pendaftaran ahli (Stage 11) - management sahaja, backend
@@ -287,6 +290,7 @@ class ProfileRepository {
     final dio = _ref.read(dioProvider);
     await dio.patch('/members/$userId/role', data: {'role_key': roleKey});
     _ref.invalidate(membersProvider);
+    _ref.invalidate(memberDetailProvider(userId));
   }
 }
 

@@ -1,10 +1,15 @@
 class Author {
   const Author({
+    required this.userId,
     required this.memberId,
     required this.displayName,
     this.avatarUrl,
   });
 
+  /// Id sebenar penulis (bukan [memberId] yang mesra-manusia) - guna ni
+  /// utk navigasi ke skrin profil ahli (`/members/$userId`), BUKAN
+  /// memberId (backend perlukan UUID, bukan nombor ahli).
+  final String userId;
   final String memberId;
   final String? displayName;
 
@@ -14,6 +19,7 @@ class Author {
 
   factory Author.fromJson(Map<String, dynamic> json) {
     return Author(
+      userId: json['user_id'] as String,
       memberId: json['member_id'] as String,
       displayName: json['display_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,

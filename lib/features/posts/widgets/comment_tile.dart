@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
@@ -184,12 +185,18 @@ class _CommentRow extends ConsumerWidget {
                 Row(
                   children: [
                     Flexible(
-                      child: Text(
-                        comment.author.label,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                      // Nama sahaja yang buka profil - avatar di atas
+                      // kekal buka gambar penuh (dua destinasi berbeza).
+                      child: GestureDetector(
+                        onTap: () =>
+                            context.push('/members/${comment.author.userId}'),
+                        child: Text(
+                          comment.author.label,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/widgets/content_action_sheet.dart';
 import 'package:marc/features/posts/widgets/post_image_grid.dart';
@@ -73,10 +74,18 @@ class PostCard extends ConsumerWidget {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(
-                              post.author.label,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium,
+                            // Nama sahaja yang buka profil - avatar di atas
+                            // kekal buka gambar penuh (dua destinasi
+                            // berbeza, dua ketukan berasingan).
+                            child: GestureDetector(
+                              onTap: () => context.push(
+                                '/members/${post.author.userId}',
+                              ),
+                              child: Text(
+                                post.author.label,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),

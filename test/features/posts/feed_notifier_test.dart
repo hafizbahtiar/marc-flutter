@@ -61,7 +61,11 @@ Map<String, dynamic> _postJson(
     'content': 'content-$id',
     'created_at': '2026-01-01T00:00:00.000Z',
     'edited_at': null,
-    'author': {'member_id': 'm1', 'display_name': 'Author'},
+    'author': {
+      'user_id': 'user-m1',
+      'member_id': 'm1',
+      'display_name': 'Author',
+    },
     'images': <String>[],
     'like_count': likeCount,
     'comment_count': 0,

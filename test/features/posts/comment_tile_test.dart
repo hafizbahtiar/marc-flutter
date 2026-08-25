@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/widgets/comment_tile.dart';
@@ -17,7 +18,11 @@ Comment _comment({String id = 'c1', String? parent, DateTime? editedAt}) =>
       content: 'kandungan comment $id',
       createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
       editedAt: editedAt,
-      author: const Author(memberId: _memberId, displayName: 'Hafiz'),
+      author: const Author(
+        userId: 'user-hafiz',
+        memberId: _memberId,
+        displayName: 'Hafiz',
+      ),
       likeCount: 2,
       likedByMe: false,
     );
@@ -164,7 +169,11 @@ void main() {
         content: 'comment orang lain',
         createdAt: DateTime.now(),
         editedAt: null,
-        author: const Author(memberId: 'MARC2026/08/9999', displayName: 'Ali'),
+        author: const Author(
+          userId: 'user-ali',
+          memberId: 'MARC2026/08/9999',
+          displayName: 'Ali',
+        ),
         likeCount: 0,
         likedByMe: false,
       );
@@ -218,6 +227,53 @@ void main() {
       // Satu untuk comment induk, satu untuk reply.
       expect(find.byType(EditedBadge), findsNWidgets(2));
       expect(find.text('Disunting'), findsNWidgets(2));
+    });
+  });
+
+  group('ketik nama penulis', () {
+    testWidgets('navigasi ke skrin profil ahli (bukan avatar)', (tester) async {
+      final router = GoRouter(
+        initialLocation: '/post',
+        routes: [
+          GoRoute(
+            path: '/post',
+            builder: (_, _) => Scaffold(
+              body: ListView(
+                children: [
+                  CommentThread(
+                    postId: 'p1',
+                    comment: _comment(),
+                    replies: const [],
+                    onReply: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/members/:userId',
+            builder: (_, state) => Scaffold(
+              body: Text('profil-${state.pathParameters['userId']}'),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [myProfileProvider.overrideWith((ref) async => _me)],
+          child: MaterialApp.router(
+            theme: AppTheme.light,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Hafiz'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('profil-user-hafiz'), findsOneWidget);
     });
   });
 }

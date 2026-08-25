@@ -22,6 +22,7 @@ import 'package:marc/features/activities/self_checkin_scanner_page.dart';
 import 'package:marc/features/audit/audit_page.dart';
 import 'package:marc/features/checkout/checkout_page.dart';
 import 'package:marc/features/donation/donation_page.dart';
+import 'package:marc/features/members/member_detail_page.dart';
 import 'package:marc/features/members/members_page.dart';
 import 'package:marc/features/members/pending_members_page.dart';
 import 'package:marc/features/notifications/notifications_page.dart';
@@ -131,8 +132,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         // (skim `marc` didaftar utk Stripe redirect,
         // `flutter_deeplinking_enabled` lalai ON) - redirect (bukan `!`
         // yang crash) ke `/feed` untuk kes tu, Opus verify 2026-08-24.
-        redirect: (_, state) =>
-            state.extra is CheckoutRequest ? null : '/feed',
+        redirect: (_, state) => state.extra is CheckoutRequest ? null : '/feed',
         builder: (_, state) =>
             CheckoutPage(request: state.extra! as CheckoutRequest),
       ),
@@ -158,9 +158,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin/payments',
         builder: (_, _) => const AdminPaymentsPage(),
       ),
+      // MESTI didahulukan drpd '/members/:userId' di bawah - sama sebab
+      // dengan '/activities/new' vs '/activities/:id' di bawah (go_router
+      // memadan mengikut urutan, laluan statik dulu).
       GoRoute(
         path: '/members/pending',
         builder: (_, _) => const PendingMembersPage(),
+      ),
+      // Skrin profil SATU ahli (view-only, tiered) - di LUAR shell (sama
+      // macam /posts/:id, /activities/:id) supaya ditolak penuh skrin
+      // dengan butang kembali.
+      GoRoute(
+        path: '/members/:userId',
+        builder: (_, state) =>
+            MemberDetailPage(userId: state.pathParameters['userId']!),
       ),
       GoRoute(path: '/posts/new', builder: (_, _) => const CreatePostPage()),
       GoRoute(
