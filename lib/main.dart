@@ -13,6 +13,7 @@ import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/device_label.dart';
 import 'package:marc/core/jwt.dart';
 import 'package:marc/core/theme_mode_provider.dart';
+import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/notifications/push_service.dart';
 
 Future<void> main() async {
@@ -72,20 +73,35 @@ class MyApp extends ConsumerStatefulWidget {
   ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Fire-and-forget - prompt OS boleh block indefinitely kalau user
     // backgroundkan app sebelum jawab, jadi jangan await sebelum UI
     // pertama render (lihat komen initOneSignal()).
     unawaited(requestNotificationPermission());
     ref.read(pushServiceProvider).startObserving();
+    unawaited(ref.read(authServiceProvider).ensureFreshSession());
 
     final initial = ref.read(authNotifierProvider);
     if (initial.isLoggedIn && initial.accessToken != null) {
       final userId = decodeJwtSubject(initial.accessToken!);
       if (userId != null) ref.read(pushServiceProvider).onSignedIn(userId);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(ref.read(authServiceProvider).ensureFreshSession());
     }
   }
 

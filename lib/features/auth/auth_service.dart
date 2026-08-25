@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:marc/core/app_log.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
+import 'package:marc/core/jwt.dart';
 import 'package:marc/core/token_storage.dart';
 import 'package:marc/features/notifications/push_service.dart';
 
@@ -86,10 +87,7 @@ class AuthService {
   /// diterima" - BUKAN "akaun itu wujud". Mesej UI mesti kekal neutral.
   Future<AuthResult> requestPasswordReset(String email) async {
     try {
-      await _dio.post(
-        '/auth/password-reset/request',
-        data: {'email': email},
-      );
+      await _dio.post('/auth/password-reset/request', data: {'email': email});
       return const AuthResult(success: true);
     } on DioException catch (e) {
       return AuthResult(success: false, error: extractErrorMessage(e));
@@ -165,6 +163,22 @@ class AuthService {
       success: false,
       error: 'Storan peranti bermasalah. Cuba log masuk semula.',
     );
+  }
+
+  /// Idle / resume: kalau access dah luput, GET /me supaya interceptor
+  /// cuba refresh. Refresh 401 (token mati) → interceptor `clear()` →
+  /// GoRouter hantar ke /login. Access masih sah → no-op (elak ping
+  /// setiap kali app ke foreground).
+  Future<void> ensureFreshSession() async {
+    final access = await _tokenStorage.readAccessToken();
+    if (access == null) return;
+    if (!isAccessTokenExpired(access)) return;
+    try {
+      await _dio.get('/me');
+    } on DioException {
+      // Interceptor dah clear sesi kalau refresh ditolak. Jangan
+      // longgarkan ralat ni ke UI - user akan nampak /login.
+    }
   }
 
   /// Clear sesi tempatan SERTA-MERTA (router redirect ke /login jadi

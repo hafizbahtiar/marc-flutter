@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/api_client.dart';
+import 'package:marc/features/auth/auth_providers.dart';
+import 'package:marc/features/auth/auth_service.dart';
 import 'package:marc/features/profile/active_sessions_page.dart';
 import 'package:marc/features/profile/session_providers.dart';
 
@@ -31,20 +33,55 @@ class _FakeAdapter implements HttpClientAdapter {
 
 SessionRow _row({
   String id = 'sesi-1',
-  String? userAgent = 'iPhone Hafiz · iOS 18.0',
+  String? userAgent = 'iPhone Hafiz - iOS 18.0',
   String? createdIp = '203.0.113.7',
+  bool isCurrent = false,
 }) => SessionRow(
   id: id,
   userAgent: userAgent,
   createdIp: createdIp,
   createdAt: DateTime.now().subtract(const Duration(hours: 3)),
   expiresAt: DateTime.now().add(const Duration(days: 30)),
+  isCurrent: isCurrent,
 );
 
-Widget _wrap({required List<SessionRow> rows, Dio? dio}) => ProviderScope(
+class _RecordingAuthService implements AuthService {
+  var signOutCalls = 0;
+
+  @override
+  Future<AuthResult> signIn(String email, String password) async =>
+      const AuthResult(success: true);
+  @override
+  Future<AuthResult> signUp(
+    String email,
+    String password,
+    String phone,
+  ) async => const AuthResult(success: true);
+  @override
+  Future<void> signOut() async => signOutCalls++;
+  @override
+  Future<void> ensureFreshSession() async {}
+  @override
+  Future<AuthResult> requestPasswordReset(String email) async =>
+      const AuthResult(success: true);
+  @override
+  Future<({bool success, String? deepLink, String? error})>
+  requestTelegramLinkToken() async =>
+      (success: true, deepLink: null, error: null);
+  @override
+  Future<AuthResult> deleteTelegramLink() async =>
+      const AuthResult(success: true);
+}
+
+Widget _wrap({
+  required List<SessionRow> rows,
+  Dio? dio,
+  AuthService? authService,
+}) => ProviderScope(
   overrides: [
     sessionsProvider.overrideWith((ref) async => rows),
     if (dio != null) dioProvider.overrideWithValue(dio),
+    if (authService != null) authServiceProvider.overrideWithValue(authService),
   ],
   child: MaterialApp(theme: AppTheme.light, home: const ActiveSessionsPage()),
 );
@@ -56,10 +93,7 @@ void main() {
     await tester.pumpWidget(_wrap(rows: [_row()]));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('iPhone Hafiz · iOS 18.0'),
-      findsOneWidget,
-    );
+    expect(find.text('iPhone Hafiz - iOS 18.0'), findsOneWidget);
     // relativeTime(3 jam lepas) == '3j'
     expect(find.text('203.0.113.7 · 3j'), findsOneWidget);
     expect(find.byIcon(Icons.logout), findsOneWidget);
@@ -169,5 +203,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(calls, ['POST /me/sessions/revoke']);
+  });
+
+  testWidgets('sesi semasa bertanda Peranti ini', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        rows: [
+          _row(isCurrent: true),
+          _row(id: 'sesi-2'),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Peranti ini'), findsOneWidget);
+  });
+
+  testWidgets('revoke peranti ini hantar DELETE kemudian signOut', (
+    tester,
+  ) async {
+    final auth = _RecordingAuthService();
+    final calls = <String>[];
+    final dio = Dio(BaseOptions(baseUrl: 'http://test'))
+      ..httpClientAdapter = _FakeAdapter((options) async {
+        calls.add('${options.method} ${options.path}');
+        return ResponseBody.fromString('', 204);
+      });
+
+    await tester.pumpWidget(
+      _wrap(
+        rows: [_row(id: 'family-ini', isCurrent: true)],
+        dio: dio,
+        authService: auth,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.logout));
+    await tester.pumpAndSettle();
+    expect(find.text('Log keluar peranti ini'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Log keluar'));
+    await tester.pumpAndSettle();
+
+    expect(calls, ['DELETE /me/sessions/family-ini']);
+    expect(auth.signOutCalls, 1);
   });
 }

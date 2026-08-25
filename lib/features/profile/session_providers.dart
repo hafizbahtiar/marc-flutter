@@ -2,15 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/api_client.dart';
 import 'package:marc/core/auth_state.dart';
 
-/// Satu sesi log masuk aktif (satu baris `refresh_tokens` di backend) -
-/// "device ni pernah log masuk dan masih boleh refresh token".
-///
-/// TIADA medan `is_current`: `/me/sessions` dipanggil dengan ACCESS
-/// token, dan access token backend cuma bawa `sub` (tiada rujukan kepada
-/// baris refresh token yang mengeluarkannya). Jadi server memang TAK
-/// BOLEH beritahu sesi mana milik device ni tanpa mekanisme penjejakan
-/// baharu. Senarai tanpa penanda "device ini" masih berguna; menekanya
-/// ikut tekaan akan buat ahli log keluar device salah.
+/// Satu sesi log masuk aktif - SATU family refresh token (satu device).
+/// Id ialah `family_id`, bukan hash token individu (refresh memutar hash
+/// baru dalam family yang sama).
 class SessionRow {
   const SessionRow({
     required this.id,
@@ -18,11 +12,12 @@ class SessionRow {
     this.createdIp,
     required this.createdAt,
     required this.expiresAt,
+    this.isCurrent = false,
   });
 
   final String id;
 
-  /// Rentetan User-Agent mentah - TAK dihurai jadi label "iPhone/Chrome".
+  /// Label peranti (`X-MARC-Device-Label`) atau User-Agent mentah.
   /// Null utk sesi lama yang dicipta sebelum backend mula merakamnya.
   final String? userAgent;
 
@@ -32,6 +27,9 @@ class SessionRow {
   final DateTime createdAt;
   final DateTime expiresAt;
 
+  /// True iff `sid` dalam access token JWT padan family ni - "peranti ini".
+  final bool isCurrent;
+
   factory SessionRow.fromJson(Map<String, dynamic> json) {
     return SessionRow(
       id: json['id'] as String,
@@ -39,11 +37,12 @@ class SessionRow {
       createdIp: json['created_ip'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       expiresAt: DateTime.parse(json['expires_at'] as String),
+      isCurrent: json['is_current'] as bool? ?? false,
     );
   }
 }
 
-/// Senarai sesi aktif ahli semasa.
+/// Senarai sesi aktif ahli semasa. Peranti semasa di depan.
 final sessionsProvider = FutureProvider<List<SessionRow>>((ref) async {
   final isLoggedIn = ref.watch(
     authNotifierProvider.select((s) => s.isLoggedIn),
@@ -52,9 +51,14 @@ final sessionsProvider = FutureProvider<List<SessionRow>>((ref) async {
 
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/me/sessions');
-  return (res.data as List)
+  final rows = (res.data as List)
       .map((s) => SessionRow.fromJson(s as Map<String, dynamic>))
       .toList();
+  rows.sort((a, b) {
+    if (a.isCurrent != b.isCurrent) return a.isCurrent ? -1 : 1;
+    return b.createdAt.compareTo(a.createdAt);
+  });
+  return rows;
 });
 
 final sessionRepositoryProvider = Provider<SessionRepository>(
@@ -65,12 +69,8 @@ class SessionRepository {
   SessionRepository(this._ref);
   final Ref _ref;
 
-  /// Log keluar SATU sesi (device). Adik-beradik satu-baris kepada
-  /// `signOutAll` - sesi lain (termasuk device ni) kekal.
-  ///
-  /// Backend pulang 404 kalau id bukan milik ahli semasa (ownership
-  /// dikuatkuasakan dalam query DELETE), jadi tiada semakan pemilikan
-  /// perlu di sini.
+  /// Log keluar SATU sesi (device / family). Adik-beradik satu-baris
+  /// kepada `signOutAll` - sesi lain kekal.
   Future<void> revoke(String id) async {
     final dio = _ref.read(dioProvider);
     await dio.delete('/me/sessions/$id');

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/core/error_utils.dart';
+import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/session_providers.dart';
 import 'package:marc/shared/relative_time.dart';
 import 'package:marc/shared/widgets/confirm_dialog.dart';
@@ -10,7 +11,7 @@ import 'package:marc/shared/widgets/my_snackbar.dart';
 
 final _placeholderSession = SessionRow(
   id: '00000000-0000-0000-0000-000000000000',
-  userAgent: 'iPhone Hafiz · iOS 18.0',
+  userAgent: 'iPhone Hafiz - iOS 18.0',
   createdIp: '203.0.113.7',
   createdAt: DateTime(2026),
   expiresAt: DateTime(2026, 2),
@@ -18,11 +19,8 @@ final _placeholderSession = SessionRow(
 
 /// Senarai sesi log masuk aktif + log keluar per device atau beramai-ramai.
 ///
-/// Sengaja TIADA penanda "sesi semasa" - lihat nota `SessionRow` di
-/// `session_providers.dart`: backend tak boleh tentukannya daripada
-/// access token, dan meneka akan mengelirukan (ahli log keluar device
-/// salah). Untuk "log keluar SEMUA", butang log keluar biasa di Tetapan
-/// kekal jalan yang betul.
+/// "Peranti ini" datang dari `is_current` backend (claim `sid` dalam
+/// access token = family_id). Bukan tekaan "paling baharu".
 class ActiveSessionsPage extends ConsumerStatefulWidget {
   const ActiveSessionsPage({super.key});
 
@@ -74,8 +72,10 @@ class _ActiveSessionsPageState extends ConsumerState<ActiveSessionsPage> {
   Future<void> _revokeOne(SessionRow row) async {
     final ok = await showConfirmDialog(
       context,
-      title: 'Log keluar sesi',
-      message: 'Log keluar device ini? Device tersebut perlu log masuk semula.',
+      title: row.isCurrent ? 'Log keluar peranti ini' : 'Log keluar sesi',
+      message: row.isCurrent
+          ? 'Anda akan dikembalikan ke skrin log masuk.'
+          : 'Log keluar device ini? Device tersebut perlu log masuk semula.',
       confirmLabel: 'Log keluar',
       isDestructive: true,
     );
@@ -83,7 +83,12 @@ class _ActiveSessionsPageState extends ConsumerState<ActiveSessionsPage> {
 
     try {
       await ref.read(sessionRepositoryProvider).revoke(row.id);
-      if (mounted) MySnackBar.success(context, 'Sesi dilog keluar.');
+      if (!mounted) return;
+      if (row.isCurrent) {
+        await ref.read(authServiceProvider).signOut();
+        return;
+      }
+      MySnackBar.success(context, 'Sesi dilog keluar.');
     } catch (e) {
       if (mounted) {
         MySnackBar.error(
@@ -96,11 +101,17 @@ class _ActiveSessionsPageState extends ConsumerState<ActiveSessionsPage> {
 
   Future<void> _revokeSelected() async {
     if (_selectedIds.isEmpty) return;
+    final rows = ref.read(sessionsProvider).valueOrNull ?? const <SessionRow>[];
+    final includesCurrent = rows.any(
+      (r) => r.isCurrent && _selectedIds.contains(r.id),
+    );
     final count = _selectedIds.length;
     final ok = await showConfirmDialog(
       context,
-      title: 'Log keluar sesi',
-      message: count == 1
+      title: includesCurrent ? 'Log keluar sesi' : 'Log keluar sesi',
+      message: includesCurrent
+          ? 'Pilihan termasuk peranti ini. Anda akan dikembalikan ke skrin log masuk.'
+          : count == 1
           ? 'Log keluar device ini? Device tersebut perlu log masuk semula.'
           : 'Log keluar $count device? Semua device terpilih perlu log masuk semula.',
       confirmLabel: count == 1 ? 'Log keluar' : 'Log keluar ($count)',
@@ -112,6 +123,10 @@ class _ActiveSessionsPageState extends ConsumerState<ActiveSessionsPage> {
     try {
       await ref.read(sessionRepositoryProvider).revokeMany(ids);
       if (!mounted) return;
+      if (includesCurrent) {
+        await ref.read(authServiceProvider).signOut();
+        return;
+      }
       _exitSelectionMode();
       MySnackBar.success(
         context,
@@ -321,17 +336,23 @@ class _SessionTile extends StatelessWidget {
     final ip = row.createdIp?.isNotEmpty == true
         ? row.createdIp!
         : 'IP tidak diketahui';
+    final scheme = Theme.of(context).colorScheme;
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: selectionMode
-          ? Checkbox(
-              value: selected,
-              onChanged: (_) => onToggle(),
-            )
-          : const Icon(Icons.devices_outlined),
+          ? Checkbox(value: selected, onChanged: (_) => onToggle())
+          : Icon(
+              row.isCurrent ? Icons.smartphone : Icons.devices_outlined,
+              color: row.isCurrent ? scheme.primary : null,
+            ),
       title: Text(device),
-      subtitle: Text('$ip · ${relativeTime(row.createdAt)}'),
+      subtitle: Text(
+        [
+          if (row.isCurrent) 'Peranti ini',
+          '$ip · ${relativeTime(row.createdAt)}',
+        ].join(' · '),
+      ),
       isThreeLine: true,
       trailing: selectionMode
           ? null

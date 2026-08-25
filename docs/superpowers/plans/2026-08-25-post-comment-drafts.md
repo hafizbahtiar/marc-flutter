@@ -4,7 +4,7 @@
 
 **Goal:** Persist unsent post/comment content locally (sqflite) so it survives navigation and app kill, with a Twitter-style "Simpan draf / Buang / Batal" prompt on exit and silent auto-restore on reopen.
 
-**Architecture:** A single sqflite table (`drafts`) behind a small `DraftRepository` interface, exposed via a Riverpod provider. Both composers (`create_post_page.dart`, the comment/reply composer in `post_detail_page.dart`) wrap their `Scaffold` in `PopScope`, intercept the exit attempt when there's unsaved content, and drive the repository from the resulting dialog choice. No autosave-while-typing — writes only happen at exit-with-confirmation or on successful submit (clears the draft).
+**Architecture:** A single sqflite table (`drafts`) behind a small `DraftRepository` interface, exposed via a Riverpod provider. Both composers (`create_post_page.dart`, the comment/reply composer in `post_detail_page.dart`) wrap their `Scaffold` in `PopScope`, intercept the exit attempt when there's unsaved content, and drive the repository from the resulting dialog choice. No autosave-while-typing - writes only happen at exit-with-confirmation or on successful submit (clears the draft).
 
 **Tech Stack:** `sqflite` (storage), `path` (path joining), `sqflite_common_ffi` (dev-only, for running repository/db tests without a device), existing `flutter_riverpod` + the app's `AppDialogShell`/`showAppDialog` dialog system.
 
@@ -12,12 +12,12 @@
 
 ## Global Constraints
 
-- Text-only drafts (no image persistence) — v1 explicitly excludes it per spec.
-- One overwritable slot per draft key — no drafts-list/management UI.
-- No autosave-while-typing — writes happen only at exit-confirmation time or on successful submit.
+- Text-only drafts (no image persistence) - v1 explicitly excludes it per spec.
+- One overwritable slot per draft key - no drafts-list/management UI.
+- No autosave-while-typing - writes happen only at exit-confirmation time or on successful submit.
 - Draft keys: `'new_post'` (post composer, fixed); `'reply:{postId}:{parentCommentId ?? "root"}'` (comment composer).
-- Auto-restore is silent (no "resume draft?" prompt) — pre-fill the field directly.
-- **Do NOT run `git commit` for any step in this plan unless the user explicitly asks in that moment.** Each task below ends with a "Stop for review" step instead of a commit step — leave the working tree as-is and wait.
+- Auto-restore is silent (no "resume draft?" prompt) - pre-fill the field directly.
+- **Do NOT run `git commit` for any step in this plan unless the user explicitly asks in that moment.** Each task below ends with a "Stop for review" step instead of a commit step - leave the working tree as-is and wait.
 
 ---
 
@@ -45,7 +45,7 @@
 - Test: `test/core/local_db_test.dart`
 
 **Interfaces:**
-- Produces: `Future<Database> openLocalDb()` — memoized, returns the same open `Database` instance on repeated calls. `Database` is `sqflite`'s type, re-exported by importing `package:sqflite/sqflite.dart`.
+- Produces: `Future<Database> openLocalDb()` - memoized, returns the same open `Database` instance on repeated calls. `Database` is `sqflite`'s type, re-exported by importing `package:sqflite/sqflite.dart`.
 
 - [ ] **Step 1: Add dependencies**
 
@@ -147,7 +147,7 @@ Future<Database> _open() async {
 Run: `flutter test test/core/local_db_test.dart`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Stop for review (no commit — wait for explicit request)**
+- [ ] **Step 6: Stop for review (no commit - wait for explicit request)**
 
 ---
 
@@ -158,11 +158,11 @@ Expected: PASS (2 tests).
 - Test: `test/shared/local_drafts_repository_test.dart`
 
 **Interfaces:**
-- Consumes: `openLocalDb()` from Task 1 (production provider only — the test constructs its own isolated in-memory `Database` directly, bypassing `openLocalDb()`).
+- Consumes: `openLocalDb()` from Task 1 (production provider only - the test constructs its own isolated in-memory `Database` directly, bypassing `openLocalDb()`).
 - Produces:
   - `class Draft { final String key; final String kind; final String content; final bool? isAnnouncement; }`
   - `abstract class DraftRepository { Future<Draft?> get(String key); Future<void> save(String key, {required String kind, required String content, bool? isAnnouncement}); Future<void> delete(String key); }`
-  - `class SqfliteDraftRepository implements DraftRepository` — constructor `SqfliteDraftRepository(Future<Database> dbFuture)`.
+  - `class SqfliteDraftRepository implements DraftRepository` - constructor `SqfliteDraftRepository(Future<Database> dbFuture)`.
   - `final draftRepositoryProvider = Provider<DraftRepository>(...)`.
 
 - [ ] **Step 1: Write the failing test**
@@ -353,24 +353,24 @@ final draftRepositoryProvider = Provider<DraftRepository>((ref) {
 Run: `flutter test test/shared/local_drafts_repository_test.dart`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Stop for review (no commit — wait for explicit request)**
+- [ ] **Step 5: Stop for review (no commit - wait for explicit request)**
 
 ---
 
 ### Task 3: Fake draft repository for widget tests
 
-**Why this task exists:** `create_post_page.dart`/`post_detail_page.dart` will call `ref.read(draftRepositoryProvider)` from `initState`. In a plain `flutter_test` widget test (no device, no FFI setup), the real `SqfliteDraftRepository` would hit the sqlite platform channel and throw `MissingPluginException`. Widget tests override `draftRepositoryProvider` with this in-memory fake instead — no sqlite involved, fast, isolated per test.
+**Why this task exists:** `create_post_page.dart`/`post_detail_page.dart` will call `ref.read(draftRepositoryProvider)` from `initState`. In a plain `flutter_test` widget test (no device, no FFI setup), the real `SqfliteDraftRepository` would hit the sqlite platform channel and throw `MissingPluginException`. Widget tests override `draftRepositoryProvider` with this in-memory fake instead - no sqlite involved, fast, isolated per test.
 
 **Files:**
 - Create: `test/support/fake_draft_repository.dart`
 
 **Interfaces:**
 - Consumes: `DraftRepository`, `Draft` from `package:marc/shared/local_drafts_repository.dart` (Task 2).
-- Produces: `class FakeDraftRepository implements DraftRepository` — no constructor args, starts empty.
+- Produces: `class FakeDraftRepository implements DraftRepository` - no constructor args, starts empty.
 
 - [ ] **Step 1: Write the failing test**
 
-This is test-support code, not production code — its "test" is a short self-check that the fake actually satisfies the same contract the real repository does. Create `test/support/fake_draft_repository_test.dart`:
+This is test-support code, not production code - its "test" is a short self-check that the fake actually satisfies the same contract the real repository does. Create `test/support/fake_draft_repository_test.dart`:
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
@@ -444,7 +444,7 @@ class FakeDraftRepository implements DraftRepository {
 Run: `flutter test test/support/fake_draft_repository_test.dart`
 Expected: PASS.
 
-- [ ] **Step 5: Stop for review (no commit — wait for explicit request)**
+- [ ] **Step 5: Stop for review (no commit - wait for explicit request)**
 
 ---
 
@@ -456,11 +456,11 @@ Expected: PASS.
 
 **Interfaces:**
 - Consumes: `draftRepositoryProvider`, `DraftRepository`, `Draft` (Task 2); `FakeDraftRepository` (Task 3); `AppDialogShell`/`AppDialogAction`/`showAppDialog` (existing, `lib/shared/widgets/app_dialog.dart`).
-- Produces: no new public API — this is UI wiring only.
+- Produces: no new public API - this is UI wiring only.
 
 - [ ] **Step 1: Write the failing tests**
 
-In `test/features/posts/create_post_page_test.dart`, add the import and update `_host()` to accept and apply a draft repository override (existing tests keep passing unchanged since `FakeDraftRepository()` starts empty — no unsaved-content dialog fires unless the test types something and tries to leave):
+In `test/features/posts/create_post_page_test.dart`, add the import and update `_host()` to accept and apply a draft repository override (existing tests keep passing unchanged since `FakeDraftRepository()` starts empty - no unsaved-content dialog fires unless the test types something and tries to leave):
 
 ```dart
 import 'package:marc/shared/local_drafts_repository.dart';
@@ -614,7 +614,7 @@ Then add a new group at the end of `main()`:
 - [ ] **Step 2: Run tests to verify the new ones fail**
 
 Run: `flutter test test/features/posts/create_post_page_test.dart`
-Expected: the 6 pre-existing tests still PASS (host change is behavior-preserving); the 5 new `draf` tests FAIL — `draftRepositoryProvider` doesn't exist as an override target yet / `PopScope` behavior isn't wired, so no "Simpan sebagai draf?" dialog appears and `pageBack()` just pops immediately.
+Expected: the 6 pre-existing tests still PASS (host change is behavior-preserving); the 5 new `draf` tests FAIL - `draftRepositoryProvider` doesn't exist as an override target yet / `PopScope` behavior isn't wired, so no "Simpan sebagai draf?" dialog appears and `pageBack()` just pops immediately.
 
 - [ ] **Step 3: Write minimal implementation**
 
@@ -757,7 +757,7 @@ Expected: "No issues found!"
 Run: `dart format --output=none --set-exit-if-changed lib/features/posts/create_post_page.dart test/features/posts/create_post_page_test.dart`
 Expected: no diff.
 
-- [ ] **Step 6: Stop for review (no commit — wait for explicit request)**
+- [ ] **Step 6: Stop for review (no commit - wait for explicit request)**
 
 ---
 
@@ -916,7 +916,7 @@ void main() {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/features/posts/post_detail_page_test.dart`
-Expected: FAIL — no `PopScope`/draft wiring exists yet in `PostDetailPage`, so no dialog appears and drafts are never written/read.
+Expected: FAIL - no `PopScope`/draft wiring exists yet in `PostDetailPage`, so no dialog appears and drafts are never written/read.
 
 - [ ] **Step 3: Write minimal implementation**
 
@@ -928,7 +928,7 @@ Add import:
 import 'package:marc/shared/local_drafts_repository.dart';
 ```
 
-Add a draft-key getter and the same exit-choice plumbing as Task 4 to `_PostDetailPageState` (this duplicates the small `_ExitDraftChoice` enum + dialog helper from `create_post_page.dart` — both files are small, separate composers with slightly different copy needs (post vs comment context); a shared helper isn't worth the indirection for two call sites per YAGNI):
+Add a draft-key getter and the same exit-choice plumbing as Task 4 to `_PostDetailPageState` (this duplicates the small `_ExitDraftChoice` enum + dialog helper from `create_post_page.dart` - both files are small, separate composers with slightly different copy needs (post vs comment context); a shared helper isn't worth the indirection for two call sites per YAGNI):
 
 ```dart
   String get _draftKey =>
@@ -1052,12 +1052,12 @@ Expected: no diff.
 Run: `dart analyze` (whole project)
 Expected: "No issues found!"
 
-- [ ] **Step 8: Stop for review (no commit — wait for explicit request)**
+- [ ] **Step 8: Stop for review (no commit - wait for explicit request)**
 
 ---
 
 ## Notes for the implementer
 
-- `PopScope`'s `onPopInvokedWithPop` is `void Function(bool, T?)`, but assigning an `async` closure to it is idiomatic and already used throughout this codebase for `VoidCallback`-typed fields (e.g. every `onPressed: () async { ... }` in `create_post_page.dart`/`profile_page.dart`) — no special handling needed.
-- The "gambar tidak disimpan" caveat lives in the exit dialog's **message**, not a button label — per this session's established convention (button text stays short; see the `app_dialog.dart` button-length cleanup earlier this session). This is a deliberate deviation from the spec's literal wording ("button label becomes...") in favor of that convention.
-- `isAnnouncement` restore for a non-management user who somehow has an announcement draft (edge case: drafted while management, role changed since) is left as-is — the announcement toggle chip stays hidden for non-management regardless, and the backend independently gates `type: 'announcement'` by role, so no real exposure, just a UI no-op. Not worth extra handling for v1.
+- `PopScope`'s `onPopInvokedWithPop` is `void Function(bool, T?)`, but assigning an `async` closure to it is idiomatic and already used throughout this codebase for `VoidCallback`-typed fields (e.g. every `onPressed: () async { ... }` in `create_post_page.dart`/`profile_page.dart`) - no special handling needed.
+- The "gambar tidak disimpan" caveat lives in the exit dialog's **message**, not a button label - per this session's established convention (button text stays short; see the `app_dialog.dart` button-length cleanup earlier this session). This is a deliberate deviation from the spec's literal wording ("button label becomes...") in favor of that convention.
+- `isAnnouncement` restore for a non-management user who somehow has an announcement draft (edge case: drafted while management, role changed since) is left as-is - the announcement toggle chip stays hidden for non-management regardless, and the backend independently gates `type: 'announcement'` by role, so no real exposure, just a UI no-op. Not worth extra handling for v1.
