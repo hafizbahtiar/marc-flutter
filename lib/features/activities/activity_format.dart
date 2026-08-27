@@ -2,7 +2,7 @@
 ///
 /// `relativeTime` sedia ada ("2j", "3h") dibina untuk post LEPAS; aktiviti
 /// kebanyakannya AKAN DATANG dan pengguna perlu tarikh sebenar untuk
-/// merancang. Nama bulan Melayu diselaraskan dengan `shared/relative_time.dart`.
+/// merancang. Nama bulan Melayu diselaraskan dengan `shared/utils/relative_time.dart`.
 library;
 
 const _months = [

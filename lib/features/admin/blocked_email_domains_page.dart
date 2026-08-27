@@ -5,10 +5,10 @@ import 'package:marc/features/activities/manage/management_gate.dart';
 import 'package:marc/features/admin/blocked_email_domains_models.dart';
 import 'package:marc/features/admin/blocked_email_domains_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/relative_time.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/relative_time.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin urus domain emel pelupusan (`blocked_email_domains`) -
 /// superadmin SAHAJA (bukan management umum): jadual ni kawal SIAPA

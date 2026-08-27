@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 const _qrAsset = 'assets/donation/maybank_hafiz.jpeg';
 

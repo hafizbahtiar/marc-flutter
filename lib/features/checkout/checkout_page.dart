@@ -5,10 +5,10 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/checkout/checkout_providers.dart';
 import 'package:marc/features/registration_payment/registration_payment_providers.dart'
     show PhoneRequiredException;
-import 'package:marc/shared/phone.dart';
-import 'package:marc/shared/validators.dart';
-import 'package:marc/shared/widgets/edit_text_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/phone.dart';
+import 'package:marc/shared/utils/validators.dart';
+import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Padan pola `_formatAmount` di fail-fail lain (`payment_history_page.dart`,

@@ -7,7 +7,7 @@ import 'package:marc/features/activities/activity_format.dart';
 import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
-import 'package:marc/shared/widgets/approval_gate.dart';
+import 'package:marc/shared/ui/widgets/approval_gate.dart';
 
 /// Baris hantu untuk Skeletonizer semasa memuat - corak sama dengan
 /// `_placeholderRow` dalam members_page.dart.

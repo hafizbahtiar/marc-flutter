@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc/shared/widgets/image_grid_layout.dart';
+import 'package:marc/shared/ui/media/image_grid_layout.dart';
 
 Widget _host(int n) => MaterialApp(
   home: Scaffold(

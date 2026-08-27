@@ -6,7 +6,7 @@ import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/token_storage.dart';
 import 'package:marc/features/profile/profile_page.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 class _LoggedInAuth extends AuthNotifier {
   _LoggedInAuth() : super(TokenStorage()) {

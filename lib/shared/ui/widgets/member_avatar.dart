@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:marc/shared/widgets/app_network_image.dart';
+import 'package:marc/shared/ui/media/app_network_image.dart';
 // ignore: unused_import
-import 'package:marc/shared/widgets/image_viewer_page.dart';
+import 'package:marc/shared/ui/media/image_viewer_page.dart';
 
 /// Avatar ahli - gambar profil kalau ada, huruf pertama nama kalau tiada.
 ///

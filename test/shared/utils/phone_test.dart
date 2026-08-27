@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:marc/shared/phone.dart';
+import 'package:marc/shared/utils/phone.dart';
 
 void main() {
   group('normalizeMY', () {

@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
 
 Widget _host(TargetPlatform platform, void Function(BuildContext) onTap) {
   return MaterialApp(

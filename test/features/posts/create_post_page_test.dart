@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/posts/create_post_page.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/local_drafts_repository.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/data/local_drafts_repository.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 import '../../support/fake_draft_repository.dart';
 

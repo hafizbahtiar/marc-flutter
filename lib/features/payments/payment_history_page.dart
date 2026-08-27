@@ -4,8 +4,8 @@ import 'package:printing/printing.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/payments/payment_models.dart';
 import 'package:marc/features/payments/payment_providers.dart';
-import 'package:marc/shared/relative_time.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/relative_time.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 // .toUpperCase() - backend tak konsisten kes currency antara modul
 // (yuran pendaftaran simpan "myr", yuran aktiviti simpan "MYR"), jadi

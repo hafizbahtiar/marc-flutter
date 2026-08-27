@@ -5,9 +5,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/session_providers.dart';
-import 'package:marc/shared/relative_time.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/relative_time.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 final _placeholderSession = SessionRow(
   id: '00000000-0000-0000-0000-000000000000',

@@ -6,7 +6,7 @@ import 'package:marc/features/posts/post_detail_page.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/local_drafts_repository.dart';
+import 'package:marc/shared/data/local_drafts_repository.dart';
 
 import '../../support/fake_draft_repository.dart';
 

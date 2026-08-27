@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marc/shared/widgets/app_action_sheet.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
 
 /// Tindakan pada satu keping kandungan (post atau comment).
 enum ContentAction { edit, delete }

@@ -6,8 +6,8 @@ import 'package:marc/app/theme.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/widgets/comment_tile.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/edit_text_dialog.dart';
-import 'package:marc/shared/widgets/edited_badge.dart';
+import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/widgets/edited_badge.dart';
 
 const _memberId = 'MARC2026/08/0001';
 

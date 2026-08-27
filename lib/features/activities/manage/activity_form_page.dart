@@ -8,10 +8,10 @@ import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/activity_draft.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
-import 'package:marc/shared/widgets/app_action_sheet.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Borang cipta/sunting aktiviti berserta editor sesi.
 ///

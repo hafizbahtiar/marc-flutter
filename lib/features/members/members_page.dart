@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 const _placeholderRow = MemberRow(
   userId: '00000000-0000-0000-0000-000000000000',

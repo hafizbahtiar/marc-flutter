@@ -56,8 +56,12 @@ lib/
     donation/   - borang sokongan + handler gateway (Strategy)
     audit/      - pemapar jejak audit (management sahaja)
     notifications/
-  shared/widgets/ - AppDialogShell, AppActionSheet, AppNetworkImage,
-                    EditedBadge, MySnackBar, ConfirmDialog
+  shared/
+    ui/map/     - peta OSM boleh guna semula (AppMap, tile sources)
+    ui/widgets/ - AppDialogShell, AppActionSheet, AppNetworkImage,
+                  EditedBadge, MySnackBar, ConfirmDialog
+    data/       - DraftRepository (draf post/comment tempatan)
+    utils/      - phone, validators, relative_time
 ```
 
 ## Corak yang mesti diikut

@@ -11,12 +11,12 @@ import 'package:marc/features/members/member_detail_model.dart';
 import 'package:marc/features/members/member_providers.dart';
 import 'package:marc/features/profile/address_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/app_action_sheet.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/image_viewer_page.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/media/image_viewer_page.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Sahkan & tukar status aktif/tak aktif ahli - management sahaja
 /// (dipanggil bila [_showMemberActionsSheet.canEdit], gate rank hierarki

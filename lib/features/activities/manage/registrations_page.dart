@@ -8,8 +8,8 @@ import 'package:marc/features/activities/manage/activity_form_page.dart'
     show showReasonDialog;
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Senarai peserta satu aktiviti, dengan tanda hadir per SESI.
 ///

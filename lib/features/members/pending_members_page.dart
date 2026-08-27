@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/app_action_sheet.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/edit_text_dialog.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 const _placeholderPendingRow = MemberRow(

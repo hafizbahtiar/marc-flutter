@@ -6,8 +6,8 @@ import 'package:marc/features/activities/activity_format.dart';
 import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 class ActivityDetailPage extends ConsumerStatefulWidget {
   const ActivityDetailPage({super.key, required this.activityId});

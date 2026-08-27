@@ -4,9 +4,9 @@ import 'package:marc/features/activities/manage/management_gate.dart';
 import 'package:marc/features/admin/departments_models.dart';
 import 'package:marc/features/admin/departments_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin urus bahagian/jabatan organisasi (`departments`) - superadmin
 /// SAHAJA, padanan corak & rasional `BlockedEmailDomainsPage` (root-level

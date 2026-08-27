@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
-import 'package:marc/shared/widgets/app_network_image.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/media/app_network_image.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 Widget _host(Widget child) => MaterialApp(
   theme: AppTheme.light,

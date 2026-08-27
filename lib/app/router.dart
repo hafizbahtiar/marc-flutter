@@ -41,7 +41,8 @@ import 'package:marc/features/profile/manage_addresses_page.dart';
 import 'package:marc/features/profile/profile_page.dart';
 import 'package:marc/features/profile/settings_page.dart';
 import 'package:marc/features/profile/telegram_link_page.dart';
-import 'package:marc/shared/widgets/web_view_page.dart';
+import 'package:marc/shared/ui/map/map_page.dart';
+import 'package:marc/shared/ui/widgets/web_view_page.dart';
 
 /// Adapter: dengar perubahan authNotifierProvider, notify GoRouter untuk
 /// refresh redirect. Gantian `GoRouterRefreshStream` yang dulu dengar
@@ -110,6 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile/sessions',
         builder: (_, _) => const ActiveSessionsPage(),
       ),
+      GoRoute(path: '/map', builder: (_, _) => const MapPage()),
       GoRoute(path: '/about', builder: (_, _) => const AboutPage()),
       GoRoute(path: '/faq', builder: (_, _) => const FaqPage()),
       GoRoute(

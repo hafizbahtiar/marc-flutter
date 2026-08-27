@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
 
 /// Dialog pengesahan adaptive yang boleh guna semula.
 ///

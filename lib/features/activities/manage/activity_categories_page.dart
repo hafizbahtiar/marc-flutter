@@ -5,8 +5,8 @@ import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin CRUD kategori aktiviti - manager ke atas SAHAJA (bukan sekadar
 /// pengurusan). Kategori ialah infrastruktur dikongsi SEMUA aktiviti, bukan

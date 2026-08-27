@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
-import 'package:marc/shared/widgets/app_action_sheet.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
 import 'package:marc/features/profile/widgets/avatar_crop_page.dart';
 import 'package:marc/features/profile/avatar_service.dart';
 import 'package:marc/core/error_utils.dart';
@@ -12,11 +12,11 @@ import 'package:marc/app/theme.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/features/profile/widgets/verify_email_banner.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/image_viewer_page.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
-import 'package:marc/shared/widgets/pending_status_view.dart';
-import 'package:marc/shared/widgets/settings_section.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/media/image_viewer_page.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/widgets/pending_status_view.dart';
+import 'package:marc/shared/ui/widgets/settings_section.dart';
 
 /// Tag Hero avatar profil sendiri - selamat guna string tetap sebab
 /// avatar sendiri cuma terpapar SEKALI pada satu-satu masa di skrin ni
@@ -295,6 +295,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/profile/addresses'),
                 ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.map_outlined),
+                  title: const Text('Peta (ujian)'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/map'),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -544,7 +551,7 @@ class _Header extends StatelessWidget {
 
 /// Kad maklumat profil di bahagian atas skrin (Email/telefon/no. ahli) -
 /// tindakan navigasi guna `SettingsCard`/`SettingsGroupLabel` dikongsi
-/// (`shared/widgets/settings_section.dart`), kad ni kekal berasingan
+/// (`shared/ui/widgets/settings_section.dart`), kad ni kekal berasingan
 /// (tanpa label kumpulan) sebab ia bukan senarai tindakan.
 class _InfoCard extends StatelessWidget {
   const _InfoCard({required this.children});

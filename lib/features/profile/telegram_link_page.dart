@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 class TelegramLinkPage extends ConsumerStatefulWidget {
   const TelegramLinkPage({super.key});

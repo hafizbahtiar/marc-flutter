@@ -8,10 +8,10 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/edit_text_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
-import 'package:marc/shared/widgets/pending_status_view.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/pending_status_view.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});

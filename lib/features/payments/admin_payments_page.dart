@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/features/payments/payment_models.dart';
 import 'package:marc/features/payments/payment_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/relative_time.dart';
+import 'package:marc/shared/utils/relative_time.dart';
 
 // "RM" digodam keras sengaja - `payment_logs` TIADA lajur currency (log
 // peristiwa, bukan jadual bayaran), dan setiap modul bayaran dalam app ni

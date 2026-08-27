@@ -6,9 +6,9 @@ import 'package:marc/core/error_utils.dart';
 import 'package:marc/core/theme_mode_provider.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
-import 'package:marc/shared/widgets/settings_section.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/settings_section.dart';
 
 /// Hub tetapan/tindakan akaun - dipisah drpd `ProfilePage` (yang kekal
 /// fokus pada info profil + Komuniti/Aktiviti/Kewangan/Pengurusan) supaya

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
 
 /// Dialog untuk edit satu medan teks - pulang teks baru (trimmed) bila
 /// disimpan, `null` bila dibatal/ditutup tanpa simpan.

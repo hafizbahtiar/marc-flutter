@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/address_providers.dart';
-import 'package:marc/shared/widgets/app_action_sheet.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Tambah/edit alamat. [existing] null = mod tambah, bukan null = mod edit
 /// (medan diseed dari alamat sedia ada).

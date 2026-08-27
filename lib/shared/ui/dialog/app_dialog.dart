@@ -34,7 +34,7 @@ class AppDialogAction {
 ///
 /// Guna widget ni terus bila dialog perlu state sendiri; guna
 /// [showAppDialog] untuk kes ringkas tanpa state, `showConfirmDialog`
-/// (shared/widgets/confirm_dialog.dart) untuk kes confirm dua-butang,
+/// (shared/ui/widgets/confirm_dialog.dart) untuk kes confirm dua-butang,
 /// [showAppAlertDialog] untuk kes info satu-butang, dan [showAppInputDialog]
 /// bila perlu medan input (cth reason/description sebelum reject/cancel).
 class AppDialogShell extends StatelessWidget {

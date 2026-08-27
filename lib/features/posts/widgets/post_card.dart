@@ -5,10 +5,10 @@ import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/widgets/content_action_sheet.dart';
 import 'package:marc/features/posts/widgets/post_image_grid.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/relative_time.dart';
-import 'package:marc/shared/widgets/edited_badge.dart';
-import 'package:marc/shared/widgets/image_viewer_page.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/utils/relative_time.dart';
+import 'package:marc/shared/ui/widgets/edited_badge.dart';
+import 'package:marc/shared/ui/media/image_viewer_page.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 class PostCard extends ConsumerWidget {
   const PostCard({

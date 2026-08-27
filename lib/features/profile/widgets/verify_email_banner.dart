@@ -5,7 +5,7 @@ import 'package:marc/app/theme.dart';
 import 'package:marc/core/api_client.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Banner "email belum disahkan". Papar hanya bila profil dimuat dan
 /// `email_verified == false`. Butang "Sahkan" panggil

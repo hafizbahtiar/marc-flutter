@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/auth/widgets/auth_field.dart';
 import 'package:marc/features/auth/widgets/button_busy.dart';
-import 'package:marc/shared/phone.dart';
-import 'package:marc/shared/validators.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/phone.dart';
+import 'package:marc/shared/utils/validators.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});

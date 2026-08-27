@@ -9,13 +9,13 @@ import 'package:marc/core/app_log.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/local_drafts_repository.dart';
-import 'package:marc/shared/widgets/app_action_sheet.dart';
-import 'package:marc/shared/widgets/app_dialog.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/image_grid_layout.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/data/local_drafts_repository.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/media/image_grid_layout.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class CreatePostPage extends ConsumerStatefulWidget {

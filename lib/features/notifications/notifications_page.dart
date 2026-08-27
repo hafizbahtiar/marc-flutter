@@ -5,9 +5,9 @@ import 'package:marc/app/router.dart';
 import 'package:marc/features/notifications/notifications_providers.dart';
 import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/relative_time.dart';
-import 'package:marc/shared/widgets/approval_gate.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/relative_time.dart';
+import 'package:marc/shared/ui/widgets/approval_gate.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Teks sandaran untuk jenis notifikasi yang klien ini belum kenal.
 ///

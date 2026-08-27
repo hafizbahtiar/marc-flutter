@@ -7,13 +7,13 @@ import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/content_action_sheet.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/relative_time.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
-import 'package:marc/shared/widgets/edit_text_dialog.dart';
-import 'package:marc/shared/widgets/edited_badge.dart';
-import 'package:marc/shared/widgets/image_viewer_page.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/utils/relative_time.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/widgets/edited_badge.dart';
+import 'package:marc/shared/ui/media/image_viewer_page.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 /// Satu comment top-level + reply-reply di bawahnya (indent sekali sahaja
 /// - backend dah cap depth 2, jadi `replies` sentiasa leaf, tak recurse).

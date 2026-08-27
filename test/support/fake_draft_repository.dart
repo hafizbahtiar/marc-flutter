@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:marc/shared/local_drafts_repository.dart';
+import 'package:marc/shared/data/local_drafts_repository.dart';
 
 /// Fake dalam-memori [DraftRepository] untuk widget test - elak sentuh
 /// sqlite/platform channel langsung dalam ujian yang bukan tentang storan
-/// itu sendiri. Lihat `test/shared/local_drafts_repository_test.dart`
+/// itu sendiri. Lihat `test/shared/data/local_drafts_repository_test.dart`
 /// untuk ujian storan SEBENAR (sqflite_common_ffi).
 class FakeDraftRepository implements DraftRepository {
   final Map<String, Draft> _store = {};

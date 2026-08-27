@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 import 'package:marc/features/donation/widgets/duitnow_qr_card.dart';
-import 'package:marc/shared/widgets/member_avatar.dart';
+import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 import 'donation_models.dart';
 import 'donation_providers.dart';

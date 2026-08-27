@@ -4,7 +4,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/features/audit/audit_models.dart';
 import 'package:marc/features/audit/audit_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/relative_time.dart';
+import 'package:marc/shared/utils/relative_time.dart';
 
 /// Jejak audit - management sahaja (backend kuatkuasakan semula 403).
 class AuditPage extends ConsumerStatefulWidget {

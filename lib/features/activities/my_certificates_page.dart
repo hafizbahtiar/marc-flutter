@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:marc/features/activities/activity_format.dart';
 import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
-import 'package:marc/shared/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Sijil ahli, dengan muat turun PDF.
 ///

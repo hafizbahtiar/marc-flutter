@@ -6,7 +6,7 @@ import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
-import 'package:marc/shared/widgets/confirm_dialog.dart';
+import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
 
 /// Terbitkan sijil untuk satu aktiviti.
 ///

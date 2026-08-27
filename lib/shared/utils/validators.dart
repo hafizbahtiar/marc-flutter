@@ -1,4 +1,4 @@
-import 'package:marc/shared/phone.dart';
+import 'package:marc/shared/utils/phone.dart';
 
 /// Validator email - null = sah.
 String? validateEmail(String? value) {
@@ -13,7 +13,7 @@ String? validateEmail(String? value) {
 }
 
 /// Validator nombor telefon - null = sah. Malaysia sahaja buat masa ini
-/// (padanan `phone.NormalizeMY` di backend) - lihat `shared/phone.dart`
+/// (padanan `phone.NormalizeMY` di backend) - lihat `shared/utils/phone.dart`
 /// untuk cara tambah negara lain kelak.
 String? validatePhone(String? value) {
   if (value == null || value.trim().isEmpty) {
