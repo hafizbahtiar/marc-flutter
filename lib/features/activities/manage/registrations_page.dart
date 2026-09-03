@@ -9,6 +9,7 @@ import 'package:marc/features/activities/manage/activity_form_page.dart'
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Senarai peserta satu aktiviti, dengan tanda hadir per SESI.
@@ -402,27 +403,31 @@ class _SessionPicker extends StatelessWidget {
     // sedangkan dropdown kekal satu ketukan tidak kira berapa banyak sesi.
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-      child: DropdownButtonFormField<String>(
-        initialValue: selectedId,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Sesi',
-          isDense: true,
-        ),
-        items: [
-          for (var i = 0; i < sessions.length; i++)
-            DropdownMenuItem(
-              value: sessions[i].id,
-              child: Text(
-                sessions[i].title.isNotEmpty
-                    ? '${sessions[i].title} - ${formatDateTime(sessions[i].startsAt)}'
-                    : 'Sesi ${sessions[i].seq} - ${formatDateTime(sessions[i].startsAt)}',
-                overflow: TextOverflow.ellipsis,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const FormFieldLabel('Sesi'),
+          DropdownButtonFormField<String>(
+            initialValue: selectedId,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              floatingLabelBehavior: FloatingLabelBehavior.never,
             ),
+            items: [
+              for (var i = 0; i < sessions.length; i++)
+                DropdownMenuItem(
+                  value: sessions[i].id,
+                  child: Text(
+                    sessions[i].title.isNotEmpty
+                        ? '${sessions[i].title} - ${formatDateTime(sessions[i].startsAt)}'
+                        : 'Sesi ${sessions[i].seq} - ${formatDateTime(sessions[i].startsAt)}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            onChanged: onChanged,
+          ),
         ],
-        onChanged: onChanged,
       ),
     );
   }

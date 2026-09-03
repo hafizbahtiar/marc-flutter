@@ -61,7 +61,7 @@ class AboutPage extends StatelessWidget {
               children: [
                 Center(
                   child: Image.asset(
-                    'assets/splash/logo.png',
+                    'assets/splash/full_logo.png',
                     height: 96,
                     errorBuilder: (_, _, _) => const SizedBox(height: 96),
                   ),
@@ -93,7 +93,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Dibina secara sukarela atas permintaan En. Ezri, yang '
+                  'Dibina secara sukarela atas permintaan kelab, yang '
                   'mencetuskan idea app ini.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -148,8 +148,7 @@ class AboutPage extends StatelessWidget {
                   alignment: WrapAlignment.center,
                   children: [
                     TextButton(
-                      onPressed: () =>
-                          context.push('/legal/terma-dan-syarat'),
+                      onPressed: () => context.push('/legal/terma-dan-syarat'),
                       child: const Text('Terma & Syarat'),
                     ),
                     TextButton(

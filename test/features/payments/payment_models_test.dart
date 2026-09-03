@@ -63,6 +63,25 @@ void main() {
 
       expect(h.donations, isEmpty);
     });
+
+    test('outstandingRegistrationFee defaults false when key missing', () {
+      final history = MyPaymentHistory.fromJson({
+        'registration_fee': <dynamic>[],
+        'activity_fees': <dynamic>[],
+        'donations': <dynamic>[],
+      });
+      expect(history.outstandingRegistrationFee, isFalse);
+    });
+
+    test('outstandingRegistrationFee parses true', () {
+      final history = MyPaymentHistory.fromJson({
+        'registration_fee': <dynamic>[],
+        'activity_fees': <dynamic>[],
+        'donations': <dynamic>[],
+        'outstanding_registration_fee': true,
+      });
+      expect(history.outstandingRegistrationFee, isTrue);
+    });
   });
 
   group('DonationPaymentEntry', () {

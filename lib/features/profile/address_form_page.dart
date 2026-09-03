@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/address_providers.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
@@ -159,46 +160,51 @@ class _AddressFormPageState extends ConsumerState<AddressFormPage> {
                       setState(() => _addressType = s.first),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                CustomTextField(
                   controller: _unitNumber,
-                  decoration: InputDecoration(
-                    labelText: isHighrise ? 'No. unit' : 'No. rumah',
-                  ),
+                  label: isHighrise ? 'No. unit' : 'No. rumah',
+                  hint: isHighrise ? 'cth: A-12-3' : 'cth: 12',
                 ),
                 if (isHighrise) ...[
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CustomTextField(
                     controller: _floor,
-                    decoration: const InputDecoration(labelText: 'Tingkat'),
+                    label: 'Tingkat',
+                    hint: 'cth: 12',
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CustomTextField(
                     controller: _block,
-                    decoration: const InputDecoration(labelText: 'Blok'),
+                    label: 'Blok',
+                    hint: 'cth: A',
                   ),
                 ],
                 const SizedBox(height: 16),
-                TextFormField(
+                CustomTextField(
                   controller: _street,
-                  decoration: const InputDecoration(labelText: 'Jalan'),
+                  label: 'Jalan',
+                  hint: 'cth: Jalan Ampang',
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                CustomTextField(
                   controller: _township,
-                  decoration: const InputDecoration(labelText: 'Taman'),
+                  label: 'Taman',
+                  hint: 'cth: Taman Melawati',
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                CustomTextField(
                   controller: _city,
-                  decoration: const InputDecoration(labelText: 'Bandar'),
+                  label: 'Bandar',
+                  hint: 'cth: Kuala Lumpur',
                   validator: (v) => (v == null || v.trim().isEmpty)
                       ? 'Bandar diperlukan'
                       : null,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                CustomTextField(
                   controller: _postcode,
-                  decoration: const InputDecoration(labelText: 'Poskod'),
+                  label: 'Poskod',
+                  hint: '53100',
                   keyboardType: TextInputType.number,
                   validator: (v) {
                     final value = v?.trim() ?? '';
@@ -210,23 +216,19 @@ class _AddressFormPageState extends ConsumerState<AddressFormPage> {
                   },
                 ),
                 const SizedBox(height: 16),
+                const FormFieldLabel('Negeri'),
                 InkWell(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(12),
                   onTap: _pickState,
                   child: InputDecorator(
+                    isEmpty: _state == null,
                     decoration: InputDecoration(
-                      labelText: 'Negeri',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      hintText: 'Pilih negeri',
                       errorText: _stateError,
                       suffixIcon: const Icon(Icons.arrow_drop_down),
                     ),
-                    child: Text(
-                      _state ?? 'Pilih negeri',
-                      style: _state == null
-                          ? TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            )
-                          : null,
-                    ),
+                    child: Text(_state ?? ''),
                   ),
                 ),
                 const SizedBox(height: 8),

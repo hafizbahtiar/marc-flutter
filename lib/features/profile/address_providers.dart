@@ -74,8 +74,7 @@ class AddressRow {
   String get summary {
     final parts = <String>[
       if (isHighrise) ...[
-        if (unitNumber != null && unitNumber!.isNotEmpty)
-          'Unit $unitNumber',
+        if (unitNumber != null && unitNumber!.isNotEmpty) 'Unit $unitNumber',
         if (floor != null && floor!.isNotEmpty) 'Tingkat $floor',
         if (block != null && block!.isNotEmpty) 'Blok $block',
       ] else ...[

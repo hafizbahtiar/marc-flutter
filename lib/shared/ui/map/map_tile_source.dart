@@ -7,7 +7,9 @@ const kMapUserAgentPackageName = 'com.hafizbahtiar.marc';
 /// Jenis jubin OSM yang disokong. `AppMap` tak kenal enum ni terus —
 /// ia cuma terima [MapTileSource], jadi pemanggil boleh tukar
 /// implementasi (OSM atau lain) tanpa sentuh widget peta.
-enum MapTileType { standard, threeD, terrain, transport }
+/// `bright` dulunya bernama `threeD`. Nama itu mengelirukan - ia tak
+/// pernah 3D: ia sentiasa cuma gaya Bright OpenFreeMap.
+enum MapTileType { standard, bright, terrain, transport }
 
 /// Kontrak sumber jubin. Widget peta cuma kenal interface ni; OSM
 /// standard/3D/terrain/transport ialah implementasi, bukan hardcode
@@ -22,13 +24,18 @@ abstract interface class MapTileSource {
   List<String> get subdomains;
   int get minZoom;
   int get maxZoom;
+
+  /// Teks ringkas (ujian, log). Paparan guna [attributions].
   String get attribution;
+
+  /// Sumber atribusi dengan pautan. Dasar OSM/penyedia jubin mewajibkan
+  /// ini nampak dan boleh diketik.
+  List<MapTileAttribution> get attributions;
 
   /// Gaya MapLibre/OpenFreeMap. Null = raster sahaja.
   ///
-  /// Vektor dilukis semula setiap frame: geometri peta berputar, teks
-  /// dan ikon kekal tegak (macam Google Maps). Raster OSM membakar
-  /// label ke dalam PNG, jadi teks ikut pusing.
+  /// Gaya MapLibre (OpenFreeMap): geometri dan ikon sepanjang jalan
+  /// ikut putaran kamera; teks kekal tegak.
   String? vectorStyleUri(Brightness brightness);
 }
 
@@ -37,4 +44,12 @@ abstract interface class MapTileSource {
 abstract interface class MapTileCatalog {
   List<MapTileSource> get all;
   MapTileSource byType(MapTileType type);
+}
+
+/// Satu sumber atribusi peta. [url] null = teks biasa, bukan pautan.
+final class MapTileAttribution {
+  const MapTileAttribution(this.text, {this.url});
+
+  final String text;
+  final String? url;
 }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/core/error_utils.dart';
-import 'package:marc/features/auth/widgets/auth_field.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
@@ -88,34 +88,38 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AuthField(
+                CustomTextField(
                   controller: _name,
                   label: 'Nama paparan',
-                  icon: Icons.badge_outlined,
+                  hint: 'Nama penuh anda',
+                  prefixIcon: Icons.badge_outlined,
                   validator: (v) => (v == null || v.trim().isEmpty)
                       ? 'Nama diperlukan'
                       : null,
                 ),
                 const SizedBox(height: 16),
-                AuthField(
+                CustomTextField(
                   controller: _phone,
                   label: 'No. telefon',
-                  icon: Icons.phone_outlined,
+                  hint: '012-3456789',
+                  prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 28),
                 Text('Waris', style: Theme.of(context).textTheme.labelSmall),
                 const SizedBox(height: 12),
-                AuthField(
+                CustomTextField(
                   controller: _emergencyName,
                   label: 'Nama waris',
-                  icon: Icons.person_outline,
+                  hint: 'Nama waris',
+                  prefixIcon: Icons.person_outline,
                 ),
                 const SizedBox(height: 16),
-                AuthField(
+                CustomTextField(
                   controller: _emergencyPhone,
                   label: 'No. telefon waris',
-                  icon: Icons.phone_outlined,
+                  hint: '012-3456789',
+                  prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 28),
@@ -124,10 +128,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
                 const SizedBox(height: 12),
-                AuthField(
+                CustomTextField(
                   controller: _healthNotes,
                   label: 'Nota kesihatan',
-                  icon: Icons.health_and_safety_outlined,
+                  hint: 'Alahan, kondisi, atau nota (pilihan)',
+                  prefixIcon: Icons.health_and_safety_outlined,
+                  maxLines: 4,
                 ),
                 const SizedBox(height: 28),
                 FilledButton(

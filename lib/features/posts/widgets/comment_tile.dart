@@ -93,7 +93,9 @@ class _CommentRow extends ConsumerWidget {
 
   Future<void> _showActions(BuildContext context, WidgetRef ref) async {
     final myProfile = ref.read(myProfileProvider).valueOrNull;
-    final isOwner = myProfile?.memberId == comment.author.memberId;
+    final isOwner =
+        myProfile?.memberId != null &&
+        myProfile!.memberId == comment.author.memberId;
 
     final action = await showContentActionSheet(
       context,
@@ -155,7 +157,9 @@ class _CommentRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final myProfile = ref.watch(myProfileProvider).valueOrNull;
-    final isOwner = myProfile?.memberId == comment.author.memberId;
+    final isOwner =
+        myProfile?.memberId != null &&
+        myProfile!.memberId == comment.author.memberId;
     final canDelete = isOwner || (myProfile?.isManagement ?? false);
 
     return Padding(

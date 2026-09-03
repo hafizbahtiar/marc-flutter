@@ -32,11 +32,15 @@ class MemberDetail {
     required this.telegramLinked,
     required this.telegramUsername,
     required this.addresses,
+    this.staffId,
+    this.staffIdVerifiedAt,
   });
 
   // Tier 1 - sentiasa hadir (nampak sesiapa dlm skop visibleRankCeiling).
   final String userId;
-  final String memberId;
+
+  /// Null sehingga nombor staff disahkan (ditangguh dari daftar).
+  final String? memberId;
   final String? displayName;
   final String? avatarUrl;
   final String roleKey;
@@ -48,6 +52,8 @@ class MemberDetail {
   final String? departmentCode;
   final String? departmentName;
   final String? position;
+  final String? staffId;
+  final DateTime? staffIdVerifiedAt;
 
   // Tier 2 - management (supervisor/manager/superadmin) sahaja.
   final String? email;
@@ -70,7 +76,11 @@ class MemberDetail {
   factory MemberDetail.fromJson(Map<String, dynamic> json) {
     return MemberDetail(
       userId: json['user_id'] as String,
-      memberId: json['member_id'] as String,
+      memberId: switch (json['member_id']) {
+        final String s when s.trim().isEmpty => null,
+        final String s => s,
+        _ => null,
+      },
       displayName: json['display_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       roleKey: (json['role_key'] as String?) ?? 'ahli',
@@ -82,6 +92,10 @@ class MemberDetail {
       departmentCode: json['department_code'] as String?,
       departmentName: json['department_name'] as String?,
       position: json['position'] as String?,
+      staffId: json['staff_id'] as String?,
+      staffIdVerifiedAt: json['staff_id_verified_at'] != null
+          ? DateTime.parse(json['staff_id_verified_at'] as String)
+          : null,
       email: json['email'] as String?,
       phone: json['phone'] as String?,
       registrationPaymentStatus: json['registration_payment_status'] as String?,

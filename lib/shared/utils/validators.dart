@@ -35,3 +35,20 @@ String? validatePassword(String? value) {
   }
   return null;
 }
+
+/// Validator nombor staff - null = sah. Tiada semakan format organisasi
+/// (rentetan legap) - wajib, trim, maksimum 64 aksara, dan `/` ditolak
+/// kerana ia pemisah struktur `member_id` (`MARC-{staff_id}/{tahun}-{kod}`).
+String? validateStaffId(String? value) {
+  final trimmed = value?.trim() ?? '';
+  if (trimmed.isEmpty) {
+    return 'Nombor staff wajib diisi';
+  }
+  if (trimmed.length > 64) {
+    return 'Nombor staff tidak boleh lebih 64 aksara';
+  }
+  if (trimmed.contains('/')) {
+    return "Nombor staff tidak boleh mengandungi '/'";
+  }
+  return null;
+}

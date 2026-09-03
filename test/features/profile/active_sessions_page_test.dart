@@ -55,8 +55,9 @@ class _RecordingAuthService implements AuthService {
   Future<AuthResult> signUp(
     String email,
     String password,
-    String phone,
-  ) async => const AuthResult(success: true);
+    String phone, {
+    required String staffId,
+  }) async => const AuthResult(success: true);
   @override
   Future<void> signOut() async => signOutCalls++;
   @override

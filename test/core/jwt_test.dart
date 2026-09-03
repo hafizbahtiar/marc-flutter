@@ -6,7 +6,7 @@ import 'package:marc/core/jwt.dart';
 String _jwt({int? exp, String sub = 'user-1'}) {
   final header = base64Url.encode(utf8.encode('{"alg":"none"}'));
   final payload = base64Url.encode(
-    utf8.encode(jsonEncode({'sub': sub, if (exp != null) 'exp': exp})),
+    utf8.encode(jsonEncode({'sub': sub, 'exp': ?exp})),
   );
   return '$header.$payload.sig';
 }

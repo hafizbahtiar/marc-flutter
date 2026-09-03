@@ -12,8 +12,9 @@ class _FakeAuthService implements AuthService {
   Future<AuthResult> signUp(
     String email,
     String password,
-    String phone,
-  ) async => _result;
+    String phone, {
+    required String staffId,
+  }) async => _result;
   @override
   Future<void> signOut() async {}
   @override

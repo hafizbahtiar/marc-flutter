@@ -1,51 +1,289 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart' as ml;
 import 'package:marc/shared/ui/map/map_tile_source.dart';
-import 'package:marc/shared/ui/map/vector_style_cache.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 export 'package:latlong2/latlong.dart' show LatLng;
 export 'package:marc/shared/ui/map/map_tile_source.dart'
     show kMapUserAgentPackageName;
 
 /// Pusat lalai: Kuala Lumpur. App MARC beroperasi di Malaysia, jadi peta
-/// lalai tak patut buka di Eropah (itu lalai flutter_map).
+/// lalai tak patut buka di Eropah.
 const kDefaultMapCenter = LatLng(3.1390, 101.6869);
 const kDefaultMapZoom = 13.0;
+
+/// Pitch maksimum yang MapLibre benarkan. Nilai lebih besar diapit senyap
+/// oleh renderer native, jadi kita apit sendiri supaya keadaan Dart tak
+/// terpesong daripada kamera sebenar.
+const kMapMaxTilt = 60.0;
+
+/// Pitch untuk pandangan "3D". Bukan maksimum: pada 60 darjah ufuk masuk
+/// ke dalam frame dan jubin jauh jadi kabur, 50 masih condong dengan jelas
+/// tanpa itu.
+const kMapTilt3D = 50.0;
+
+/// Ambang untuk membaca kamera sebagai 3D. Gesture dua jari boleh berhenti
+/// pada nilai kecil bukan sifar; tanpa ambang, butang toggle akan tunjuk
+/// "3D" untuk condongan yang mata pun tak nampak.
+const kMapTilt3DThreshold = 5.0;
+
+/// `View` Android mana yang peta dilukis ke dalamnya. Mesti dipanggil
+/// sebelum `runApp`; peta yang sudah dibina kekal dengan mod asalnya.
+/// Tiada kesan pada iOS.
+///
+/// `false` (lalai MapLibre) = `GLSurfaceView` melalui Virtual Display:
+/// laluan render paling terus, tapi Flutter terpaksa memancarkan semula
+/// MotionEvent ke dalam display maya itu, dan itulah punca lazim gesture
+/// peta terasa lambat/berat pada Android.
+///
+/// `true` = `TextureView` yang Flutter komposit macam lapisan biasa. Kos
+/// render lebih tinggi, tapi sentuhan mengikut laluan input normal.
+///
+/// TUKAR NILAI NI kalau gesture terasa clunky pada peranti sasaran - ia
+/// satu-satunya knob yang menyentuh perkara itu, dan mana satu lebih laju
+/// bergantung pada GPU peranti. Uji kedua-duanya.
+void initMapPlatformView({bool useTextureView = true}) {
+  ml.MapLibreMap.useHybridComposition = useTextureView;
+}
 
 bool get _inWidgetTest =>
     WidgetsBinding.instance.runtimeType.toString().contains('TestWidgets');
 
-/// Pengawal kamera. Wrap `MapController` flutter_map supaya pemanggil
-/// `AppMap` tak perlu import flutter_map terus untuk gerakkan peta.
+ml.LatLng _toMl(LatLng point) => ml.LatLng(point.latitude, point.longitude);
+
+LatLng _fromMl(ml.LatLng point) => LatLng(point.latitude, point.longitude);
+
+/// Permukaan peta dalam ujian widget. `MapLibreMap` ialah PlatformView
+/// dan meletup tanpa method channel native (`_channel` uninitialized).
+@visibleForTesting
+class AppMapDebugHost extends StatelessWidget {
+  const AppMapDebugHost({super.key, required this.styleString});
+
+  final String styleString;
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
+}
+
+/// Penanda Flutter di atas peta. Widget kekal tegak bila kamera berputar
+/// (bukan ikon dalam gaya MapLibre).
+///
+/// HAD: kedudukan skrin dikira lewat `toScreenLocation` - satu round-trip
+/// async melalui platform channel - jadi penanda sentiasa satu frame atau
+/// lebih di belakang peta native semasa pan/zoom. Ia nampak menggigil, dan
+/// hilang sekejap bila unjuran gagal. Untuk apa-apa yang mesti melekat
+/// tepat pada peta (lokasi peranti terutamanya) guna lapisan native:
+/// [AppMap.showUserLocation] untuk titik pengguna, atau simbol dalam gaya
+/// MapLibre. `AppMapMarker` sesuai untuk penanda statik yang boleh terima
+/// sedikit lag.
+class AppMapMarker {
+  const AppMapMarker({
+    required this.point,
+    required this.child,
+    this.width = 44,
+    this.height = 44,
+    this.alignment = Alignment.topCenter,
+  });
+
+  final LatLng point;
+  final Widget child;
+  final double width;
+  final double height;
+
+  /// Bahagian [child] yang duduk pada [point]. `topCenter` = hujung atas
+  /// widget pada koordinat (ikon pin Material).
+  final Alignment alignment;
+}
+
+/// Pengawal kamera. Wrap `MapLibreMapController` supaya pemanggil
+/// `AppMap` tak perlu import MapLibre terus untuk gerakkan peta.
 class AppMapController {
-  AppMapController() : _delegate = MapController();
+  AppMapController({
+    LatLng initialCenter = kDefaultMapCenter,
+    double initialZoom = kDefaultMapZoom,
+  }) : _center = initialCenter,
+       _zoom = initialZoom;
 
-  final MapController _delegate;
+  ml.MapLibreMapController? _native;
+  LatLng _center;
+  double _zoom;
+  double _bearing = 0;
+  double _tilt = 0;
+  LatLng? _userLocation;
+  final _events = StreamController<void>.broadcast();
 
-  Stream<MapEvent> get mapEventStream => _delegate.mapEventStream;
+  Stream<void> get mapEventStream => _events.stream;
 
-  bool move(LatLng center, double zoom) => _delegate.move(center, zoom);
+  LatLng get center => _center;
 
-  bool rotate(double degree) => _delegate.rotate(degree);
+  double get zoom => _zoom;
 
-  LatLng get center => _delegate.camera.center;
+  /// Darjah, ikut bearing MapLibre (jam dari utara). 0 = utara ke atas.
+  double get rotation => _bearing;
 
-  double get zoom => _delegate.camera.zoom;
+  /// Pitch kamera dalam darjah. 0 = pandangan tegak dari atas (2D),
+  /// makin besar makin condong (3D). MapLibre hadkan pada 60.
+  double get tilt => _tilt;
 
-  /// Darjah. 0 = utara ke atas.
-  double get rotation => _delegate.camera.rotation;
+  void _attach(ml.MapLibreMapController native) {
+    _native = native;
+    _syncFromNative(native.cameraPosition);
+  }
 
-  void dispose() => _delegate.dispose();
+  /// MapLibre memanggil `onCameraMove` SETIAP frame semasa gesture, dengan
+  /// perubahan sekecil 0.001 darjah. Menyiarkan setiap satu bermakna setiap
+  /// pendengar membina semula UI 60-120 kali sesaat untuk gerakan yang mata
+  /// pun tak nampak - itulah sebab kawalan peta terasa berat semasa
+  /// diseret. Kita simpan nilai terkini SENTIASA (supaya getter tak pernah
+  /// basi), tapi hanya siarkan bila ada yang benar-benar berubah.
+  void _onCamera(ml.CameraPosition? position) {
+    if (_syncFromNative(position) && !_events.isClosed) _events.add(null);
+  }
+
+  /// Pulangkan true bila mana-mana paksi berubah melebihi ambang yang
+  /// boleh dilihat.
+  bool _syncFromNative(ml.CameraPosition? position) {
+    if (position == null) return false;
+    if (!position.zoom.isFinite ||
+        !position.bearing.isFinite ||
+        !position.tilt.isFinite ||
+        !position.target.latitude.isFinite ||
+        !position.target.longitude.isFinite) {
+      return false;
+    }
+    final center = _fromMl(position.target);
+    // ~0.1 m pada khatulistiwa: di bawah satu piksel pada zoom maksimum.
+    final moved =
+        (center.latitude - _center.latitude).abs() > 1e-6 ||
+        (center.longitude - _center.longitude).abs() > 1e-6 ||
+        (position.zoom - _zoom).abs() > 0.01 ||
+        (position.bearing - _bearing).abs() > 0.25 ||
+        (position.tilt - _tilt).abs() > 0.25;
+    _center = center;
+    _zoom = position.zoom;
+    _bearing = position.bearing;
+    _tilt = position.tilt;
+    return moved;
+  }
+
+  /// Set [animate] false untuk lompat serta-merta. Fokus awal patut guna
+  /// itu: menganimasi dari pusat lalai ke lokasi pengguna bermakna skrin
+  /// dibuka dengan peta yang meluncur, dan orang sempat nampak ia bermula
+  /// di tempat yang salah.
+  Future<void> move(LatLng center, double zoom, {bool animate = true}) async {
+    _center = center;
+    _zoom = zoom;
+    if (!_events.isClosed) _events.add(null);
+    final native = _native;
+    if (native == null) return;
+    final update = ml.CameraUpdate.newLatLngZoom(_toMl(center), zoom);
+    if (!animate) {
+      await native.moveCamera(update);
+      return;
+    }
+    await native.animateCamera(
+      update,
+      duration: const Duration(milliseconds: 220),
+    );
+  }
+
+  Future<void> zoomBy(double delta) async {
+    _zoom += delta;
+    if (!_events.isClosed) _events.add(null);
+    final native = _native;
+    if (native == null) return;
+    await native.animateCamera(
+      ml.CameraUpdate.zoomBy(delta),
+      duration: const Duration(milliseconds: 220),
+    );
+  }
+
+  Future<void> rotate(double degree) async {
+    _bearing = degree;
+    if (!_events.isClosed) _events.add(null);
+    final native = _native;
+    if (native == null) return;
+    await native.animateCamera(
+      ml.CameraUpdate.bearingTo(degree),
+      duration: const Duration(milliseconds: 280),
+    );
+  }
+
+  /// Condongkan kamera ke [degree] (0 = 2D, `kMapTilt3D` = 3D). Nilai
+  /// diapit pada julat yang MapLibre terima supaya nilai luar julat tak
+  /// senyap-senyap jadi no-op.
+  Future<void> tiltTo(double degree) async {
+    final target = degree.clamp(0.0, kMapMaxTilt).toDouble();
+    _tilt = target;
+    if (!_events.isClosed) _events.add(null);
+    final native = _native;
+    if (native == null) return;
+    await native.animateCamera(
+      ml.CameraUpdate.tiltTo(target),
+      duration: const Duration(milliseconds: 280),
+    );
+  }
+
+  /// Fix terakhir yang ditolak oleh lapisan lokasi native. `null` sehingga
+  /// fix pertama sampai.
+  LatLng? get lastKnownUserLocation => _userLocation;
+
+  void _onUserLocation(LatLng point) {
+    _userLocation = point;
+    if (!_events.isClosed) _events.add(null);
+  }
+
+  /// Lokasi peranti mengikut lapisan lokasi native. `null` bila
+  /// [AppMap.showUserLocation] false, kebenaran ditolak, atau belum ada
+  /// fix GPS lagi - jadi pemanggil mesti kendalikan null, bukan anggap
+  /// koordinat sentiasa ada.
+  ///
+  /// Fix yang ditolak native diutamakan berbanding `requestMyLocationLatLng`:
+  /// yang kedua itu round-trip platform channel, dan menunggunya sebelum
+  /// menggerakkan kamera membuatkan butang "Lokasi saya" terasa lambat.
+  Future<LatLng?> userLocation() async {
+    final cached = _userLocation;
+    if (cached != null) return cached;
+    final native = _native;
+    if (native == null) return null;
+    final point = await native.requestMyLocationLatLng();
+    if (point == null) return null;
+    return _userLocation = _fromMl(point);
+  }
+
+  /// Suap satu kedudukan kamera macam MapLibre buat. Ujian perlukan ini
+  /// untuk mengesahkan penapisan siaran tanpa peta native.
+  @visibleForTesting
+  void debugSyncCamera({
+    required LatLng center,
+    required double zoom,
+    required double bearing,
+    required double tilt,
+  }) {
+    _onCamera(
+      ml.CameraPosition(
+        target: _toMl(center),
+        zoom: zoom,
+        bearing: bearing,
+        tilt: tilt,
+      ),
+    );
+  }
+
+  void dispose() {
+    _native = null;
+    _events.close();
+  }
 }
 
 /// Peta OSM boleh guna semula. Sumber jubin dihantar sebagai
 /// [MapTileSource] (interface).
 ///
-/// Vektor (OpenFreeMap): geometri ikut putaran kamera, label dilukis
-/// di ruang skrin — teks/ikon kekal tegak. Raster: fallback jika
-/// gaya vektor gagal.
+/// Renderer: MapLibre native. Gaya OpenFreeMap (spesifikasi MapLibre)
+/// termasuk ikon sepanjang jalan (arrow satu-hala) yang ikut geometri.
 class AppMap extends StatefulWidget {
   const AppMap({
     super.key,
@@ -54,10 +292,15 @@ class AppMap extends StatefulWidget {
     this.initialCenter = kDefaultMapCenter,
     this.initialZoom = kDefaultMapZoom,
     this.children = const [],
+    this.markers = const [],
     this.onTap,
     this.onMapReady,
     this.showAttribution = true,
     this.showScalebar = true,
+    this.showUserLocation = false,
+    this.onUserLocation,
+    this.rotateGesturesEnabled = true,
+    this.tiltGesturesEnabled = true,
   });
 
   final MapTileSource tileSource;
@@ -65,209 +308,344 @@ class AppMap extends StatefulWidget {
   final LatLng initialCenter;
   final double initialZoom;
 
-  /// Lapisan tambahan di atas jubin (penanda, polyline, dll).
-  /// Untuk ikon kekal tegak bila peta diputar, set `Marker.rotate: true`
-  /// (atau `MarkerLayer(rotate: true)`).
+  /// Overlay Flutter di atas peta (bukan lapisan MapLibre).
   final List<Widget> children;
+
+  /// Penanda yang diunjur ke koordinat peta. Ikon kekal tegak.
+  final List<AppMapMarker> markers;
 
   final void Function(LatLng point)? onTap;
   final VoidCallback? onMapReady;
   final bool showAttribution;
+
+  /// Skala native MapLibre (web sahaja). Tiada kesan pada Android/iOS.
   final bool showScalebar;
+
+  /// Titik lokasi peranti, dilukis oleh MapLibre DALAM peta native.
+  ///
+  /// Sengaja bukan [AppMapMarker]: penanda Flutter diunjur melalui
+  /// platform channel async, jadi ia ketinggalan di belakang peta dan
+  /// menggigil. Titik native bergerak dalam frame yang sama dengan jubin.
+  ///
+  /// Pemanggil bertanggungjawab minta kebenaran lokasi DAHULU. Set flag ni
+  /// true tanpa kebenaran cuma menghasilkan peta tanpa titik (Android) atau
+  /// prompt sistem yang tak dijangka (iOS).
+  final bool showUserLocation;
+
+  /// Fix GPS ditolak oleh native bila ia tiba. Ini cara yang betul untuk
+  /// tahu bila lokasi jadi tersedia - tinjau `userLocation()` berulang kali
+  /// membazir round-trip channel dan tetap tak tahu bila fix pertama
+  /// sampai.
+  final void Function(LatLng point)? onUserLocation;
+
+  /// Putar kamera dengan gesture dua jari (pusing).
+  final bool rotateGesturesEnabled;
+
+  /// Condongkan kamera dengan gesture dua jari (seret menegak).
+  ///
+  /// Pada Android kedua-dua gesture ini dikesan daripada pointer yang sama,
+  /// jadi seretan yang tak betul-betul menegak sering didaftar sebagai
+  /// putaran juga. Skrin yang mengutamakan 3D boleh matikan
+  /// [rotateGesturesEnabled] untuk hilangkan pertembungan itu.
+  final bool tiltGesturesEnabled;
 
   @override
   State<AppMap> createState() => _AppMapState();
 }
 
 class _AppMapState extends State<AppMap> {
-  late final TileProvider _rasterProvider;
-  vt.Style? _style;
-  String? _loadedStyleUri;
-  bool _loadingStyle = false;
-  int _loadGen = 0;
-  Brightness? _brightness;
+  ml.MapLibreMapController? _native;
+  List<Offset?> _markerScreens = const [];
+  int _projectGen = 0;
+  bool _readyNotified = false;
 
   @override
   void initState() {
     super.initState();
-    _rasterProvider = NetworkTileProvider(
-      silenceExceptions: true,
-      abortObsoleteRequests: true,
-      cachingProvider: _inWidgetTest
-          ? const DisabledMapCachingProvider()
-          : null,
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final brightness = Theme.of(context).brightness;
-    if (_brightness != brightness) {
-      _brightness = brightness;
-      _loadStyle();
+    if (_inWidgetTest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _notifyReady());
     }
   }
 
   @override
   void didUpdateWidget(AppMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.tileSource.id != widget.tileSource.id) {
-      _loadStyle();
+    if (oldWidget.markers != widget.markers) {
+      unawaited(_projectMarkers());
     }
   }
 
   @override
   void dispose() {
-    _rasterProvider.dispose();
+    _native = null;
     super.dispose();
   }
 
-  Future<void> _loadStyle() async {
-    final brightness = _brightness ?? Brightness.light;
-    final uri = widget.tileSource.vectorStyleUri(brightness);
-    if (uri == null) {
-      if (mounted) {
-        setState(() {
-          _style = null;
-          _loadedStyleUri = null;
-          _loadingStyle = false;
-        });
+  void _notifyReady() {
+    if (_readyNotified || !mounted) return;
+    _readyNotified = true;
+    widget.onMapReady?.call();
+  }
+
+  void _onMapCreated(ml.MapLibreMapController native) {
+    _native = native;
+    widget.controller?._attach(native);
+    _notifyReady();
+  }
+
+  void _onStyleLoaded() {
+    unawaited(_projectMarkers());
+  }
+
+  void _onCamera(ml.CameraPosition? position) {
+    widget.controller?._onCamera(position);
+    // Dipanggil setiap frame semasa gesture. Tanpa penanda tiada apa nak
+    // diunjur, jadi jangan pun mulakan async body - itu satu Future
+    // dibuang setiap frame untuk tiada hasil.
+    if (widget.markers.isEmpty) return;
+    unawaited(_projectMarkers());
+  }
+
+  void _onUserLocation(ml.UserLocation location) {
+    final point = _fromMl(location.position);
+    widget.controller?._onUserLocation(point);
+    widget.onUserLocation?.call(point);
+  }
+
+  Future<void> _projectMarkers() async {
+    final native = _native;
+    final markers = widget.markers;
+    if (native == null || markers.isEmpty) {
+      if (mounted && _markerScreens.isNotEmpty) {
+        setState(() => _markerScreens = const []);
       }
       return;
     }
-    if (uri == _loadedStyleUri && _style != null) return;
-
-    final gen = ++_loadGen;
-    setState(() => _loadingStyle = true);
-    try {
-      final style = await VectorStyleCache.instance.load(
-        uri,
-        cacheToDisk: !_inWidgetTest,
-      );
-      if (!mounted || gen != _loadGen) return;
-      setState(() {
-        _style = style;
-        _loadedStyleUri = uri;
-        _loadingStyle = false;
-      });
-    } catch (_) {
-      if (!mounted || gen != _loadGen) return;
-      setState(() => _loadingStyle = false);
+    final gen = ++_projectGen;
+    final screens = <Offset?>[];
+    for (final marker in markers) {
+      try {
+        final point = await native.toScreenLocation(_toMl(marker.point));
+        screens.add(Offset(point.x.toDouble(), point.y.toDouble()));
+      } catch (_) {
+        screens.add(null);
+      }
     }
+    if (!mounted || gen != _projectGen) return;
+    setState(() => _markerScreens = screens);
+  }
+
+  String _styleString(BuildContext context) {
+    return widget.tileSource.vectorStyleUri(Theme.of(context).brightness) ??
+        ml.MapLibreStyles.openfreemapLiberty;
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final source = widget.tileSource;
-    final style = _style;
-    final attribution = style != null && style.attributions.isNotEmpty
-        ? style.attributions.map((a) => a.text).join(' · ')
-        : source.attribution;
+    final styleString = _styleString(context);
+    final initial = widget.controller == null
+        ? ml.CameraPosition(
+            target: _toMl(widget.initialCenter),
+            zoom: widget.initialZoom,
+          )
+        : ml.CameraPosition(
+            target: _toMl(widget.controller!.center),
+            zoom: widget.controller!.zoom,
+            bearing: widget.controller!.rotation,
+            tilt: widget.controller!.tilt,
+          );
 
     return RepaintBoundary(
       child: Stack(
         children: [
-          FlutterMap(
-            mapController: widget.controller?._delegate,
-            options: MapOptions(
-              initialCenter: widget.initialCenter,
-              initialZoom: widget.initialZoom,
-              minZoom: 3,
-              maxZoom: style != null ? 20 : source.maxZoom.toDouble(),
-              backgroundColor: scheme.surface,
-              onTap: widget.onTap == null
-                  ? null
-                  : (_, point) => widget.onTap!(point),
-              onMapReady: widget.onMapReady,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.all,
-                enableMultiFingerGestureRace: true,
-                rotationThreshold: 12,
+          _mapSurface(scheme, styleString, initial),
+          ..._projectedMarkers(),
+          ...widget.children,
+          if (widget.showAttribution)
+            Positioned(
+              left: 12,
+              bottom: 12,
+              child: MapAttribution(
+                attributions: widget.tileSource.attributions,
               ),
-            ),
-            children: [
-              if (style != null)
-                vt.VectorTileLayer(
-                  theme: style.theme,
-                  tileProviders: style.providers,
-                  rasterSources: style.rasterSources,
-                  sprites: style.sprites,
-                  showLabels: true,
-                  concurrency: 3,
-                  diskCacheMaximumSizeInBytes: _inWidgetTest
-                      ? 0
-                      : 50 * 1024 * 1024,
-                  tileFadeDuration: const Duration(milliseconds: 120),
-                  labelFadeDuration: const Duration(milliseconds: 120),
-                )
-              else
-                TileLayer(
-                  urlTemplate: source.urlTemplate,
-                  subdomains: source.subdomains,
-                  minNativeZoom: source.minZoom,
-                  maxNativeZoom: source.maxZoom,
-                  userAgentPackageName: kMapUserAgentPackageName,
-                  tileProvider: _rasterProvider,
-                  panBuffer: 1,
-                  keepBuffer: 2,
-                  tileDisplay: const TileDisplay.fadeIn(
-                    duration: Duration(milliseconds: 100),
-                  ),
-                ),
-              ...widget.children,
-              if (widget.showScalebar)
-                Scalebar(
-                  alignment: Alignment.bottomLeft,
-                  padding: const EdgeInsets.fromLTRB(12, 8, 8, 36),
-                  textStyle:
-                      Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurface,
-                      ) ??
-                      TextStyle(color: scheme.onSurface, fontSize: 11),
-                  lineColor: scheme.onSurface,
-                  strokeWidth: 1.5,
-                ),
-              if (widget.showAttribution)
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 260),
-                        child: Material(
-                          color: scheme.surface.withValues(alpha: 0.88),
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            child: Text(
-                              attribution,
-                              style: Theme.of(context).textTheme.labelSmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          if (_loadingStyle)
-            const Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: LinearProgressIndicator(minHeight: 2),
             ),
         ],
       ),
     );
   }
+
+  Widget _mapSurface(
+    ColorScheme scheme,
+    String styleString,
+    ml.CameraPosition initial,
+  ) {
+    if (_inWidgetTest) return AppMapDebugHost(styleString: styleString);
+    return ml.MapLibreMap(
+      styleString: styleString,
+      initialCameraPosition: initial,
+      onMapCreated: _onMapCreated,
+      onStyleLoadedCallback: _onStyleLoaded,
+      trackCameraPosition: true,
+      compassEnabled: false,
+      logoEnabled: false,
+      // Seret dua jari menegak = condong (2D <-> 3D). Default MapLibre
+      // memang true, tapi ia dinyatakan di sini supaya gesture itu jadi
+      // sebahagian kontrak AppMap dan tak boleh hilang tanpa disedari.
+      tiltGesturesEnabled: widget.tiltGesturesEnabled,
+      rotateGesturesEnabled: widget.rotateGesturesEnabled,
+      myLocationEnabled: widget.showUserLocation,
+      onUserLocationUpdated: _onUserLocation,
+      // Kosong = MapLibre langkau pengurus anotasi sepenuhnya, yang doknya
+      // sendiri panggil "a big performance boost for android". Peta ni guna
+      // penanda Flutter dan lapisan lokasi native, bukan anotasi, jadi
+      // pengurus itu kerja untuk apa-apa yang tiada.
+      // (`annotationConsumeTapEvents` sengaja dibiar default - MapLibreMap
+      // ada `assert(length > 0)` untuknya.)
+      annotationOrder: const [],
+      // `compass`, bukan `normal`: pada iOS hanya render mode ni yang
+      // benar-benar memaparkan titik pengguna (lihat doc MyLocationRenderMode).
+      myLocationRenderMode: widget.showUserLocation
+          ? ml.MyLocationRenderMode.compass
+          : ml.MyLocationRenderMode.normal,
+      attributionButtonPosition: ml.AttributionButtonPosition.bottomRight,
+      scaleControlEnabled: widget.showScalebar,
+      minMaxZoomPreference: ml.MinMaxZoomPreference(
+        3,
+        widget.tileSource.maxZoom.toDouble(),
+      ),
+      foregroundLoadColor: scheme.surface,
+      onCameraMove: _onCamera,
+      onCameraIdle: () => _onCamera(_native?.cameraPosition),
+      onMapClick: widget.onTap == null
+          ? null
+          : (point, latLng) => widget.onTap!(_fromMl(latLng)),
+    );
+  }
+
+  Iterable<Widget> _projectedMarkers() {
+    final markers = widget.markers;
+    if (markers.isEmpty) return const [];
+    return [
+      for (var i = 0; i < markers.length; i++)
+        _markerAt(
+          markers[i],
+          i < _markerScreens.length ? _markerScreens[i] : null,
+        ),
+    ];
+  }
+
+  Widget _markerAt(AppMapMarker marker, Offset? screen) {
+    final child = SizedBox(
+      width: marker.width,
+      height: marker.height,
+      child: marker.child,
+    );
+    if (screen == null) {
+      if (_inWidgetTest) return Center(child: child);
+      return const SizedBox.shrink();
+    }
+    final ax = (marker.alignment.x + 1) / 2;
+    final ay = (marker.alignment.y + 1) / 2;
+    return Positioned(
+      left: screen.dx - marker.width * ax,
+      top: screen.dy - marker.height * ay,
+      child: IgnorePointer(child: child),
+    );
+  }
+}
+
+/// Atribusi OSM/penyedia. Teks boleh diketik; butang kembang/tutup.
+class MapAttribution extends StatefulWidget {
+  const MapAttribution({super.key, required this.attributions});
+
+  final List<MapTileAttribution> attributions;
+
+  @override
+  State<MapAttribution> createState() => _MapAttributionState();
+}
+
+class _MapAttributionState extends State<MapAttribution> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface.withValues(alpha: 0.92),
+      elevation: 2,
+      shadowColor: scheme.shadow.withValues(alpha: 0.25),
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: _open ? _expanded(scheme) : _collapsed(),
+    );
+  }
+
+  Widget _collapsed() {
+    return IconButton(
+      tooltip: 'Attributions',
+      visualDensity: VisualDensity.compact,
+      icon: const Icon(Icons.copyright, size: 18),
+      onPressed: () => setState(() => _open = true),
+    );
+  }
+
+  Widget _expanded(ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 2,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (var i = 0; i < widget.attributions.length; i++) ...[
+                  if (i > 0)
+                    Text('·', style: TextStyle(color: scheme.onSurfaceVariant)),
+                  _AttributionChip(attribution: widget.attributions[i]),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Attributions',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => setState(() => _open = false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttributionChip extends StatelessWidget {
+  const _AttributionChip({required this.attribution});
+
+  final MapTileAttribution attribution;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelSmall;
+    if (attribution.url == null) {
+      return Text(attribution.text, style: style);
+    }
+    return GestureDetector(
+      onTap: () => _openAttribution(attribution.url!),
+      child: Text(
+        attribution.text,
+        style: style?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          decoration: TextDecoration.underline,
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _openAttribution(String url) {
+  return launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 }

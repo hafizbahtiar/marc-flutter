@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 
 /// Satu tindakan dalam [AppDialogShell] / [showAppDialog].
 ///
@@ -292,17 +293,14 @@ class _AppInputDialogState extends State<_AppInputDialog> {
             onChanged: _onChanged,
           )
         else
-          TextField(
+          CustomTextField(
             controller: _controller,
+            hint: widget.hint,
             maxLines: widget.maxLines,
             maxLength: widget.maxLength,
             keyboardType: widget.keyboardType,
             textCapitalization: widget.textCapitalization,
             autofocus: true,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              hintText: widget.hint,
-            ),
             onChanged: _onChanged,
           ),
       ],

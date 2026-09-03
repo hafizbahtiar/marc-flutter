@@ -265,6 +265,167 @@ Backend: `../marc_go/TODO.md`.
       diresearch - jangan keliru dengan ToyyibPay, dua guna kes/akaun
       berbeza.
 
+## Audit peta `lib/shared/ui/map` (2026-09-04) - 17 penemuan, SEMUA BELUM DIBAIKI
+
+Kajian Opus berskop penuh atas kelima-lima fail (1,015 baris) selepas
+penghijrahan enjin `flutter_map` → `maplibre_gl` 0.27. `flutter analyze`
+bersih dan 17 ujian peta lulus, jadi **tiada satu pun** daripada penemuan
+ini ditangkap oleh analyzer atau suite - jangan anggap hijau bermakna
+selamat di sini.
+
+Konteks penghijrahan (disahkan dalam sumber pakej, bukan andaian):
+
+- "Pilih layer, nothing happen" **selesai** - `MapLibreMap.didUpdateWidget`
+  (maplibre_map.dart:514-524) membezakan peta pilihan dan menolak
+  `styleString` baharu melalui `_updateOptions`.
+- Anak panah jalan sehala kini dilukis natif oleh gaya MapLibre.
+- `vector_style_cache.dart` + `vector_theme.dart` dibuang bersama
+  `flutter_map`.
+
+### Kelihatan oleh pengguna - baiki dahulu
+
+- [ ] **Butang berjanji "lokasi saya", bawa ke Kuala Lumpur.**
+      `Icons.my_location_outlined` → `_controller.move(kDefaultMapCenter,
+      kDefaultMapZoom)`. Ikon itu sejagat bermaksud "pusatkan pada saya";
+      ia pusatkan pada pemalar KL yang di-hardcode. Pengguna baca itu
+      sebagai GPS rosak. `myLocationEnabled` (maplibre_map.dart:34)
+      tersedia tetapi tak diguna - tiada titik biru, tiada lokasi langsung.
+      Sama ada tukar ikon supaya jujur, atau laksanakan lokasi sebenar.
+- [ ] **`_mapReady` menipu; tiada maklum balas bila gaya gagal.**
+      `_notifyReady()` dipanggil dari `_onMapCreated`, BUKAN
+      `_onStyleLoaded` - jadi semua kawalan hidup sebelum gaya dimuat.
+      `LinearProgressIndicator` versi flutter_map hilang dalam
+      penghijrahan: sekarang tiada spinner, ralat, mahupun cuba semula.
+      Luar talian = permukaan kosong bercat `foregroundLoadColor`
+      selama-lamanya, dengan butang zoom yang nampak berfungsi di atas
+      peta mati. maplibre_gl 0.27 **tiada** callback ralat gaya (disemak),
+      jadi caranya pengadang masa atas `onStyleLoadedCallback`.
+- [ ] **Halaman ini dihantar ke pengeluaran, berlabel "(ujian)".**
+      `router.dart:114` daftar `/map` tanpa pengadang; `profile_page.dart:301`
+      papar tile bertajuk harfiah "Peta (ujian)"; tiada `kDebugMode` atau
+      semakan `appFlavor` di mana-mana. Doc `MapPage` sendiri kata "Bukan
+      skrin produk". Adang ia pada dev/staging, atau naik taraf jadi ciri
+      sebenar dan buang label itu.
+- [ ] **Had zoom warisan raster mengecilkan peta vektor.** `maxZoom` 17
+      (terrain) / 18 (transport) datang daripada had OpenTopoMap dan
+      MeMoMaps - penyedia raster yang dah tiada. Style JSON OpenFreeMap
+      tak isytihar `maxzoom` pada sumber `openmaptiles`, dan MapLibre
+      overzoom jubin vektor jauh melepasi 17. Pada dua daripada empat
+      layer pengguna tak boleh zoom sedalam yang gaya benarkan, atas
+      sebab yang dah tak wujud.
+- [ ] **Atribusi mengkredit penyedia yang tak lagi digunakan.** Keempat-empat
+      variant kini render gaya vektor OpenFreeMap. CARTO, OpenTopoMap/SRTM
+      dan MeMoMaps ialah penyedia raster - jubin mereka tak diambil langsung
+      lagi - tetapi `osm_tile_source.dart:93-117` masih kreditkan mereka.
+      Atribusi ialah kewajipan lesen. **`map_page_test.dart:143` mengunci
+      dakwaan salah ini sebagai tingkah laku dijangka** ("transport papar
+      atribusi kaya OSM dan MeMoMaps") - ujian itu kena tukar sekali.
+- [ ] **Tema gelap: tiga daripada empat layer kekal terang.** Hanya
+      `standard` ada variant gelap; Bright/Terrain/Transport jadi peta
+      putih menyilaukan dalam app gelap. Berkaitan: `_styleString`
+      bergantung pada `Theme.of(context).brightness`, jadi toggle tema
+      semasa di peta mencetuskan muat semula gaya MapLibre SEPENUHNYA
+      (fetch + render semula). Digabung dgn `themeAnimationDuration:
+      Duration.zero`, itu kilatan pada peta tepat masa pendedahan radial
+      sepatutnya licin. Seam antara dua kerja ini belum diperiksa.
+
+### Prestasi
+
+- [ ] **Unjuran penanda: satu lompatan platform per penanda, per frame
+      kamera.** `_onCamera` menyala berterusan semasa pan
+      (`trackCameraPosition: true`) → `_projectMarkers()` → `await
+      native.toScreenLocation()` setiap penanda → `setState` yang bina
+      semula seluruh subtree `AppMap`, termasuk `MapLibreMap` yang
+      `didUpdateWidget`-nya membezakan seluruh peta pilihan setiap kali.
+      Akibat kedua lebih penting daripada yang pertama: kerana unjuran itu
+      **async**, penanda sentiasa ≥1 frame di belakang peta dan akan nampak
+      "berenang" semasa pan/zoom. `toScreenLocationBatch`
+      (controller.dart:2078) runtuhkan N lompatan jadi satu; penanda yang
+      mesti melekat tepat sepatutnya jadi symbol layer natif, atau diunjur
+      dalam Dart daripada kedudukan kamera.
+
+### Struktur & API
+
+- [ ] **Pengawal boleh hidup lebih lama daripada permukaan peta.**
+      `_AppMapState.dispose()` (app_map.dart:211-214) nullkan `_native`
+      sendiri tetapi tak pernah tanggalkan `AppMapController`. Kalau
+      pengawal dimiliki parent yang hidup lebih lama daripada `AppMap` -
+      iaitu justru sebab parameter pengawal itu wujud - `move`/`zoomBy`/
+      `rotate` akan panggil `animateCamera` pada pengawal natif yang mati.
+      `MapPage` kebetulan lupuskan kedua-duanya serentak, jadi ia belum
+      menggigit. Perlu `widget.controller?._detach()` dalam dispose.
+- [ ] **API raster mati, dikekalkan hidup oleh ujian yang beri keyakinan
+      palsu.** `MapTileSource` masih isytihar `urlTemplate`, `subdomains`,
+      `minZoom`, didokumen sebagai "Raster fallback ... jika gaya vektor
+      gagal dimuat" (map_tile_source.dart:22). Tiada apa membacanya -
+      `_styleString` jatuh ke `ml.MapLibreStyles.openfreemapLiberty`, tak
+      pernah ke template raster. `osm_tile_source_test.dart` masih tegaskan
+      "url jubin raster fallback tidak sama antara variant": suite hijau
+      atas kontrak yang app dah tak tunaikan. Juga `minZoom` mati sedangkan
+      `maxZoom` hidup - `_mapSurface` hardcode `3` (app_map.dart:315-318).
+- [ ] **`initialCenter`/`initialZoom` disenyapkan bila ada pengawal.**
+      `AppMap.build` (baris 269-278) guna `controller.center/zoom` bila
+      pengawal wujud. Jadi `AppMap(controller: c, initialCenter: X)`
+      abaikan `X` secara senyap - tiada assert, tiada dokumentasi.
+- [ ] **Keadaan kamera optimistik tak pernah diapit.** `zoomBy` buat
+      `_zoom += delta` (app_map.dart:119) tanpa apitan pada
+      `minMaxZoomPreference`; ia hanya diselaraskan bila `onCameraMove`
+      seterusnya sampai. Halimunan sekarang (tiada apa papar zoom) KECUALI
+      `AppMap.build` menyuap `controller.zoom` ke `initialCameraPosition`,
+      jadi keadaan terpesong akan dibakar masuk pada permukaan peta baharu.
+- [ ] **Kod pengeluaran bercabang pada konteks ujian, di tiga tempat.**
+      `_inWidgetTest` (app_map.dart:18-19) menghidu
+      `WidgetsBinding.instance.runtimeType.toString()` dan memandu
+      `_mapSurface` (stub), `_markerAt` (`Center`), dan `initState`
+      (`onMapReady` palsu). Satu seam peringkat widget (suntik pembina
+      permukaan) akan kekalkan stub dalam fail ujian.
+- [ ] **Ralat unjuran ditelan senyap.** `_projectMarkers` `catch (_)` →
+      tambah null → `_markerAt` pulang `SizedBox.shrink()`. Penanda hilang
+      tanpa log.
+- [ ] **Ujian penanda menguji harness, bukan produk.** `_markerAt` ada
+      cabang khusus-ujian yang pulang `Center(child: child)` bila unjuran
+      tiada (app_map.dart:346-348). "penanda ialah widget Flutter"
+      (map_page_test.dart:155) tegaskan `find.byIcon(Icons.location_on)`,
+      yang lulus semata-mata kerana cabang itu - ia tak boleh gagal atas
+      sebab produk. Memandangkan `AppMapDebugHost` gantikan seluruh
+      permukaan peta dalam ujian, itu tak dapat dielak untuk rendering;
+      ujian itu patut jujur tentang liputannya, atau digugurkan.
+- [ ] **Bahasa bercampur.** Tooltip peta dalam BM ("Jenis peta", "Zoom
+      masuk", "Pusat semula", "Utara ke atas") tetapi `MapAttribution` guna
+      'Attributions' (app_map.dart:388, 416), dan `map_page_test.dart:152`
+      mengunci English itu.
+- [ ] **Komen basi.** `map_tile_source.dart:15` masih sebut
+      "standard/**3D**/terrain/transport" selepas rename `threeD`→`bright`;
+      baris 22 "Raster fallback (dan paparan awal)" dah bukan kedua-duanya;
+      `app_map.dart:181` `showScalebar` didokumen "web sahaja, tiada kesan
+      pada Android/iOS" - parameter yang tak buat apa-apa pada satu-satunya
+      dua platform yang dihantar.
+- [ ] **`mapEventStream` ialah `Stream<void>`** - setiap pancaran memaksa
+      pendengar tarik keadaan dari pengawal, dan move/rotate/idle tak dapat
+      dibezakan. `MapPage` cuma mahu putaran tetapi terjaga pada setiap
+      frame kamera.
+
+## Peralihan tema radial (2026-09-03) - belum disahkan atas peranti
+
+Toggle Mod Gelap dalam `settings_page.dart` kini guna pendedahan radial
+gaya Telegram (`lib/core/theme_switch_reveal.dart`, dipasang melalui
+`MaterialApp.builder`). `flutter analyze` bersih, suite penuh lulus.
+
+Aduan "clunky" pertama dijejak ke punca sebenar: `MaterialApp` bungkus app
+dalam `AnimatedTheme` 200ms (`app.dart:1059`), jadi kawasan yang terdedah
+oleh bulatan itu memaparkan tema SEPARUH JALAN, bukan tema akhir - dua
+animasi bertempoh berbeza bertindih. Tiga pembetulan dibuat:
+`themeAnimationDuration: Duration.zero`; `toImage()` → `toImageSync()`
+(buang GPU readback yang menyekat pipeline); `Path.combine` →
+`PathFillType.evenOdd` (buang penyelesai boolean Skia setiap frame).
+
+- [ ] **Sahkan atas peranti dalam mod `--profile`.** Bacaan debug tak sah
+      untuk menilai prestasi animasi. Instrumentasi `[theme-reveal]` masih
+      dalam `theme_switch_reveal.dart` (kiraan frame → fps); buang bila dah
+      puas hati.
+- [ ] **Kena periksa bersama audit peta #13** - toggle tema semasa di
+      halaman peta mencetuskan muat semula gaya MapLibre sepenuhnya.
+
 ## Keputusan produk - belum diputuskan
 
 - [ ] **Bucket R2 boleh dibaca awam.** `R2_PUBLIC_URL` guna Public
@@ -285,6 +446,30 @@ Backend: `../marc_go/TODO.md`.
       yang akan tersiar di Play Store. Sahkan beliau setuju dinamakan secara
       awam sebelum terbit - sekali app disiarkan, ia tak boleh ditarik balik
       daripada peranti yang dah pasang.
+
+## Verifikasi Staff ID (2026-09-03) ✅
+
+Bahagian Flutter (plan Task 10-13) dibina. Spec/plan kekal di
+`../marc_go/docs/superpowers/` (design 2026-09-02, plan v2).
+
+Dibuat:
+- `memberId` nullable merentas `Profile` / `MemberRow` / `MemberDetail` /
+  `Author` - papar "Belum disahkan" / "-" sehingga nombor staff disahkan.
+  `isOwner` tak layan `null == null` sebagai milik sendiri.
+- Medan "Nombor Staff" wajib pada skrin daftar (`validateStaffId`, max 64,
+  tiada validasi format). Dihantar sebagai `staff_id` pada sign-up.
+- Pending members: papar nombor staff, "Sahkan Nombor Staff" untuk
+  manager ke atas, "Luluskan" dimatikan sampai `staff_id_verified_at`
+  diisi.
+- Profil ahli: papar nombor staff; "Betulkan Nombor Staff" untuk
+  admin/superadmin (bukan terhad kepada pending).
+- Banner "Yuran pendaftaran belum dibayar" pada sejarah bayaran bila
+  `outstanding_registration_fee` true - kekal nampak walaupun senarai
+  bayaran kosong. Butang guna `CheckoutPage` sedia ada.
+
+⚠️ Deploy berperingkat: `outstanding_registration_fee` dinyahsiri dengan
+`?? false` (padanan `donations`). Backend Tasks 1-9 mesti hidup dulu;
+tanpa itu verify/correct 404.
 
 ## Gambar profil - Flutter ✅
 
@@ -792,6 +977,14 @@ ketat.
 
 ## Jurang ujian
 
+- [ ] **Ujian MERAH sedia ada: `about_page_test.dart` - "Tentang: kredit
+      En. Ezri sebagai pencetus".** `find.textContaining('En. Ezri')` jumpa
+      0 widget. Suite penuh: 372 lulus, 1 gagal - HANYA yang ini. Disahkan
+      (2026-09-04) ia gagal juga bila kerja tema/peta di-stash, jadi ia
+      mendahului kerja itu; berkemungkinan kredit dibuang atau ditulis
+      semula dalam `about_page.dart` tanpa ujian dikemas kini. Rujuk juga
+      baris 445 ("Kebenaran En. Ezri") - putuskan sama ada kredit itu kekal
+      sebelum baiki ujian, bukan sebaliknya.
 - [ ] Widget test `forgot_password_page.dart` - mesej kejayaan benar-benar
       **dirender**. Ujian sedia ada mengesahkan pemalar itu neutral (itu
       invarian keselamatan, dan sudah dikunci); yang tak dilindungi ialah

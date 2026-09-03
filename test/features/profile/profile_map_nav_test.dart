@@ -62,6 +62,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.byType(MapPage), findsOneWidget);
-    expect(find.text('Standard'), findsOneWidget);
+    // Kawalan peta sendiri, bukan nama layer: nama layer kini duduk
+    // dalam bottom sheet yang belum dibuka pada ketika ni.
+    expect(find.byTooltip('Jenis peta'), findsOneWidget);
   });
 }

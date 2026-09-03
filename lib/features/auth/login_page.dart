@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/features/auth/auth_providers.dart';
-import 'package:marc/features/auth/widgets/auth_field.dart';
 import 'package:marc/features/auth/widgets/button_busy.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/utils/validators.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
@@ -63,18 +63,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 40),
-                AuthField(
+                CustomTextField(
                   controller: _email,
                   label: 'Email',
-                  icon: Icons.mail_outline,
+                  hint: 'nama@contoh.com',
+                  prefixIcon: Icons.mail_outline,
                   keyboardType: TextInputType.emailAddress,
                   validator: validateEmail,
                 ),
                 const SizedBox(height: 16),
-                AuthField(
+                CustomTextField(
                   controller: _password,
                   label: 'Kata laluan',
-                  icon: Icons.lock_outline,
+                  hint: 'Masukkan kata laluan',
+                  prefixIcon: Icons.lock_outline,
                   obscureText: true,
                   validator: validatePassword,
                 ),

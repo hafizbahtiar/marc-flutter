@@ -24,3 +24,14 @@ plugins {
 }
 
 include(":app")
+
+// maplibre_gl 0.27.0 skips `kotlin-android` when AGP is 9+, assuming
+// built-in Kotlin is on. Flutter 3.44 keeps `android.builtInKotlin=false`,
+// so the plugin's `kotlin { }` block has no extension and evaluation
+// fails with "Could not find method kotlin()". Apply KGP first.
+// Remove when maplibre_gl applies KGP whenever builtInKotlin != true.
+gradle.beforeProject {
+    if (name == "maplibre_gl") {
+        pluginManager.apply("org.jetbrains.kotlin.android")
+    }
+}

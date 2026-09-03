@@ -59,11 +59,21 @@ class AuthService {
     }
   }
 
-  Future<AuthResult> signUp(String email, String password, String phone) async {
+  Future<AuthResult> signUp(
+    String email,
+    String password,
+    String phone, {
+    required String staffId,
+  }) async {
     try {
       final res = await _dio.post(
         '/auth/register',
-        data: {'email': email, 'password': password, 'phone': phone},
+        data: {
+          'email': email,
+          'password': password,
+          'phone': phone,
+          'staff_id': staffId,
+        },
       );
       await _setTokensWithStorageRetry(
         access: res.data['access_token'] as String,

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/features/auth/auth_providers.dart';
-import 'package:marc/features/auth/widgets/auth_field.dart';
 import 'package:marc/features/auth/widgets/button_busy.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/utils/phone.dart';
 import 'package:marc/shared/utils/validators.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
@@ -19,6 +19,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _phone = TextEditingController();
+  final _staffId = TextEditingController();
   final _password = TextEditingController();
   final _confirmPassword = TextEditingController();
 
@@ -26,6 +27,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   void dispose() {
     _email.dispose();
     _phone.dispose();
+    _staffId.dispose();
     _password.dispose();
     _confirmPassword.dispose();
     super.dispose();
@@ -53,6 +55,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           _email.text.trim(),
           _password.text,
           normalizeMY(_phone.text) ?? _phone.text.trim(),
+          staffId: _staffId.text.trim(),
         );
     if (!mounted) return;
     if (ok) {
@@ -95,34 +98,46 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 40),
-                AuthField(
+                CustomTextField(
                   controller: _email,
                   label: 'Email',
-                  icon: Icons.mail_outline,
+                  hint: 'nama@contoh.com',
+                  prefixIcon: Icons.mail_outline,
                   keyboardType: TextInputType.emailAddress,
                   validator: validateEmail,
                 ),
                 const SizedBox(height: 16),
-                AuthField(
+                CustomTextField(
                   controller: _phone,
                   label: 'Nombor telefon',
-                  icon: Icons.phone_outlined,
+                  hint: '012-3456789',
+                  prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   validator: validatePhone,
                 ),
                 const SizedBox(height: 16),
-                AuthField(
+                CustomTextField(
+                  controller: _staffId,
+                  label: 'Nombor Staff',
+                  hint: 'cth: 12345',
+                  prefixIcon: Icons.badge_outlined,
+                  validator: validateStaffId,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
                   controller: _password,
                   label: 'Kata laluan',
-                  icon: Icons.lock_outline,
+                  hint: 'Masukkan kata laluan',
+                  prefixIcon: Icons.lock_outline,
                   obscureText: true,
                   validator: validatePassword,
                 ),
                 const SizedBox(height: 16),
-                AuthField(
+                CustomTextField(
                   controller: _confirmPassword,
                   label: 'Sahkan kata laluan',
-                  icon: Icons.lock_outline,
+                  hint: 'Masukkan semula kata laluan',
+                  prefixIcon: Icons.lock_outline,
                   obscureText: true,
                   validator: _validateConfirmPassword,
                 ),

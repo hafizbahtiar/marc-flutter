@@ -78,7 +78,9 @@ class ManageAddressesPage extends ConsumerWidget {
   ) async {
     try {
       await ref.read(addressRepositoryProvider).update(row.id, isDefault: true);
-      if (context.mounted) MySnackBar.success(context, 'Alamat utama dikemas kini.');
+      if (context.mounted) {
+        MySnackBar.success(context, 'Alamat utama dikemas kini.');
+      }
     } catch (e) {
       if (context.mounted) {
         MySnackBar.error(
@@ -91,7 +93,11 @@ class ManageAddressesPage extends ConsumerWidget {
     }
   }
 
-  Future<void> _delete(BuildContext context, WidgetRef ref, AddressRow row) async {
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    AddressRow row,
+  ) async {
     final ok = await showConfirmDialog(
       context,
       title: 'Padam alamat',
@@ -126,7 +132,10 @@ class ManageAddressesPage extends ConsumerWidget {
         child: addresses.when(
           loading: () => Skeletonizer(
             enabled: true,
-            child: _AddressList(rows: List.filled(2, _placeholderAddress), onTap: (_) {}),
+            child: _AddressList(
+              rows: List.filled(2, _placeholderAddress),
+              onTap: (_) {},
+            ),
           ),
           error: (e, _) => RefreshIndicator.adaptive(
             onRefresh: onRefresh,
@@ -210,10 +219,8 @@ class _AddressList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: rows.length,
       separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (_, i) => _AddressTile(
-        row: rows[i],
-        onTap: () => onTap(rows[i]),
-      ),
+      itemBuilder: (_, i) =>
+          _AddressTile(row: rows[i], onTap: () => onTap(rows[i])),
     );
   }
 }
@@ -244,7 +251,9 @@ class _AddressTile extends StatelessWidget {
               label: const Text('Default'),
               backgroundColor: scheme.primary.withValues(alpha: 0.12),
               labelStyle: TextStyle(
-                color: Theme.of(context).extension<AppSemanticColors>()!.accentDark,
+                color: Theme.of(
+                  context,
+                ).extension<AppSemanticColors>()!.accentDark,
                 fontSize: 12,
               ),
               side: BorderSide.none,

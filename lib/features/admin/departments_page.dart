@@ -6,6 +6,7 @@ import 'package:marc/features/admin/departments_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin urus bahagian/jabatan organisasi (`departments`) - superadmin
@@ -72,7 +73,8 @@ class DepartmentsPage extends ConsumerWidget {
   }
 }
 
-class _DepartmentsAppBar extends StatelessWidget implements PreferredSizeWidget {
+class _DepartmentsAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
   const _DepartmentsAppBar();
 
   @override
@@ -286,23 +288,19 @@ class _DepartmentFormState extends State<_DepartmentForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
+        CustomTextField(
           controller: _code,
+          label: 'Kod',
+          hint: 'cth: BKP',
           enabled: !_isEdit,
           autofocus: !_isEdit,
-          decoration: const InputDecoration(
-            labelText: 'Kod (cth: BKP)',
-            border: OutlineInputBorder(),
-          ),
         ),
         const SizedBox(height: 12),
-        TextField(
+        CustomTextField(
           controller: _name,
+          label: 'Nama penuh',
+          hint: 'cth: Bahagian Kewangan',
           autofocus: _isEdit,
-          decoration: const InputDecoration(
-            labelText: 'Nama penuh',
-            border: OutlineInputBorder(),
-          ),
         ),
         if (_error != null) ...[
           const SizedBox(height: 8),

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:marc/app/theme.dart';
 import 'package:marc/features/activities/activity_format.dart';
 import 'package:marc/features/activities/activity_models.dart';
 import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/activity_draft.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
+import 'package:marc/shared/ui/form/custom_datefield.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
@@ -352,9 +355,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
     _sessions.sort((a, b) => a.startsAt.compareTo(b.startsAt));
   }
 
-  Future<void> _pickSessionStart(SessionDraft s) async {
-    final picked = await _pickDateTime(context, s.startsAt);
-    if (picked == null || !mounted) return;
+  void _applySessionStart(SessionDraft s, DateTime picked) {
     setState(() {
       final length = s.endsAt.difference(s.startsAt);
       s.startsAt = picked;
@@ -365,9 +366,7 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
     });
   }
 
-  Future<void> _pickSessionEnd(SessionDraft s) async {
-    final picked = await _pickDateTime(context, s.endsAt);
-    if (picked == null || !mounted) return;
+  void _applySessionEnd(SessionDraft s, DateTime picked) {
     setState(() => s.endsAt = picked);
   }
 
@@ -454,9 +453,10 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
             if (a != null) _StatusBanner(activity: a),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _Label('Kategori'),
+                const Expanded(
+                  child: FormFieldLabel('Kategori', padding: EdgeInsets.zero),
+                ),
                 if (ref.watch(isManagerOrAboveProvider))
                   TextButton(
                     onPressed: () => context.push('/activities/categories'),
@@ -464,15 +464,17 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
                   ),
               ],
             ),
+            const SizedBox(height: 8),
             InkWell(
               onTap: () => _pickCategory(rows),
+              borderRadius: BorderRadius.circular(12),
               child: InputDecorator(
                 // isEmpty MESTI ditetapkan - lalai InputDecorator ialah
                 // false, jadi hintText tak pernah dipapar langsung tanpanya
                 // (medan nampak kosong-kosong sahaja walaupun belum pilih).
                 isEmpty: _categoryId == null,
                 decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
                   hintText: 'Pilih kategori',
                 ),
                 child: Row(
@@ -490,65 +492,59 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
               ),
 
             const SizedBox(height: 18),
-            _Label('Tajuk'),
-            TextField(
+            CustomTextField(
               controller: _title,
+              label: 'Tajuk',
+              hint: 'Nama aktiviti',
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
 
             const SizedBox(height: 18),
-            _Label('Penerangan'),
-            TextField(
+            CustomTextField(
               controller: _description,
+              label: 'Penerangan',
+              hint: 'Ringkasan aktiviti',
               maxLines: 4,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
 
             const SizedBox(height: 18),
-            _Label('Lokasi'),
-            TextField(
+            CustomTextField(
               controller: _locationName,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Nama tempat',
-              ),
+              label: 'Lokasi',
+              hint: 'Nama tempat',
             ),
-            const SizedBox(height: 10),
-            TextField(
+            const SizedBox(height: 12),
+            CustomTextField(
               controller: _locationAddress,
+              label: 'Alamat',
+              hint: 'Alamat penuh (pilihan)',
               maxLines: 2,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Alamat penuh (pilihan)',
-              ),
             ),
 
             const SizedBox(height: 18),
-            _Label('Pendaftaran'),
-            _DateTimeField(
+            CustomDateField(
               label: 'Buka pendaftaran (pilihan)',
               value: _opensAt,
-              emptyLabel: 'Sebaik diterbitkan',
-              onPick: () async {
-                final picked = await _pickDateTime(context, _opensAt);
-                if (picked == null || !mounted) return;
-                setState(() => _opensAt = picked);
-              },
-              onClear: _opensAt == null
-                  ? null
-                  : () => setState(() => _opensAt = null),
+              hint: 'Sebaik diterbitkan',
+              includeTime: true,
+              format: formatDateTime,
+              canClear: true,
+              firstDate: DateTime(DateTime.now().year - 2),
+              lastDate: DateTime(DateTime.now().year + 5),
+              onChanged: (v) => setState(() => _opensAt = v),
             ),
-            const SizedBox(height: 10),
-            _DateTimeField(
+            const SizedBox(height: 12),
+            CustomDateField(
               label: 'Tutup pendaftaran',
               value: _closesAt,
-              emptyLabel: 'Belum ditetapkan',
-              onPick: () async {
-                final picked = await _pickDateTime(context, _closesAt);
-                if (picked == null || !mounted) return;
-                setState(() => _closesAt = picked);
+              hint: 'Belum ditetapkan',
+              includeTime: true,
+              format: formatDateTime,
+              firstDate: DateTime(DateTime.now().year - 2),
+              lastDate: DateTime(DateTime.now().year + 5),
+              onChanged: (v) {
+                if (v != null) setState(() => _closesAt = v);
               },
             ),
 
@@ -557,42 +553,22 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _Label('Kapasiti'),
-                      TextField(
-                        controller: _capacity,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Tiada had',
-                        ),
-                      ),
-                    ],
+                  child: CustomTextField(
+                    controller: _capacity,
+                    label: 'Kapasiti',
+                    hint: 'Tiada had',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _Label('Ambang kehadiran (%)'),
-                      TextField(
-                        controller: _threshold,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: '100',
-                        ),
-                      ),
-                    ],
+                  child: CustomTextField(
+                    controller: _threshold,
+                    label: 'Ambang kehadiran (%)',
+                    hint: '100',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
               ],
@@ -612,7 +588,12 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _Label('Sesi (${_sessions.length})')),
+                Expanded(
+                  child: FormFieldLabel(
+                    'Sesi (${_sessions.length})',
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
                 TextButton.icon(
                   onPressed: _busy
                       ? null
@@ -639,8 +620,12 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
                 index: i,
                 session: _sessions[i],
                 onTitleChanged: (v) => _sessions[i].title = v,
-                onPickStart: () => _pickSessionStart(_sessions[i]),
-                onPickEnd: () => _pickSessionEnd(_sessions[i]),
+                onStartChanged: (v) {
+                  if (v != null) _applySessionStart(_sessions[i], v);
+                },
+                onEndChanged: (v) {
+                  if (v != null) _applySessionEnd(_sessions[i], v);
+                },
                 onRemove: _sessions.length == 1
                     ? null
                     : () => setState(() => _sessions.removeAt(i)),
@@ -670,30 +655,6 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
       ),
     );
   }
-}
-
-/// Pemilih tarikh + masa dalam satu aliran. Pulangkan null bila pengurus
-/// membatalkan mana-mana daripada dua langkah.
-Future<DateTime?> _pickDateTime(BuildContext context, DateTime? initial) async {
-  final now = DateTime.now();
-  final base = initial ?? now;
-
-  final date = await showDatePicker(
-    context: context,
-    initialDate: base,
-    // Julat luas ke belakang: pengurus membetulkan aktiviti LEPAS juga.
-    firstDate: DateTime(now.year - 2),
-    lastDate: DateTime(now.year + 5),
-  );
-  if (date == null || !context.mounted) return null;
-
-  final time = await showTimePicker(
-    context: context,
-    initialTime: TimeOfDay.fromDateTime(base),
-  );
-  if (time == null) return null;
-
-  return DateTime(date.year, date.month, date.day, time.hour, time.minute);
 }
 
 /// Dialog yang memaksa sebab bukan kosong sebelum butang sah aktif.
@@ -731,6 +692,10 @@ class _StatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final semantic = theme.extension<AppSemanticColors>()!;
+    // 'draft' kekal `tertiary` (biru diraja) - ia status *maklumat*, bukan
+    // berjaya. Hijau `success` disimpan untuk 'published', satu-satunya
+    // keadaan positif di sini.
     final (String text, Color color) = switch (activity.status) {
       'draft' => (
         'Draf - belum kelihatan kepada ahli. Terbitkan dari menu di atas.',
@@ -741,7 +706,7 @@ class _StatusBanner extends StatelessWidget {
         theme.colorScheme.error,
       ),
       'completed' => ('Aktiviti tamat.', theme.colorScheme.onSurfaceVariant),
-      _ => ('Diterbitkan.', theme.colorScheme.primary),
+      _ => ('Diterbitkan.', semantic.success),
     };
 
     return Container(
@@ -762,89 +727,30 @@ class _StatusBanner extends StatelessWidget {
   }
 }
 
-class _Label extends StatelessWidget {
-  const _Label(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: Theme.of(context).textTheme.titleSmall),
-    );
-  }
-}
-
-class _DateTimeField extends StatelessWidget {
-  const _DateTimeField({
-    required this.label,
-    required this.value,
-    required this.emptyLabel,
-    required this.onPick,
-    this.onClear,
-  });
-
-  final String label;
-  final DateTime? value;
-  final String emptyLabel;
-  final VoidCallback onPick;
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final v = value;
-
-    return InkWell(
-      onTap: onPick,
-      borderRadius: BorderRadius.circular(8),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          border: const OutlineInputBorder(),
-          labelText: label,
-          suffixIcon: onClear == null
-              ? const Icon(Icons.event_outlined)
-              : IconButton(
-                  icon: const Icon(Icons.clear),
-                  tooltip: 'Kosongkan',
-                  onPressed: onClear,
-                ),
-        ),
-        child: Text(
-          v == null ? emptyLabel : formatDateTime(v),
-          style: v == null
-              ? theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                )
-              : theme.textTheme.bodyLarge,
-        ),
-      ),
-    );
-  }
-}
-
 class _SessionCard extends StatelessWidget {
   const _SessionCard({
     super.key,
     required this.index,
     required this.session,
     required this.onTitleChanged,
-    required this.onPickStart,
-    required this.onPickEnd,
+    required this.onStartChanged,
+    required this.onEndChanged,
     required this.onRemove,
   });
 
   final int index;
   final SessionDraft session;
   final ValueChanged<String> onTitleChanged;
-  final VoidCallback onPickStart;
-  final VoidCallback onPickEnd;
+  final ValueChanged<DateTime?> onStartChanged;
+  final ValueChanged<DateTime?> onEndChanged;
   final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final now = DateTime.now();
+    final firstDate = DateTime(now.year - 2);
+    final lastDate = DateTime(now.year + 5);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -869,29 +775,34 @@ class _SessionCard extends StatelessWidget {
                   ),
               ],
             ),
-            TextFormField(
+            CustomTextField(
               initialValue: session.title,
+              label: 'Tajuk sesi',
+              hint: 'Pilihan',
               onChanged: onTitleChanged,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Tajuk sesi (pilihan)',
-                isDense: true,
-              ),
             ),
-            const SizedBox(height: 10),
-            _DateTimeField(
+            const SizedBox(height: 12),
+            CustomDateField(
               label: 'Mula',
               value: session.startsAt,
-              emptyLabel: '-',
-              onPick: onPickStart,
+              hint: '-',
+              includeTime: true,
+              format: formatDateTime,
+              firstDate: firstDate,
+              lastDate: lastDate,
+              onChanged: onStartChanged,
             ),
-            const SizedBox(height: 8),
-            _DateTimeField(
+            const SizedBox(height: 12),
+            CustomDateField(
               label: 'Tamat',
               value: session.endsAt,
-              emptyLabel: '-',
-              onPick: onPickEnd,
+              hint: '-',
+              includeTime: true,
+              format: formatDateTime,
+              firstDate: firstDate,
+              lastDate: lastDate,
+              onChanged: onEndChanged,
             ),
             if (!session.isValid)
               Padding(

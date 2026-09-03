@@ -29,7 +29,10 @@ class Profile {
     this.position,
   });
 
-  final String memberId;
+  /// Null sehingga nombor staff disahkan - `generateMemberID` ditangguh
+  /// ke `VerifyStaffID`. Papar "Belum disahkan" / "-" di UI, jangan
+  /// andai sentiasa diisi.
+  final String? memberId;
   final String email;
   final bool emailVerified;
   final String status;
@@ -125,7 +128,11 @@ class Profile {
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
-      memberId: json['member_id'] as String,
+      memberId: switch (json['member_id']) {
+        final String s when s.trim().isEmpty => null,
+        final String s => s,
+        _ => null,
+      },
       email: json['email'] as String,
       emailVerified: (json['email_verified'] as bool?) ?? false,
       status: (json['status'] as String?) ?? 'pending',
@@ -284,6 +291,29 @@ class ProfileRepository {
     _ref.invalidate(pendingMembersProvider);
   }
 
+  /// Sahkan nombor staff ahli pending (rank manager ke atas).
+  /// [staffId] pilihan - betulkan salah taip semasa verify pertama.
+  Future<void> verifyStaffID(String userId, {String? staffId}) async {
+    final dio = _ref.read(dioProvider);
+    await dio.post(
+      '/members/$userId/verify-staff-id',
+      data: staffId == null ? null : {'staff_id': staffId},
+    );
+    _ref.invalidate(membersProvider);
+    _ref.invalidate(pendingMembersProvider);
+    _ref.invalidate(memberDetailProvider(userId));
+  }
+
+  /// Betulkan nombor staff bila-bila masa (rank admin/superadmin).
+  /// Tidak menyentuh status verified / member_id.
+  Future<void> correctStaffID(String userId, String staffId) async {
+    final dio = _ref.read(dioProvider);
+    await dio.patch('/members/$userId/staff-id', data: {'staff_id': staffId});
+    _ref.invalidate(membersProvider);
+    _ref.invalidate(pendingMembersProvider);
+    _ref.invalidate(memberDetailProvider(userId));
+  }
+
   /// Tukar role ahli (Stage 12) - backend kuatkuasakan hierarki rank,
   /// client cuma hantar niat.
   Future<void> updateMemberRole(String userId, String roleKey) async {
@@ -311,10 +341,14 @@ class MemberRow {
     this.departmentCode,
     this.departmentName,
     this.position,
+    this.staffId,
+    this.staffIdVerifiedAt,
   });
 
   final String userId;
-  final String memberId;
+
+  /// Null untuk ahli pending yang belum diverify nombor staff.
+  final String? memberId;
   final String? displayName;
 
   /// `null` = backend sembunyikan (emel ahli lain cuma didedahkan kepada
@@ -346,10 +380,22 @@ class MemberRow {
   final String? departmentName;
   final String? position;
 
+  /// Nombor staff organisasi. Wajib pada daftar; `null` cuma bila backend
+  /// lama belum hantar kunci (deploy berperingkat).
+  final String? staffId;
+
+  /// Bila nombor staff disahkan. `null` = belum verified - Luluskan
+  /// mesti disorok/dimatikan sampai medan ni diisi.
+  final DateTime? staffIdVerifiedAt;
+
   factory MemberRow.fromJson(Map<String, dynamic> json) {
     return MemberRow(
       userId: json['user_id'] as String,
-      memberId: json['member_id'] as String,
+      memberId: switch (json['member_id']) {
+        final String s when s.trim().isEmpty => null,
+        final String s => s,
+        _ => null,
+      },
       displayName: json['display_name'] as String?,
       email: json['email'] as String?,
       roleKey: (json['role_key'] as String?) ?? 'ahli',
@@ -363,6 +409,10 @@ class MemberRow {
       departmentCode: json['department_code'] as String?,
       departmentName: json['department_name'] as String?,
       position: json['position'] as String?,
+      staffId: json['staff_id'] as String?,
+      staffIdVerifiedAt: json['staff_id_verified_at'] != null
+          ? DateTime.parse(json['staff_id_verified_at'] as String)
+          : null,
     );
   }
 }

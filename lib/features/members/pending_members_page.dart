@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/core/error_utils.dart';
+import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
@@ -23,7 +24,7 @@ const _placeholderPendingRow = MemberRow(
   status: 'pending',
 );
 
-enum _PendingAction { approve, cancelBill, bypass, reject }
+enum _PendingAction { verifyStaff, approve, cancelBill, bypass, reject }
 
 class PendingMembersPage extends ConsumerWidget {
   const PendingMembersPage({super.key});
@@ -53,8 +54,37 @@ class PendingMembersPage extends ConsumerWidget {
 
     final pending = ref.watch(pendingMembersProvider);
     final isAdminOrAbove = ref.watch(isAdminOrAboveProvider);
+    final isManagerOrAbove = ref.watch(isManagerOrAboveProvider);
 
     Future<void> onRefresh() => ref.refresh(pendingMembersProvider.future);
+
+    Future<void> handleVerifyStaff(MemberRow row) async {
+      final name = row.displayName ?? row.memberId ?? 'Belum disahkan';
+      final staffLabel = row.staffId ?? '-';
+      final ok = await showConfirmDialog(
+        context,
+        title: 'Sahkan nombor staff',
+        message: 'Sahkan nombor staff $staffLabel untuk $name?',
+        confirmLabel: 'Sahkan',
+      );
+      if (!ok || !context.mounted) return;
+
+      try {
+        await ref.read(profileRepositoryProvider).verifyStaffID(row.userId);
+        if (context.mounted) {
+          MySnackBar.success(context, 'Nombor staff $name disahkan.');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          MySnackBar.error(
+            context,
+            e is DioException
+                ? extractErrorMessage(e)
+                : 'Gagal sahkan nombor staff.',
+          );
+        }
+      }
+    }
 
     Future<void> handleApprove(MemberRow row, {String? bypassReason}) async {
       try {
@@ -62,7 +92,10 @@ class PendingMembersPage extends ConsumerWidget {
             .read(profileRepositoryProvider)
             .approveMember(row.userId, bypassReason: bypassReason);
         if (context.mounted) {
-          MySnackBar.success(context, '${row.memberId} diluluskan.');
+          MySnackBar.success(
+            context,
+            '${row.memberId ?? 'Belum disahkan'} diluluskan.',
+          );
         }
       } catch (e) {
         if (context.mounted) {
@@ -79,7 +112,7 @@ class PendingMembersPage extends ConsumerWidget {
     // ni cuma UI). Nota WAJIB - showEditTextDialog pulang null kalau
     // kosong, jadi guard `reason == null` di bawah dah cukup.
     Future<void> handleApproveBypass(MemberRow row) async {
-      final name = row.displayName ?? row.memberId;
+      final name = row.displayName ?? row.memberId ?? 'Belum disahkan';
       final ok = await showConfirmDialog(
         context,
         title: 'Langkau bayaran yuran',
@@ -104,7 +137,7 @@ class PendingMembersPage extends ConsumerWidget {
     }
 
     Future<void> handleCancelBill(MemberRow row) async {
-      final name = row.displayName ?? row.memberId;
+      final name = row.displayName ?? row.memberId ?? 'Belum disahkan';
       final ok = await showConfirmDialog(
         context,
         title: 'Batalkan bil online',
@@ -122,7 +155,10 @@ class PendingMembersPage extends ConsumerWidget {
             .read(profileRepositoryProvider)
             .cancelRegistrationPayment(row.userId);
         if (context.mounted) {
-          MySnackBar.success(context, 'Bil ${row.memberId} dibatalkan.');
+          MySnackBar.success(
+            context,
+            'Bil ${row.memberId ?? 'Belum disahkan'} dibatalkan.',
+          );
         }
       } catch (e) {
         if (context.mounted) {
@@ -138,7 +174,10 @@ class PendingMembersPage extends ConsumerWidget {
       try {
         await ref.read(profileRepositoryProvider).rejectMember(row.userId);
         if (context.mounted) {
-          MySnackBar.success(context, '${row.memberId} ditolak.');
+          MySnackBar.success(
+            context,
+            '${row.memberId ?? 'Belum disahkan'} ditolak.',
+          );
         }
       } catch (e) {
         if (context.mounted) {
@@ -162,7 +201,9 @@ class PendingMembersPage extends ConsumerWidget {
               onReject: (_) async {},
               onApproveBypass: (_) async {},
               onCancelBill: (_) async {},
+              onVerifyStaff: (_) async {},
               isAdminOrAbove: isAdminOrAbove,
+              isManagerOrAbove: isManagerOrAbove,
             ),
           ),
           error: (e, _) => RefreshIndicator.adaptive(
@@ -215,7 +256,9 @@ class PendingMembersPage extends ConsumerWidget {
                 onReject: handleReject,
                 onApproveBypass: handleApproveBypass,
                 onCancelBill: handleCancelBill,
+                onVerifyStaff: handleVerifyStaff,
                 isAdminOrAbove: isAdminOrAbove,
+                isManagerOrAbove: isManagerOrAbove,
               ),
             );
           },
@@ -232,7 +275,9 @@ class _PendingList extends StatelessWidget {
     required this.onReject,
     required this.onApproveBypass,
     required this.onCancelBill,
+    required this.onVerifyStaff,
     required this.isAdminOrAbove,
+    required this.isManagerOrAbove,
   });
 
   final List<MemberRow> rows;
@@ -240,7 +285,9 @@ class _PendingList extends StatelessWidget {
   final Future<void> Function(MemberRow row) onReject;
   final Future<void> Function(MemberRow row) onApproveBypass;
   final Future<void> Function(MemberRow row) onCancelBill;
+  final Future<void> Function(MemberRow row) onVerifyStaff;
   final bool isAdminOrAbove;
+  final bool isManagerOrAbove;
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +301,9 @@ class _PendingList extends StatelessWidget {
         onReject: () => onReject(rows[i]),
         onApproveBypass: () => onApproveBypass(rows[i]),
         onCancelBill: () => onCancelBill(rows[i]),
+        onVerifyStaff: () => onVerifyStaff(rows[i]),
         isAdminOrAbove: isAdminOrAbove,
+        isManagerOrAbove: isManagerOrAbove,
       ),
     );
   }
@@ -267,7 +316,9 @@ class _PendingTile extends StatefulWidget {
     required this.onReject,
     required this.onApproveBypass,
     required this.onCancelBill,
+    required this.onVerifyStaff,
     required this.isAdminOrAbove,
+    required this.isManagerOrAbove,
   });
 
   final MemberRow row;
@@ -275,7 +326,9 @@ class _PendingTile extends StatefulWidget {
   final Future<void> Function() onReject;
   final Future<void> Function() onApproveBypass;
   final Future<void> Function() onCancelBill;
+  final Future<void> Function() onVerifyStaff;
   final bool isAdminOrAbove;
+  final bool isManagerOrAbove;
 
   @override
   State<_PendingTile> createState() => _PendingTileState();
@@ -284,18 +337,25 @@ class _PendingTile extends StatefulWidget {
 class _PendingTileState extends State<_PendingTile> {
   bool _busy = false;
 
-  String get _name => widget.row.displayName ?? widget.row.memberId;
+  String get _name =>
+      widget.row.displayName ?? widget.row.memberId ?? 'Belum disahkan';
 
-  bool get _canApproveNormally =>
-      widget.row.registrationPaymentStatus == 'succeeded';
+  bool get _staffVerified => widget.row.staffIdVerifiedAt != null;
+
+  /// Luluskan hanya selepas nombor staff disahkan - padan gate backend.
+  /// Staff verified = exempt yuran, jadi status bayaran bukan syarat lagi.
+  bool get _canApproveNormally => _staffVerified;
 
   bool get _canBypass =>
       widget.isAdminOrAbove &&
+      _staffVerified &&
       widget.row.registrationPaymentStatus != 'succeeded' &&
       widget.row.registrationPaymentStatus != 'pending';
 
   bool get _hasPendingOnlineBill =>
       widget.row.registrationPaymentStatus == 'pending';
+
+  bool get _showVerifyStaff => widget.isManagerOrAbove && !_staffVerified;
 
   Future<void> _run(Future<void> Function() action) async {
     if (_busy) return;
@@ -332,6 +392,8 @@ class _PendingTileState extends State<_PendingTile> {
 
   Future<void> _handleAction(_PendingAction action) async {
     switch (action) {
+      case _PendingAction.verifyStaff:
+        await _run(widget.onVerifyStaff);
       case _PendingAction.approve:
         await _confirmApprove();
       case _PendingAction.cancelBill:
@@ -347,12 +409,26 @@ class _PendingTileState extends State<_PendingTile> {
     if (_busy) return;
 
     final actions = <AppSheetAction<_PendingAction>>[
+      if (_showVerifyStaff)
+        const AppSheetAction(
+          value: _PendingAction.verifyStaff,
+          label: 'Sahkan Nombor Staff',
+          icon: Icons.verified_outlined,
+        ),
       if (_canApproveNormally)
         const AppSheetAction(
           value: _PendingAction.approve,
           label: 'Luluskan',
           icon: Icons.check_circle_outline,
-          subtitle: 'Yuran pendaftaran telah dibayar',
+          subtitle: 'Nombor staff telah disahkan',
+        )
+      else
+        const AppSheetAction(
+          value: _PendingAction.approve,
+          label: 'Luluskan',
+          icon: Icons.check_circle_outline,
+          subtitle: 'Sahkan nombor staff dulu',
+          enabled: false,
         ),
       if (_hasPendingOnlineBill && widget.isAdminOrAbove)
         const AppSheetAction(
@@ -380,7 +456,7 @@ class _PendingTileState extends State<_PendingTile> {
     final action = await showAppActionSheet<_PendingAction>(
       context,
       title: _name,
-      message: widget.row.memberId,
+      message: widget.row.memberId ?? 'Belum disahkan',
       actions: actions,
     );
     if (action == null || !mounted) return;
@@ -390,25 +466,47 @@ class _PendingTileState extends State<_PendingTile> {
   @override
   Widget build(BuildContext context) {
     final row = widget.row;
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      onTap: _busy ? null : _openActions,
-      leading: MemberAvatar(
-        label: row.displayName ?? row.memberId,
-        avatarUrl: row.avatarUrl,
-      ),
-      title: Text(row.displayName ?? '(Tiada nama)'),
-      subtitle: Text(
-        row.email == null ? row.memberId : '${row.memberId}\n${row.email}',
-      ),
-      isThreeLine: row.email != null,
-      trailing: _busy
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-            )
-          : _PaymentStatusChip(status: row.registrationPaymentStatus),
+    final idLine = row.email == null
+        ? (row.memberId ?? 'Belum disahkan')
+        : '${row.memberId ?? 'Belum disahkan'}\n${row.email}';
+    final staffLine = 'Nombor staff: ${row.staffId ?? '-'}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 4,
+          ),
+          onTap: _busy ? null : _openActions,
+          leading: MemberAvatar(
+            label: row.displayName ?? row.memberId ?? 'Belum disahkan',
+            avatarUrl: row.avatarUrl,
+          ),
+          title: Text(row.displayName ?? '(Tiada nama)'),
+          subtitle: Text('$idLine\n$staffLine'),
+          isThreeLine: true,
+          trailing: _busy
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                )
+              : _PaymentStatusChip(status: row.registrationPaymentStatus),
+        ),
+        if (_showVerifyStaff)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: _busy ? null : () => _run(widget.onVerifyStaff),
+                child: const Text('Sahkan Nombor Staff'),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

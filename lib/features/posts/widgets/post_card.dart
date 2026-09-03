@@ -30,7 +30,9 @@ class PostCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final myProfile = ref.watch(myProfileProvider).valueOrNull;
-    final isOwner = myProfile?.memberId == post.author.memberId;
+    final isOwner =
+        myProfile?.memberId != null &&
+        myProfile!.memberId == post.author.memberId;
     final isManagement = myProfile?.isManagement ?? false;
     final canDelete = isOwner || isManagement;
 

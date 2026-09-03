@@ -24,6 +24,65 @@ const _viewerProfile = Profile(
   telegramLinked: false,
 );
 
+const _adminViewer = Profile(
+  memberId: 'MARC2026/08/0099',
+  email: 'admin@contoh.com',
+  emailVerified: true,
+  status: 'approved',
+  displayName: 'Admin',
+  phone: null,
+  roleKey: 'admin',
+  roleName: 'Admin',
+  roleRank: 80,
+  category: 'management',
+  telegramLinked: false,
+);
+
+const _managerViewer = Profile(
+  memberId: 'MARC2026/08/0088',
+  email: 'manager@contoh.com',
+  emailVerified: true,
+  status: 'approved',
+  displayName: 'Manager',
+  phone: null,
+  roleKey: 'manager',
+  roleName: 'Manager',
+  roleRank: 60,
+  category: 'management',
+  telegramLinked: false,
+);
+
+extension on MemberDetail {
+  MemberDetail copyWithStaff({String? staffId, DateTime? staffIdVerifiedAt}) {
+    return MemberDetail(
+      userId: userId,
+      memberId: memberId,
+      displayName: displayName,
+      avatarUrl: avatarUrl,
+      roleKey: roleKey,
+      roleName: roleName,
+      roleRank: roleRank,
+      category: category,
+      status: status,
+      isActive: isActive,
+      departmentCode: departmentCode,
+      departmentName: departmentName,
+      position: position,
+      email: email,
+      phone: phone,
+      registrationPaymentStatus: registrationPaymentStatus,
+      emergencyContactName: emergencyContactName,
+      emergencyContactPhone: emergencyContactPhone,
+      healthNotes: healthNotes,
+      telegramLinked: telegramLinked,
+      telegramUsername: telegramUsername,
+      addresses: addresses,
+      staffId: staffId ?? this.staffId,
+      staffIdVerifiedAt: staffIdVerifiedAt ?? this.staffIdVerifiedAt,
+    );
+  }
+}
+
 MemberDetail _standardTier() => const MemberDetail(
   userId: 'user-1',
   memberId: 'MARC2026/08/0002',
@@ -205,6 +264,63 @@ void main() {
       expect(find.text('Tiada alamat.'), findsOneWidget);
     },
   );
+
+  testWidgets('header papar nombor staff', (tester) async {
+    await tester.pumpWidget(
+      _host(_standardTier().copyWithStaff(staffId: 'EMP-001')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nombor staff: EMP-001'), findsOneWidget);
+  });
+
+  testWidgets('admin nampak Betulkan Nombor Staff', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          myProfileProvider.overrideWith((ref) async => _adminViewer),
+          memberDetailProvider.overrideWith(
+            (ref, userId) async =>
+                _standardTier().copyWithStaff(staffId: 'EMP-001'),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const MemberDetailPage(userId: 'user-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Tindakan pengurusan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Betulkan Nombor Staff'), findsOneWidget);
+  });
+
+  testWidgets('manager tak nampak Betulkan Nombor Staff', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          myProfileProvider.overrideWith((ref) async => _managerViewer),
+          memberDetailProvider.overrideWith(
+            (ref, userId) async =>
+                _standardTier().copyWithStaff(staffId: 'EMP-001'),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const MemberDetailPage(userId: 'user-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Tindakan pengurusan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Betulkan Nombor Staff'), findsNothing);
+  });
 
   testWidgets(
     'ketuk chip bahagian navigasi ke direktori ahli (/members) tertapis kpd bahagian tu',

@@ -13,8 +13,10 @@ import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/device_label.dart';
 import 'package:marc/core/jwt.dart';
 import 'package:marc/core/theme_mode_provider.dart';
+import 'package:marc/core/theme_switch_reveal.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/notifications/push_service.dart';
+import 'package:marc/shared/ui/map/app_map.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +53,7 @@ Future<void> main() async {
   }
   await initOneSignal();
   await initStripe();
+  initMapPlatformView();
 
   // Baca token tersimpan dulu sebelum runApp, supaya redirect pertama
   // GoRouter betul terus (elak "flicker" ke /login sebelum sempat tahu
@@ -129,6 +132,17 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       darkTheme: AppTheme.dark,
       themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
+      // MaterialApp secara lalai bungkus app dalam `AnimatedTheme` yang
+      // lerp SEMUA warna selama 200ms. Digabung dgn peralihan radial,
+      // kawasan yang baru terdedah oleh bulatan itu memaparkan tema
+      // separuh-jalan, bukan tema akhir - dua animasi bertempoh berbeza
+      // bertindih, dan itulah yang nampak "clunky". Tukar tema mesti
+      // SERTA-MERTA; bulatan itu sahaja animasinya.
+      themeAnimationDuration: Duration.zero,
+      // Di bawah Theme, di atas Navigator - jadi snapshot yang ditangkap
+      // meliputi seluruh skrin yang nampak, termasuk route semasa.
+      builder: (context, child) =>
+          ThemeSwitchReveal(child: child ?? const SizedBox.shrink()),
     );
   }
 }

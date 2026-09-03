@@ -1,14 +1,21 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/core/theme_mode_provider.dart';
+import 'package:marc/core/theme_switch_reveal.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 import 'package:marc/shared/ui/widgets/settings_section.dart';
+
+/// Padding kiri/kanan seragam utk semua baris dalam [SettingsCard] -
+/// kad tu sendiri dah ada radius 16, jadi tile perlukan inset sikit.
+const _tilePadding = EdgeInsets.symmetric(horizontal: 18);
 
 /// Hub tetapan/tindakan akaun - dipisah drpd `ProfilePage` (yang kekal
 /// fokus pada info profil + Komuniti/Aktiviti/Kewangan/Pengurusan) supaya
@@ -88,49 +95,30 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
           children: [
-            SettingsGroupLabel('Paparan'),
-            SettingsCard(
-              children: [
-                SwitchListTile.adaptive(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  secondary: const Icon(Icons.dark_mode_outlined),
-                  title: const Text('Mod Gelap'),
-                  value: ref.watch(themeModeProvider) == ThemeMode.dark,
-                  onChanged: (isDark) =>
-                      ref.read(themeModeProvider.notifier).setDark(isDark),
+            const _SettingsGroup(
+              label: 'Paparan',
+              tiles: [_ThemeTile()],
+            ),
+            const _SettingsGroup(
+              label: 'Sambungan',
+              tiles: [
+                _NavTile(
+                  icon: Icons.send_outlined,
+                  label: 'Telegram',
+                  route: '/telegram-link',
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            SettingsGroupLabel('Sambungan'),
-            SettingsCard(
-              children: [
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.send_outlined),
-                  title: const Text('Telegram'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/telegram-link'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            SettingsGroupLabel('Bantuan'),
-            SettingsCard(
-              children: [
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.help_outline),
-                  title: const Text('Soalan Lazim'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/faq'),
-                ),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('Tentang'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/about'),
+            const _SettingsGroup(
+              label: 'Akaun',
+              tiles: [
+                // Sesi aktif - self-service "log keluar device ni", beza
+                // drpd butang Log keluar di bawah (device ini sahaja) dan
+                // drpd logout-all.
+                _NavTile(
+                  icon: Icons.devices_outlined,
+                  label: 'Sesi Aktif',
+                  route: '/profile/sessions',
                 ),
               ],
             ),
@@ -138,43 +126,44 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             // SAHAJA, padanan siling backend `authz.IsAtLeastRole(...,
             // "superadmin")`. Kumpulan BERASINGAN drpd yang lain, elak kelirukan
             // ahli management biasa dgn pintu yang terkunci utk mereka.
-            if (ref.watch(isSuperAdminProvider)) ...[
-              SettingsGroupLabel('Sistem'),
-              SettingsCard(
-                children: [
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                    leading: const Icon(Icons.block_outlined),
-                    title: const Text('Domain Emel Disekat'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/admin/blocked-email-domains'),
+            if (ref.watch(isSuperAdminProvider))
+              const _SettingsGroup(
+                label: 'Sistem',
+                tiles: [
+                  _NavTile(
+                    icon: Icons.block_outlined,
+                    label: 'Domain Emel Disekat',
+                    route: '/admin/blocked-email-domains',
                   ),
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                    leading: const Icon(Icons.apartment_outlined),
-                    title: const Text('Bahagian/Jabatan'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/admin/departments'),
+                  _NavTile(
+                    icon: Icons.apartment_outlined,
+                    label: 'Bahagian/Jabatan',
+                    route: '/admin/departments',
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-            ],
-            SettingsGroupLabel('Akaun'),
-            SettingsCard(
-              children: [
-                // Sesi aktif - self-service "log keluar device ni",
-                // beza drpd butang Log keluar di bawah (device ini
-                // sahaja) dan drpd logout-all.
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.devices_outlined),
-                  title: const Text('Sesi Aktif'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/profile/sessions'),
+            const _SettingsGroup(
+              label: 'Bantuan',
+              tiles: [
+                _NavTile(
+                  icon: Icons.help_outline,
+                  label: 'Soalan Lazim',
+                  route: '/faq',
                 ),
+                _NavTile(
+                  icon: Icons.info_outline,
+                  label: 'Tentang',
+                  route: '/about',
+                ),
+              ],
+            ),
+            // Dua tindakan yang tak boleh "tekan tersilap" dikumpul di
+            // hujung senarai, jauh drpd navigasi biasa.
+            _SettingsGroup(
+              label: 'Zon Bahaya',
+              tiles: [
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  contentPadding: _tilePadding,
                   leading: Icon(
                     Icons.person_remove_outlined,
                     color: scheme.error,
@@ -196,7 +185,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _signingOut ? null : _handleLogout,
               icon: _signingOut
@@ -218,6 +207,103 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Label + kad + jarak bawah dalam SATU widget. Sebelum ni jarak antara
+/// kumpulan datang drpd `SizedBox` manual yang senang tertinggal (kad
+/// "Bantuan" dulu melekat pada kumpulan seterusnya) - sekarang mustahil
+/// terlepas sebab ia sebahagian drpd kumpulan itu sendiri.
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.label, required this.tiles});
+
+  final String label;
+  final List<Widget> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [SettingsGroupLabel(label), SettingsCard(children: tiles)],
+      ),
+    );
+  }
+}
+
+/// Baris navigasi standard (ikon - tajuk - chevron - push route).
+class _NavTile extends StatelessWidget {
+  const _NavTile({
+    required this.icon,
+    required this.label,
+    required this.route,
+  });
+
+  final IconData icon;
+  final String label;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: _tilePadding,
+      leading: Icon(icon),
+      title: Text(label),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => context.push(route),
+    );
+  }
+}
+
+/// Toggle mod gelap dgn peralihan radial (lihat [ThemeSwitchReveal]).
+///
+/// Seluruh baris boleh ditap - bukan switch sahaja - sebab animasi perlu
+/// tahu kedudukan jari, dan sasaran tap sebesar baris lebih senang kena.
+class _ThemeTile extends ConsumerStatefulWidget {
+  const _ThemeTile();
+
+  @override
+  ConsumerState<_ThemeTile> createState() => _ThemeTileState();
+}
+
+class _ThemeTileState extends ConsumerState<_ThemeTile> {
+  Offset _lastPointer = Offset.zero;
+
+  Future<void> _toggle(bool isDark) async {
+    final reveal = ThemeSwitchReveal.maybeOf(context);
+    // `setDark` tukar state secara segerak, cuma tulis ke prefs yang
+    // async - jadi selamat untuk tak di-await masa animasi bermula.
+    void apply() =>
+        unawaited(ref.read(themeModeProvider.notifier).setDark(isDark));
+
+    if (reveal == null) {
+      apply();
+      return;
+    }
+    await reveal.reveal(globalPosition: _lastPointer, applyThemeChange: apply);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+
+    // `Listener` (bukan GestureDetector) - ia tak masuk gesture arena,
+    // jadi tap tetap sampai ke ListTile untuk ink splash yang normal.
+    return Listener(
+      onPointerDown: (event) => _lastPointer = event.position,
+      child: ListTile(
+        contentPadding: _tilePadding,
+        leading: Icon(isDark ? Icons.dark_mode : Icons.dark_mode_outlined),
+        title: const Text('Mod Gelap'),
+        // IgnorePointer - switch cuma paparan status; tap dikendali oleh
+        // baris supaya kedudukan jari sentiasa direkod.
+        trailing: IgnorePointer(
+          child: Switch.adaptive(value: isDark, onChanged: (_) {}),
+        ),
+        onTap: () => _toggle(!isDark),
       ),
     );
   }

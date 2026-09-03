@@ -14,9 +14,12 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/media/image_viewer_page.dart';
 import 'package:marc/shared/ui/widgets/member_avatar.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/validators.dart';
 
 /// Sahkan & tukar status aktif/tak aktif ahli - management sahaja
 /// (dipanggil bila [_showMemberActionsSheet.canEdit], gate rank hierarki
@@ -26,7 +29,7 @@ Future<void> _confirmToggleActive(
   WidgetRef ref,
   MemberRow row,
 ) async {
-  final name = row.displayName ?? row.memberId;
+  final name = row.displayName ?? row.memberId ?? 'Belum disahkan';
   final makeActive = !row.isActive;
   final ok = await showConfirmDialog(
     context,
@@ -86,7 +89,7 @@ Future<void> _showEditRoleSheet(
   final selected = await showAppActionSheet<RoleOption>(
     context,
     title: 'Tukar role',
-    message: row.displayName ?? row.memberId,
+    message: row.displayName ?? row.memberId ?? 'Belum disahkan',
     actions: [
       for (final role in assignable)
         AppSheetAction(
@@ -107,7 +110,7 @@ Future<void> _showEditRoleSheet(
     if (context.mounted) {
       MySnackBar.success(
         context,
-        'Role ${row.displayName ?? row.memberId} dikemas kini.',
+        'Role ${row.displayName ?? row.memberId ?? 'Belum disahkan'} dikemas kini.',
       );
     }
   } catch (e) {
@@ -172,11 +175,11 @@ class _DepartmentPositionFormState extends State<_DepartmentPositionForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const FormFieldLabel('Bahagian'),
         DropdownButtonFormField<String?>(
           initialValue: _departmentCode,
           decoration: const InputDecoration(
-            labelText: 'Bahagian',
-            border: OutlineInputBorder(),
+            floatingLabelBehavior: FloatingLabelBehavior.never,
           ),
           items: [
             const DropdownMenuItem(value: null, child: Text('Tiada bahagian')),
@@ -194,13 +197,11 @@ class _DepartmentPositionFormState extends State<_DepartmentPositionForm> {
           onChanged: (v) => setState(() => _departmentCode = v),
         ),
         const SizedBox(height: 12),
-        TextField(
+        CustomTextField(
           controller: _position,
+          label: 'Jawatan',
+          hint: 'cth: Penolong Pegawai',
           maxLength: 150,
-          decoration: const InputDecoration(
-            labelText: 'Jawatan (cth: Penolong Pegawai)',
-            border: OutlineInputBorder(),
-          ),
         ),
       ],
     );
@@ -263,7 +264,7 @@ Future<void> _showEditDepartmentDialog(
     if (context.mounted) {
       MySnackBar.success(
         context,
-        'Bahagian/jawatan ${row.displayName ?? row.memberId} dikemas kini.',
+        'Bahagian/jawatan ${row.displayName ?? row.memberId ?? 'Belum disahkan'} dikemas kini.',
       );
     }
   } catch (e) {
@@ -278,7 +279,7 @@ Future<void> _showEditDepartmentDialog(
   }
 }
 
-enum _MemberAction { editRole, toggleActive, editDepartment }
+enum _MemberAction { editRole, toggleActive, editDepartment, correctStaffId }
 
 /// Sheet tindakan management utk satu ahli - dipindah dari `members_page.dart`
 /// (dulu dicetus terus dari ketukan baris senarai; kini dari butang AppBar
@@ -295,11 +296,12 @@ Future<void> _showMemberActionsSheet(
   int myRoleRank, {
   required bool canEdit,
   required bool canEditDeptPosition,
+  required bool isAdminOrAbove,
 }) async {
   final action = await showAppActionSheet<_MemberAction>(
     context,
-    title: row.displayName ?? row.memberId,
-    message: row.memberId,
+    title: row.displayName ?? row.memberId ?? 'Belum disahkan',
+    message: row.memberId ?? 'Belum disahkan',
     actions: [
       if (canEdit) ...[
         const AppSheetAction(
@@ -322,6 +324,12 @@ Future<void> _showMemberActionsSheet(
           label: 'Tukar bahagian & jawatan',
           icon: Icons.apartment_outlined,
         ),
+      if (isAdminOrAbove)
+        const AppSheetAction(
+          value: _MemberAction.correctStaffId,
+          label: 'Betulkan Nombor Staff',
+          icon: Icons.badge_outlined,
+        ),
     ],
   );
   if (action == null || !context.mounted) return;
@@ -333,6 +341,44 @@ Future<void> _showMemberActionsSheet(
       await _confirmToggleActive(context, ref, row);
     case _MemberAction.editDepartment:
       await _showEditDepartmentDialog(context, ref, row);
+    case _MemberAction.correctStaffId:
+      await _correctStaffId(context, ref, row);
+  }
+}
+
+Future<void> _correctStaffId(
+  BuildContext context,
+  WidgetRef ref,
+  MemberRow row,
+) async {
+  final value = await showEditTextDialog(
+    context,
+    title: 'Betulkan Nombor Staff',
+    initialValue: row.staffId ?? '',
+    maxLines: 1,
+    maxLength: 64,
+  );
+  if (value == null || !context.mounted) return;
+  final error = validateStaffId(value);
+  if (error != null) {
+    MySnackBar.error(context, error);
+    return;
+  }
+
+  try {
+    await ref.read(profileRepositoryProvider).correctStaffID(row.userId, value);
+    if (context.mounted) {
+      MySnackBar.success(context, 'Nombor staff dikemas kini.');
+    }
+  } catch (e) {
+    if (context.mounted) {
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal betulkan nombor staff.',
+      );
+    }
   }
 }
 
@@ -358,6 +404,8 @@ MemberRow _toMemberRow(MemberDetail d) => MemberRow(
   departmentCode: d.departmentCode,
   departmentName: d.departmentName,
   position: d.position,
+  staffId: d.staffId,
+  staffIdVerifiedAt: d.staffIdVerifiedAt,
 );
 
 String? _deptPositionLine(MemberDetail d) {
@@ -382,6 +430,7 @@ class MemberDetailPage extends ConsumerWidget {
     final detailAsync = ref.watch(memberDetailProvider(userId));
     final myRoleRank = ref.watch(myProfileProvider).valueOrNull?.roleRank ?? 0;
     final isManagerOrAbove = ref.watch(isManagerOrAboveProvider);
+    final isAdminOrAbove = ref.watch(isAdminOrAboveProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -393,7 +442,7 @@ class MemberDetailPage extends ConsumerWidget {
                 final canEdit = myRoleRank > detail.roleRank;
                 final canEditDeptPosition =
                     isManagerOrAbove && myRoleRank >= detail.roleRank;
-                if (!canEdit && !canEditDeptPosition) {
+                if (!canEdit && !canEditDeptPosition && !isAdminOrAbove) {
                   return const SizedBox.shrink();
                 }
                 return IconButton(
@@ -406,6 +455,7 @@ class MemberDetailPage extends ConsumerWidget {
                     myRoleRank,
                     canEdit: canEdit,
                     canEditDeptPosition: canEditDeptPosition,
+                    isAdminOrAbove: isAdminOrAbove,
                   ),
                 );
               },
@@ -553,7 +603,8 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = detail.displayName ?? detail.memberId;
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+    final label = detail.displayName ?? detail.memberId ?? 'Belum disahkan';
     final heroTag = 'avatar-member-${detail.userId}';
     final deptPositionLine = _deptPositionLine(detail);
 
@@ -582,7 +633,15 @@ class _Header extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 2),
-          Text(detail.memberId, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            detail.memberId ?? 'Belum disahkan',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Nombor staff: ${detail.staffId ?? '-'}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           const SizedBox(height: 12),
           Wrap(
             alignment: WrapAlignment.center,
@@ -593,9 +652,7 @@ class _Header extends StatelessWidget {
                 label: Text(detail.roleName),
                 backgroundColor: scheme.primary.withValues(alpha: 0.12),
                 labelStyle: TextStyle(
-                  color: Theme.of(
-                    context,
-                  ).extension<AppSemanticColors>()!.accentDark,
+                  color: semantic.accentDark,
                   fontSize: 12,
                 ),
                 side: BorderSide.none,
@@ -631,10 +688,10 @@ class _Header extends StatelessWidget {
               Chip(
                 label: Text(detail.isActive ? 'Aktif' : 'Tidak aktif'),
                 backgroundColor: detail.isActive
-                    ? scheme.tertiary.withValues(alpha: 0.12)
+                    ? semantic.successBg
                     : scheme.error.withValues(alpha: 0.12),
                 labelStyle: TextStyle(
-                  color: detail.isActive ? scheme.tertiary : scheme.error,
+                  color: detail.isActive ? semantic.success : scheme.error,
                   fontSize: 12,
                 ),
                 side: BorderSide.none,

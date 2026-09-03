@@ -88,13 +88,13 @@ dependencies:
   # penting).
   printing: ^5.14.3
   device_info_plus: ^12.4.0
-  # Peta OSM. flutter_map 8.x + flutter_map_vector_tiles tulen Dart
-  # (tiada kod Android/iOS native), jadi tak sentuh siling compileSdk 35.
-  # Vektor OpenFreeMap: label ruang-skrin kekal tegak bila peta diputar.
-  # Dasar jubin OSM mewajibkan User-Agent `com.hafizbahtiar.marc`.
-  flutter_map: ^8.3.1
+  # Peta OSM melalui MapLibre native (`maplibre_gl`) + gaya OpenFreeMap
+  # (data OSM, tanpa API key). Arrow satu-hala dan `setStyle` ialah
+  # sebahagian spesifikasi gaya - bukan workaround Dart. Plugin Android
+  # compileSdk 36, sama dengan `flutter.compileSdkVersion` (Flutter 3.44).
+  # Elak compileSdk 37 (lihat `permission_handler` di atas).
   latlong2: ^0.10.1
-  flutter_map_vector_tiles: ^2.8.1
+  maplibre_gl: ^0.27.0
 
 dev_dependencies:
   flutter_test:
@@ -180,8 +180,11 @@ flutter:
     - .env
     - .env.staging
     - .env.prod
-    - assets/splash/logo.png
-    - assets/donation/maybank_hafiz.jpeg
+    # Entri direktori Flutter TIDAK rekursif: `- assets/` hanya ambil fail
+    # yang terus dalam `assets/` (tiada satu pun), jadi ia no-op. Setiap
+    # subdirektori kena disenarai sendiri atau asetnya tak masuk bundle.
+    - assets/donation/
+    - assets/splash/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 
 /// Dialog untuk edit satu medan teks - pulang teks baru (trimmed) bila
 /// disimpan, `null` bila dibatal/ditutup tanpa simpan.
@@ -98,12 +99,11 @@ class _EditTextDialogState extends State<_EditTextDialog> {
               maxLength: widget.maxLength,
               autofocus: true,
             )
-          : TextField(
+          : CustomTextField(
               controller: _controller,
               maxLines: widget.maxLines,
               maxLength: widget.maxLength,
               autofocus: true,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
       actions: [
         AppDialogAction(

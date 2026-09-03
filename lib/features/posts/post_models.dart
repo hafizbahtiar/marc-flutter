@@ -10,7 +10,11 @@ class Author {
   /// utk navigasi ke skrin profil ahli (`/members/$userId`), BUKAN
   /// memberId (backend perlukan UUID, bukan nombor ahli).
   final String userId;
-  final String memberId;
+
+  /// Null sehingga nombor staff penulis disahkan. Penulis feed sepatutnya
+  /// dah approved (jadi dah ada member_id) - nullable untuk version-skew
+  /// dengan backend yang pulang `null`.
+  final String? memberId;
   final String? displayName;
 
   /// null = tiada gambar profil. Backend hantar medan ni pada SETIAP
@@ -20,13 +24,19 @@ class Author {
   factory Author.fromJson(Map<String, dynamic> json) {
     return Author(
       userId: json['user_id'] as String,
-      memberId: json['member_id'] as String,
+      memberId: switch (json['member_id']) {
+        final String s when s.trim().isEmpty => null,
+        final String s => s,
+        _ => null,
+      },
       displayName: json['display_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,
     );
   }
 
-  String get label => displayName?.isNotEmpty == true ? displayName! : memberId;
+  String get label => displayName?.isNotEmpty == true
+      ? displayName!
+      : (memberId ?? 'Belum disahkan');
 }
 
 class Post {

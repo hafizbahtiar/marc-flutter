@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/member_avatar.dart';
 
 const _placeholderRow = MemberRow(
@@ -102,7 +103,7 @@ class _MembersPageState extends ConsumerState<MembersPage> {
       }
       if (_query.isEmpty) return true;
       final name = row.displayName?.toLowerCase() ?? '';
-      final memberId = row.memberId.toLowerCase();
+      final memberId = row.memberId?.toLowerCase() ?? '';
       return name.contains(_query) || memberId.contains(_query);
     }).toList();
   }
@@ -228,26 +229,16 @@ class _SearchAndFilterBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
+          CustomTextField(
             controller: controller,
-            decoration: InputDecoration(
-              hintText: 'Cari nama atau no. ahli',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: controller.text.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: controller.clear,
-                    ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
+            hint: 'Cari nama atau no. ahli',
+            prefixIcon: Icons.search,
+            suffixIcon: controller.text.isEmpty
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: controller.clear,
+                  ),
           ),
           if (departments.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -314,7 +305,7 @@ class _MemberTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
       onTap: () => context.push('/members/${row.userId}'),
       leading: MemberAvatar(
-        label: row.displayName ?? row.memberId,
+        label: row.displayName ?? row.memberId ?? 'Belum disahkan',
         avatarUrl: row.avatarUrl,
       ),
       title: Text(row.displayName ?? '(Tiada nama)'),
@@ -324,7 +315,9 @@ class _MemberTile extends StatelessWidget {
       // dua) supaya senarai tak jadi terlalu tinggi bila kedua-duanya diisi.
       subtitle: Text(
         [
-          row.email == null ? row.memberId : '${row.memberId}\n${row.email}',
+          row.email == null
+              ? (row.memberId ?? 'Belum disahkan')
+              : '${row.memberId ?? 'Belum disahkan'}\n${row.email}',
           ?_deptPositionLine(row),
         ].join('\n'),
       ),

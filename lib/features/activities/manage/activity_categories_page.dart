@@ -6,6 +6,7 @@ import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin CRUD kategori aktiviti - manager ke atas SAHAJA (bukan sekadar
@@ -338,26 +339,25 @@ class _CategoryFormState extends State<_CategoryForm> {
 
     Widget field(
       TextEditingController controller,
-      String placeholder, {
+      String label, {
+      String? hint,
       bool enabled = true,
       TextInputType? keyboardType,
     }) {
       if (isApple) {
         return CupertinoTextField(
           controller: controller,
-          placeholder: placeholder,
+          placeholder: hint ?? label,
           enabled: enabled,
           keyboardType: keyboardType,
         );
       }
-      return TextField(
+      return CustomTextField(
         controller: controller,
+        label: label,
+        hint: hint,
         enabled: enabled,
         keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: placeholder,
-          border: const OutlineInputBorder(),
-        ),
       );
     }
 
@@ -368,11 +368,21 @@ class _CategoryFormState extends State<_CategoryForm> {
         // `key` dibekukan semasa sunting - padanan backend (lihat komen di
         // atas class), bukan cuma UI: PATCH tidak menghantar medan ini
         // langsung dalam mod sunting.
-        field(_key, 'Kunci (cth: badminton)', enabled: !_isEdit),
+        field(
+          _key,
+          'Kunci',
+          hint: 'cth: badminton',
+          enabled: !_isEdit,
+        ),
         const SizedBox(height: 12),
-        field(_name, 'Nama'),
+        field(_name, 'Nama', hint: 'cth: Badminton'),
         const SizedBox(height: 12),
-        field(_sortOrder, 'Susunan', keyboardType: TextInputType.number),
+        field(
+          _sortOrder,
+          'Susunan',
+          hint: '0',
+          keyboardType: TextInputType.number,
+        ),
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 import 'package:marc/app/theme.dart';
+import 'package:marc/features/checkout/checkout_page.dart';
 import 'package:marc/features/payments/payment_models.dart';
 import 'package:marc/features/payments/payment_providers.dart';
+import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/features/registration_payment/registration_payment_providers.dart';
 import 'package:marc/shared/utils/relative_time.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
@@ -91,9 +95,11 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
             ),
           ),
           data: (data) {
-            if (data.registrationFee.isEmpty &&
+            final isEmpty =
+                data.registrationFee.isEmpty &&
                 data.activityFees.isEmpty &&
-                data.donations.isEmpty) {
+                data.donations.isEmpty;
+            if (isEmpty && !data.outstandingRegistrationFee) {
               return RefreshIndicator.adaptive(
                 onRefresh: () => ref.refresh(myPaymentHistoryProvider.future),
                 child: ListView(
@@ -113,6 +119,8 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
+                  if (data.outstandingRegistrationFee)
+                    const _OutstandingFeeBanner(),
                   if (data.registrationFee.isNotEmpty) ...[
                     const _SectionHeader('Yuran Pendaftaran'),
                     for (final e in data.registrationFee)
@@ -160,6 +168,58 @@ class _PaymentHistoryPageState extends ConsumerState<PaymentHistoryPage> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _OutstandingFeeBanner extends ConsumerWidget {
+  const _OutstandingFeeBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final warning = theme.extension<AppSemanticColors>()!.warning;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Card(
+        color: warning.withValues(alpha: 0.12),
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Yuran pendaftaran belum dibayar',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () {
+                  final repo = ref.read(registrationPaymentRepositoryProvider);
+                  final feeCents = ref
+                      .read(myProfileProvider)
+                      .valueOrNull
+                      ?.registrationFeeCents;
+                  context.push(
+                    '/checkout',
+                    extra: CheckoutRequest(
+                      title: 'Yuran Pendaftaran Ahli',
+                      amountCents: feeCents,
+                      currency: 'myr',
+                      onCheckout: ({phone}) => repo.checkout(phone: phone),
+                    ),
+                  );
+                },
+                child: const Text('Bayar Yuran Pendaftaran'),
+              ),
+            ],
+          ),
         ),
       ),
     );

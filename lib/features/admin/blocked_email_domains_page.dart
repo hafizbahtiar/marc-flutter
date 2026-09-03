@@ -8,6 +8,7 @@ import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/utils/relative_time.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin urus domain emel pelupusan (`blocked_email_domains`) -
@@ -271,13 +272,11 @@ class _DomainFormState extends State<_DomainForm> {
             autofocus: true,
           )
         else
-          TextField(
+          CustomTextField(
             controller: _domain,
+            label: 'Domain',
+            hint: 'cth: contoh-pelupusan.com',
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Domain (cth: contoh-pelupusan.com)',
-              border: OutlineInputBorder(),
-            ),
           ),
         if (_error != null) ...[
           const SizedBox(height: 8),

@@ -8,7 +8,7 @@ void main() {
 
   test('setiap MapTileType ada sumber OSM tersendiri', () {
     final ids = catalog.all.map((s) => s.id).toSet();
-    expect(ids, {'standard', 'threeD', 'terrain', 'transport'});
+    expect(ids, {'standard', 'bright', 'terrain', 'transport'});
     expect(catalog.all, hasLength(MapTileType.values.length));
   });
 
@@ -37,9 +37,9 @@ void main() {
     expect(urls, hasLength(catalog.all.length));
   });
 
-  test('3D/terrain guna subdomain raster, standard OSM tidak', () {
+  test('bright/terrain guna subdomain raster, standard OSM tidak', () {
     expect(catalog.byType(MapTileType.standard).subdomains, isEmpty);
-    expect(catalog.byType(MapTileType.threeD).subdomains, isNotEmpty);
+    expect(catalog.byType(MapTileType.bright).subdomains, isNotEmpty);
     expect(catalog.byType(MapTileType.terrain).subdomains, isNotEmpty);
   });
 
@@ -49,6 +49,25 @@ void main() {
       expect(light, isNotNull, reason: '${source.id} tiada gaya vektor');
       expect(light, contains('openfreemap.org'));
     }
+  });
+
+  test('transport nyatakan OSM + MeMoMaps dengan pautan', () {
+    final source = catalog.byType(MapTileType.transport);
+    expect(
+      source.attributions.map((a) => a.text),
+      containsAll(['OpenStreetMap contributors', 'MeMoMaps']),
+    );
+    expect(
+      source.attributions
+          .where((a) => a.text.contains('OpenStreetMap'))
+          .single
+          .url,
+      contains('openstreetmap.org/copyright'),
+    );
+    expect(
+      source.attributions.where((a) => a.text == 'MeMoMaps').single.url,
+      contains('memomaps.de'),
+    );
   });
 
   test('standard bertukar gaya gelap ikut tema', () {

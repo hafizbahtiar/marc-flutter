@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/features/auth/auth_providers.dart';
-import 'package:marc/features/auth/widgets/auth_field.dart';
 import 'package:marc/features/auth/widgets/button_busy.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/utils/validators.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
@@ -84,9 +84,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 24),
-                      AuthField(
+                      CustomTextField(
                         controller: _email,
                         label: 'Emel',
+                        hint: 'nama@contoh.com',
                         keyboardType: TextInputType.emailAddress,
                         validator: validateEmail,
                       ),

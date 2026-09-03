@@ -130,11 +130,17 @@ class MyPaymentHistory {
     required this.registrationFee,
     required this.activityFees,
     required this.donations,
+    this.outstandingRegistrationFee = false,
   });
 
   final List<RegistrationPaymentEntry> registrationFee;
   final List<ActivityPaymentEntry> activityFees;
   final List<DonationPaymentEntry> donations;
+
+  /// `GET /me/payments` - true bila yuran pendaftaran masih tertunggak
+  /// (ahli belum bayar dan belum exempt). Lalai `false` jika kunci tiada
+  /// (deploy berperingkat, padanan `donations`).
+  final bool outstandingRegistrationFee;
 
   factory MyPaymentHistory.fromJson(Map<String, dynamic> json) {
     return MyPaymentHistory(
@@ -153,6 +159,8 @@ class MyPaymentHistory {
       donations: ((json['donations'] as List?) ?? const [])
           .map((e) => DonationPaymentEntry.fromJson(e as Map<String, dynamic>))
           .toList(),
+      outstandingRegistrationFee:
+          json['outstanding_registration_fee'] as bool? ?? false,
     );
   }
 }

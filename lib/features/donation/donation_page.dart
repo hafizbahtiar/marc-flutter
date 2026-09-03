@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/profile/profile_providers.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 import 'package:marc/features/donation/widgets/duitnow_qr_card.dart';
@@ -202,7 +203,7 @@ class _DeveloperStory extends StatelessWidget {
           // lebih memudaratkan kepercayaan daripada tak berjanji langsung.
           Text(
             'Saya bekas pelajar Kompleks Darul Kifayah, MAIWP. MARC saya '
-            'bina secara sukarela atas permintaan En. Ezri, yang '
+            'bina secara sukarela atas permintaan kelab, yang '
             'mencetuskan idea app ni - percuma untuk semua ahli, tiada '
             'langganan.',
             style: textTheme.bodyMedium?.copyWith(height: 1.5),
@@ -267,13 +268,12 @@ class _AmountForm extends StatelessWidget {
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
-          TextFormField(
+          CustomTextField(
             controller: amountController,
+            label: 'Jumlah (RM)',
+            hint: '10.00',
+            prefixText: 'RM ',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Jumlah (RM)',
-              prefixText: 'RM ',
-            ),
             validator: (v) {
               final amount = double.tryParse((v ?? '').trim());
               if (amount == null || amount < 1) return 'Amount tidak sah';
@@ -281,9 +281,10 @@ class _AmountForm extends StatelessWidget {
             },
           ),
           const SizedBox(height: 12),
-          TextFormField(
+          CustomTextField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'Nama (pilihan)'),
+            label: 'Nama (pilihan)',
+            hint: 'Nama anda',
           ),
           // Ahli yang log masuk backend kaitkan user_id automatik
           // (OptionalAuth) dan boleh trace balik ke emel akaun terus,
@@ -293,12 +294,11 @@ class _AmountForm extends StatelessWidget {
           // (tak log masuk) wajib isi, sebab itu satu-satunya jejak yang
           // backend ada untuk mereka.
           const SizedBox(height: 12),
-          TextFormField(
+          CustomTextField(
             controller: emailController,
+            label: requireEmail ? 'Emel' : 'Emel (pilihan)',
+            hint: 'nama@contoh.com',
             keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              labelText: requireEmail ? 'Emel' : 'Emel (pilihan)',
-            ),
             validator: (v) {
               final value = (v ?? '').trim();
               if (!requireEmail && value.isEmpty) return null;
