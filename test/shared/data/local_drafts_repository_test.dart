@@ -50,22 +50,28 @@ void main() {
     expect(draft.isAnnouncement, isTrue);
   });
 
-  test('isAnnouncement null (draf comment) kekal null lepas roundtrip', () async {
-    await repo.save('reply:p1:root', kind: 'comment', content: 'Setuju!');
+  test(
+    'isAnnouncement null (draf comment) kekal null lepas roundtrip',
+    () async {
+      await repo.save('reply:p1:root', kind: 'comment', content: 'Setuju!');
 
-    final draft = await repo.get('reply:p1:root');
+      final draft = await repo.get('reply:p1:root');
 
-    expect(draft!.isAnnouncement, isNull);
-  });
+      expect(draft!.isAnnouncement, isNull);
+    },
+  );
 
-  test('save dgn key sama menimpa draf lama (upsert), bukan tambah row baru', () async {
-    await repo.save('new_post', kind: 'post', content: 'draf pertama');
-    await repo.save('new_post', kind: 'post', content: 'draf kedua');
+  test(
+    'save dgn key sama menimpa draf lama (upsert), bukan tambah row baru',
+    () async {
+      await repo.save('new_post', kind: 'post', content: 'draf pertama');
+      await repo.save('new_post', kind: 'post', content: 'draf kedua');
 
-    final draft = await repo.get('new_post');
+      final draft = await repo.get('new_post');
 
-    expect(draft!.content, 'draf kedua');
-  });
+      expect(draft!.content, 'draf kedua');
+    },
+  );
 
   test('delete buang draf - get lepas tu pulangkan null', () async {
     await repo.save('new_post', kind: 'post', content: 'nak dibuang');

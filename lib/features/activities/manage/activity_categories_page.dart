@@ -368,12 +368,7 @@ class _CategoryFormState extends State<_CategoryForm> {
         // `key` dibekukan semasa sunting - padanan backend (lihat komen di
         // atas class), bukan cuma UI: PATCH tidak menghantar medan ini
         // langsung dalam mod sunting.
-        field(
-          _key,
-          'Kunci',
-          hint: 'cth: badminton',
-          enabled: !_isEdit,
-        ),
+        field(_key, 'Kunci', hint: 'cth: badminton', enabled: !_isEdit),
         const SizedBox(height: 12),
         field(_name, 'Nama', hint: 'cth: Badminton'),
         const SizedBox(height: 12),

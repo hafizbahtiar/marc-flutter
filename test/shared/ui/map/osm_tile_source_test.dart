@@ -78,4 +78,16 @@ void main() {
     );
     expect(source.vectorStyleUri(Brightness.dark), contains('/dark'));
   });
+
+  test('hanya transport membawa overlay transit', () {
+    const catalog = OsmTileCatalog();
+    for (final source in catalog.all) {
+      final ids = source.overlays.map((o) => o.id);
+      if (source.id == MapTileType.transport.name) {
+        expect(ids, ['transit']);
+      } else {
+        expect(ids, isEmpty, reason: '${source.id} tak patut ada overlay');
+      }
+    }
+  });
 }

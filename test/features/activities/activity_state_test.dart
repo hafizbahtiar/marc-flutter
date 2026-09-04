@@ -32,7 +32,10 @@ Activity buatAktiviti({
 
 void main() {
   test('boleh daftar bila ada slot dan masih terbuka', () {
-    expect(buatAktiviti(capacity: 10, registrationCount: 3).canRegister, isTrue);
+    expect(
+      buatAktiviti(capacity: 10, registrationCount: 3).canRegister,
+      isTrue,
+    );
   });
 
   test('tak boleh daftar bila penuh', () {
@@ -59,7 +62,10 @@ void main() {
   });
 
   test('tak boleh daftar bila aktiviti dibatalkan', () {
-    expect(buatAktiviti(capacity: 10, status: 'cancelled').canRegister, isFalse);
+    expect(
+      buatAktiviti(capacity: 10, status: 'cancelled').canRegister,
+      isFalse,
+    );
   });
 
   // Gerbang TUNGGAL. `canRegister` diterbitkan daripada
@@ -188,10 +194,7 @@ void main() {
     test('timestamp ditukar ke waktu tempatan', () {
       final a = Activity.fromJson(detailJson());
       expect(a.startsAt.isUtc, isFalse);
-      expect(
-        a.startsAt.toUtc(),
-        DateTime.utc(2026, 9, 1, 9),
-      );
+      expect(a.startsAt.toUtc(), DateTime.utc(2026, 9, 1, 9));
       expect(a.sessions.single.startsAt.isUtc, isFalse);
     });
 

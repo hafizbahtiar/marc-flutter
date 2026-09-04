@@ -15,7 +15,6 @@ flutter test test/shared/ui/map
 | [`docs/OSM.md`](docs/OSM.md) | Apa yang ada dalam jubin vektor - rel **ada**, identiti laluan **tiada**. Cara memeriksa jubin sendiri. |
 | [`docs/OPENLAYER.md`](docs/OPENLAYER.md) | Basemap yang boleh dipilih, konsep overlay, dan kenapa `transport` dulunya tak tunjuk pengangkutan. |
 | [`docs/TRANSPORTATION.md`](docs/TRANSPORTATION.md) | **Dari mana laluan Rapid KL datang**, perangkap feed GTFS, dan cara jana semula aset. |
-| [`docs/SEARCH.md`](docs/SEARCH.md) | Carian tempat: kenapa Photon dan **bukan** Nominatim, terma penggunaan, padanan stesen. |
 | [`docs/STACK.md`](docs/STACK.md) | Kebergantungan, siling compileSdk, kebenaran, aset, isu build. |
 
 ## Fail ujian
@@ -26,9 +25,8 @@ flutter test test/shared/ui/map
 | `map_page_test.dart` | Susun atur kawalan, sasaran sentuh, sheet jenis peta, toggle 2D/3D, tiada penanda Flutter untuk lokasi. |
 | `osm_tile_source_test.dart` | Setiap variant ada gaya + atribusi tersendiri. |
 | `map_overlay_test.dart` | Overlay memasang melalui `MapStyleController`, bukan MapLibre. |
-| `transit_overlay_test.dart` | Susunan layer, fontstack, penghuraian properties. |
+| `transit_overlay_test.dart` | Susunan layer, atribusi, penghuraian properties. |
 | `transit_station_card_test.dart` | Nama penuh laluan, jadual, label anggaran. |
-| `place_search_test.dart` | Penghuraian Photon, nyahlantun, pembatalan, padanan stesen. |
 | `../sheet/app_info_sheet_test.dart` | Tiada barrier; tutup dan leret-buang. |
 
 ## Kalau anda ke sini kerana sesuatu terasa salah
@@ -50,27 +48,23 @@ belakang peta. Lihat peraturan penanda dalam `docs/ARCHITECTURE.md`.
 **Laluan MRT/LRT hilang atau silap** → `docs/TRANSPORTATION.md`. Kemungkinan
 besar aset perlu dijana semula.
 
+**Jadual stesen kosong selepas ubah alat bina** → anda mungkin menyambung
+GTFS ikut `route_id`. Ia guna nama pendek dalam `stop_times.txt` dan id
+asas di tempat lain, jadi sambungan itu pulangkan sifar baris secara
+senyap. Sambung melalui `trip_id`.
+
 **Tap pada peta langsung tak berkesan** → semak
 `initMapPlatformView(useTextureView:)`. `true` menelan setiap ketikan pada
 Android sambil membiarkan pan/zum berfungsi, jadi peta nampak sihat.
-
-**Tap atas stesen tak buat apa-apa, tapi tap di sebelahnya log query
-kosong** → `enableInteraction` pada layer. Lalainya `true` dan ia merampas
-`onMapClick` untuk ketikan yang mengenai ciri. Lihat `docs/MAPLIBRE.md`.
+Lihat `docs/MAPLIBRE.md`.
 
 **Tap mengenai peta tapi tak pernah kena stesen** → ambang sasaran sentuh
-mesti diskala dengan `devicePixelRatio`; koordinat ketikan ialah piksel
-fizikal pada Android.
+mesti diskala dengan `devicePixelRatio` pada Android; koordinat ketikan
+ialah piksel fizikal di sana.
 
 **Label peta tak muncul walaupun layer dipasang tanpa ralat** → fontstack.
 OpenFreeMap hanya sajikan Noto Sans; lalai MapLibre ialah Open Sans.
 
-**Jadual stesen kosong selepas ubah alat bina** → anda menyambung GTFS ikut
-`route_id`. Ia guna nama pendek dalam `stop_times.txt` dan id asas di tempat
-lain, jadi sambungan itu pulangkan sifar baris secara senyap.
-
-**Carian kata "perkhidmatan menolak permintaan (HTTP 403)"** → User-Agent.
-Photon menyekat UA stok pustaka HTTP; lihat `docs/SEARCH.md`.
-
-**Kad stesen menutup peta** → ia sepatutnya tidak; `AppInfoSheet` widget
-dalam `Stack`, bukan modal.
+**Kad stesen menutup peta** → ia sepatutnya tidak; `AppInfoSheet` ialah
+widget dalam `Stack`, bukan modal. Kalau ada barrier muncul, seseorang
+telah menukarnya kepada `showModalBottomSheet`.

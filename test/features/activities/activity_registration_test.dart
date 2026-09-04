@@ -90,48 +90,52 @@ ProviderContainer _containerWith(Dio dio) {
 }
 
 void main() {
-  test('daftar berjaya → kiraan senarai naik dan diselaraskan dgn server',
-      () async {
-    var registered = false;
+  test(
+    'daftar berjaya → kiraan senarai naik dan diselaraskan dgn server',
+    () async {
+      var registered = false;
 
-    final dio = _dioWith((options) async {
-      if (options.method == 'GET' && options.path == '/activities') {
-        return _jsonResponse({
-          'activities': [_activityJson()],
-          'next_cursor': null,
-        });
-      }
-      if (options.method == 'POST' &&
-          options.path == '/activities/a1/registration') {
-        registered = true;
-        return _jsonResponse({'registration': <String, dynamic>{}}, status: 201);
-      }
-      if (options.method == 'GET' && options.path == '/activities/a1') {
-        // Server ialah hakim: ia melaporkan 6 kerana pendaftaran kita
-        // mendarat.
-        return _jsonResponse(
-          _activityJson(registrationCount: 6, isRegistered: true),
-        );
-      }
-      if (options.method == 'GET' && options.path == '/me/activities') {
-        return _jsonResponse({'registrations': <dynamic>[]});
-      }
-      throw StateError('Unexpected ${options.method} ${options.path}');
-    });
+      final dio = _dioWith((options) async {
+        if (options.method == 'GET' && options.path == '/activities') {
+          return _jsonResponse({
+            'activities': [_activityJson()],
+            'next_cursor': null,
+          });
+        }
+        if (options.method == 'POST' &&
+            options.path == '/activities/a1/registration') {
+          registered = true;
+          return _jsonResponse({
+            'registration': <String, dynamic>{},
+          }, status: 201);
+        }
+        if (options.method == 'GET' && options.path == '/activities/a1') {
+          // Server ialah hakim: ia melaporkan 6 kerana pendaftaran kita
+          // mendarat.
+          return _jsonResponse(
+            _activityJson(registrationCount: 6, isRegistered: true),
+          );
+        }
+        if (options.method == 'GET' && options.path == '/me/activities') {
+          return _jsonResponse({'registrations': <dynamic>[]});
+        }
+        throw StateError('Unexpected ${options.method} ${options.path}');
+      });
 
-    final container = _containerWith(dio);
-    await container.read(activitiesProvider.future);
+      final container = _containerWith(dio);
+      await container.read(activitiesProvider.future);
 
-    final result = await container
-        .read(activityRepositoryProvider)
-        .register('a1');
+      final result = await container
+          .read(activityRepositoryProvider)
+          .register('a1');
 
-    expect(result.isOk, isTrue);
-    expect(registered, isTrue);
-    final row = container.read(activitiesProvider).value!.activities.single;
-    expect(row.registrationCount, 6);
-    expect(row.isRegistered, isTrue);
-  });
+      expect(result.isOk, isTrue);
+      expect(registered, isTrue);
+      final row = container.read(activitiesProvider).value!.activities.single;
+      expect(row.registrationCount, 6);
+      expect(row.isRegistered, isTrue);
+    },
+  );
 
   test('409 dari server → kiraan optimistik digulung semula dan mesej '
       'Bahasa Melayu dipulangkan', () async {
@@ -166,7 +170,11 @@ void main() {
     final container = _containerWith(dio);
     await container.read(activitiesProvider.future);
     expect(
-      container.read(activitiesProvider).value!.activities.single
+      container
+          .read(activitiesProvider)
+          .value!
+          .activities
+          .single
           .registrationCount,
       9,
     );
@@ -199,7 +207,9 @@ void main() {
     final dio = _dioWith((options) async {
       if (options.method == 'GET' && options.path == '/activities') {
         return _jsonResponse({
-          'activities': [_activityJson(registrationCount: 6, isRegistered: true)],
+          'activities': [
+            _activityJson(registrationCount: 6, isRegistered: true),
+          ],
           'next_cursor': null,
         });
       }

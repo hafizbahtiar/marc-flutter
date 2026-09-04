@@ -69,10 +69,7 @@ void main() {
   // warna sepanduk diputuskan, jadi ujian ini yang menahan "sudah hadir"
   // daripada bertukar merah pada refactor kemudian.
   test('kedua-dua keadaan hadir bukan kegagalan', () {
-    expect(
-      const ScanResult(ScanResultKind.marked, 'x').isFailure,
-      isFalse,
-    );
+    expect(const ScanResult(ScanResultKind.marked, 'x').isFailure, isFalse);
     expect(
       const ScanResult(ScanResultKind.alreadyMarked, 'x').isFailure,
       isFalse,
@@ -124,7 +121,10 @@ void main() {
         isTrue,
       );
       expect(
-        d.shouldSkip('tok', now: t0.add(const Duration(seconds: 2, milliseconds: 999))),
+        d.shouldSkip(
+          'tok',
+          now: t0.add(const Duration(seconds: 2, milliseconds: 999)),
+        ),
         isTrue,
       );
     });
@@ -132,7 +132,10 @@ void main() {
     test('dibenarkan semula selepas tetingkap tamat', () {
       final d = ScanDebouncer();
       expect(d.shouldSkip('tok', now: t0), isFalse);
-      expect(d.shouldSkip('tok', now: t0.add(const Duration(seconds: 3))), isFalse);
+      expect(
+        d.shouldSkip('tok', now: t0.add(const Duration(seconds: 3))),
+        isFalse,
+      );
     });
 
     // Orang kedua dalam barisan tidak menunggu tiga saat kerana orang
@@ -151,7 +154,10 @@ void main() {
       for (var ms = 100; ms < 3000; ms += 100) {
         d.shouldSkip('tok', now: t0.add(Duration(milliseconds: ms)));
       }
-      expect(d.shouldSkip('tok', now: t0.add(const Duration(seconds: 3))), isFalse);
+      expect(
+        d.shouldSkip('tok', now: t0.add(const Duration(seconds: 3))),
+        isFalse,
+      );
     });
 
     test('prune membuang entri tamat tempoh sahaja', () {
@@ -161,7 +167,10 @@ void main() {
       d.prune(now: t0.add(const Duration(seconds: 3)));
       expect(d.trackedCount, 1);
       // 'lama' dibuang, jadi ia dibenarkan semula; 'baharu' masih dijejaki.
-      expect(d.shouldSkip('baharu', now: t0.add(const Duration(seconds: 3))), isTrue);
+      expect(
+        d.shouldSkip('baharu', now: t0.add(const Duration(seconds: 3))),
+        isTrue,
+      );
     });
 
     test('clear membuang semua token yang dijejaki', () {

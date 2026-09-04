@@ -23,7 +23,10 @@ void main() {
 
     final panel = tester.widget<Container>(
       find
-          .ancestor(of: find.byType(QrImageView), matching: find.byType(Container))
+          .ancestor(
+            of: find.byType(QrImageView),
+            matching: find.byType(Container),
+          )
           .first,
     );
     expect((panel.decoration as BoxDecoration).color, Colors.white);

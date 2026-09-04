@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marc/shared/ui/map/map_overlay.dart';
 
 /// User-Agent yang kenal pasti app. Dasar jubin OSM memblok
 /// `com.example.app` / string generik — jubin kosong akan terpapar.
@@ -37,6 +38,13 @@ abstract interface class MapTileSource {
   /// Gaya MapLibre (OpenFreeMap): geometri dan ikon sepanjang jalan
   /// ikut putaran kamera; teks kekal tegak.
   String? vectorStyleUri(Brightness brightness);
+
+  /// Lapisan tambahan yang sumber ni mahu dipasang di atas basemap.
+  ///
+  /// Ini pengikatan antara jenis jubin dan overlaynya - satu baris, bukan
+  /// komitmen. Menjadikan overlay satu toggle bebas kemudian bermakna
+  /// hantar `overlays` terus ke `AppMap`; tiada apa dalam overlay berubah.
+  List<MapOverlay> get overlays;
 }
 
 /// Katalog sumber jubin. Halaman ujian/pemanggil senarai variant

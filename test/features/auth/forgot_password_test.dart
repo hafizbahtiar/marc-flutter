@@ -10,8 +10,12 @@ void main() {
 
     expect(m, contains('kalau'));
     for (final bocor in ['tidak dijumpai', 'tak wujud', 'berjaya dihantar']) {
-      expect(m, isNot(contains(bocor)),
-          reason: 'mesej mengesahkan kewujudan akaun: "$forgotPasswordSentMessage"');
+      expect(
+        m,
+        isNot(contains(bocor)),
+        reason:
+            'mesej mengesahkan kewujudan akaun: "$forgotPasswordSentMessage"',
+      );
     }
   });
 }

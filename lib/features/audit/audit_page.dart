@@ -261,7 +261,9 @@ class _AuditTile extends StatelessWidget {
               if (log.actorRoleKey != null) '(${log.actorRoleKey})',
               '· ${relativeTime(log.createdAt)}',
             ].join(' '),
-            style: textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
           if (log.actorId != null)
             SelectableText(

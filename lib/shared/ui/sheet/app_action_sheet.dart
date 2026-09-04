@@ -270,9 +270,7 @@ class _MaterialActionSheet<T> extends StatelessWidget {
                               : scheme.onSurface,
                         ),
                       ),
-                      subtitle: a.subtitle == null
-                          ? null
-                          : Text(a.subtitle!),
+                      subtitle: a.subtitle == null ? null : Text(a.subtitle!),
                       trailing: a.isSelected
                           ? Icon(Icons.check, color: scheme.primary)
                           : null,

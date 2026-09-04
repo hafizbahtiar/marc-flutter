@@ -54,57 +54,66 @@ void main() {
     expect(result, 250);
   });
 
-  test('medan gateway_charge_cents tiada - fallback kDefaultGatewayChargeCents', () async {
-    final dio = _dioWith(
-      (options) async => ResponseBody.fromString(
-        jsonEncode(<String, dynamic>{}), // medan tiada dalam respons
-        200,
-        headers: {
-          Headers.contentTypeHeader: [Headers.jsonContentType],
-        },
-      ),
-    );
-    final container = ProviderContainer(
-      overrides: [dioProvider.overrideWithValue(dio)],
-    );
-    addTearDown(container.dispose);
-
-    final result = await container.read(paymentConfigProvider.future);
-    expect(result, kDefaultGatewayChargeCents);
-  });
-
-  test('ralat network - fallback kDefaultGatewayChargeCents, tak throw', () async {
-    final dio = _dioWith((options) async {
-      throw DioException(
-        requestOptions: options,
-        type: DioExceptionType.connectionError,
+  test(
+    'medan gateway_charge_cents tiada - fallback kDefaultGatewayChargeCents',
+    () async {
+      final dio = _dioWith(
+        (options) async => ResponseBody.fromString(
+          jsonEncode(<String, dynamic>{}), // medan tiada dalam respons
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        ),
       );
-    });
-    final container = ProviderContainer(
-      overrides: [dioProvider.overrideWithValue(dio)],
-    );
-    addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [dioProvider.overrideWithValue(dio)],
+      );
+      addTearDown(container.dispose);
 
-    final result = await container.read(paymentConfigProvider.future);
-    expect(result, kDefaultGatewayChargeCents);
-  });
+      final result = await container.read(paymentConfigProvider.future);
+      expect(result, kDefaultGatewayChargeCents);
+    },
+  );
 
-  test('backend lama (404, route tiada) - fallback kDefaultGatewayChargeCents', () async {
-    final dio = _dioWith(
-      (options) async => ResponseBody.fromString(
-        jsonEncode({'error': 'not found'}),
-        404,
-        headers: {
-          Headers.contentTypeHeader: [Headers.jsonContentType],
-        },
-      ),
-    );
-    final container = ProviderContainer(
-      overrides: [dioProvider.overrideWithValue(dio)],
-    );
-    addTearDown(container.dispose);
+  test(
+    'ralat network - fallback kDefaultGatewayChargeCents, tak throw',
+    () async {
+      final dio = _dioWith((options) async {
+        throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.connectionError,
+        );
+      });
+      final container = ProviderContainer(
+        overrides: [dioProvider.overrideWithValue(dio)],
+      );
+      addTearDown(container.dispose);
 
-    final result = await container.read(paymentConfigProvider.future);
-    expect(result, kDefaultGatewayChargeCents);
-  });
+      final result = await container.read(paymentConfigProvider.future);
+      expect(result, kDefaultGatewayChargeCents);
+    },
+  );
+
+  test(
+    'backend lama (404, route tiada) - fallback kDefaultGatewayChargeCents',
+    () async {
+      final dio = _dioWith(
+        (options) async => ResponseBody.fromString(
+          jsonEncode({'error': 'not found'}),
+          404,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [dioProvider.overrideWithValue(dio)],
+      );
+      addTearDown(container.dispose);
+
+      final result = await container.read(paymentConfigProvider.future);
+      expect(result, kDefaultGatewayChargeCents);
+    },
+  );
 }

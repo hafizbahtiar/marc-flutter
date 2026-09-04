@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:math' show Point;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:maplibre_gl/maplibre_gl.dart' as ml;
+import 'package:marc/shared/ui/map/map_overlay.dart';
 import 'package:marc/shared/ui/map/map_tile_source.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,6 +28,10 @@ const kMapMaxTilt = 60.0;
 /// tanpa itu.
 const kMapTilt3D = 50.0;
 
+/// Jejari sasaran sentuh untuk ciri peta, dalam piksel logical. Kira-kira
+/// separuh sasaran sentuh Material 48dp.
+const kMapTapSlop = 22.0;
+
 /// Ambang untuk membaca kamera sebagai 3D. Gesture dua jari boleh berhenti
 /// pada nilai kecil bukan sifar; tanpa ambang, butang toggle akan tunjuk
 /// "3D" untuk condongan yang mata pun tak nampak.
@@ -40,12 +47,16 @@ const kMapTilt3DThreshold = 5.0;
 /// peta terasa lambat/berat pada Android.
 ///
 /// `true` = `TextureView` yang Flutter komposit macam lapisan biasa. Kos
-/// render lebih tinggi, tapi sentuhan mengikut laluan input normal.
+/// render lebih tinggi, dan ia **mematikan `onMapClick` sepenuhnya** pada
+/// Android - disahkan atas peranti: sifar peristiwa klik sampai ke Dart
+/// dengan `true`, setiap ketikan sampai dengan `false`. Pan dan zum kekal
+/// berfungsi dalam kedua-dua mod, jadi kerosakan itu senyap.
 ///
-/// TUKAR NILAI NI kalau gesture terasa clunky pada peranti sasaran - ia
-/// satu-satunya knob yang menyentuh perkara itu, dan mana satu lebih laju
-/// bergantung pada GPU peranti. Uji kedua-duanya.
-void initMapPlatformView({bool useTextureView = true}) {
+/// Lalai `false` kerana itu: peta yang tak boleh diketik ialah peta yang
+/// rosak, dan kelancaran gesture ialah keutamaan yang lebih rendah. Kalau
+/// ia diflip semula untuk melicinkan gesture, tap MESTI diuji atas peranti
+/// dalam pusingan yang sama.
+void initMapPlatformView({bool useTextureView = false}) {
   ml.MapLibreMap.useHybridComposition = useTextureView;
 }
 
@@ -301,6 +312,9 @@ class AppMap extends StatefulWidget {
     this.onUserLocation,
     this.rotateGesturesEnabled = true,
     this.tiltGesturesEnabled = true,
+    this.tapLayerIds = const [],
+    this.onFeatureTap,
+    this.onAttributionTap,
   });
 
   final MapTileSource tileSource;
@@ -340,6 +354,19 @@ class AppMap extends StatefulWidget {
 
   /// Putar kamera dengan gesture dua jari (pusing).
   final bool rotateGesturesEnabled;
+
+  /// Bila diberi, butang hak cipta memanggil ini dengan atribusi tergabung
+  /// dan bukan mengembang jadi baris cip dalam peta. Senarai itu dikira di
+  /// sini supaya logik gabung basemap+overlay kekal di satu tempat.
+  final void Function(List<MapTileAttribution> attributions)? onAttributionTap;
+
+  /// Id layer yang dikenakan hit-test bila peta diketik.
+  final List<String> tapLayerIds;
+
+  /// Properties ciri teratas pada titik yang diketik. Widget ni tak tahu
+  /// apa properties itu bermakna - pemanggil yang tafsirkannya, jadi
+  /// `AppMap` kekal umum dan tak tahu apa-apa tentang transit.
+  final void Function(Map<String, dynamic> properties)? onFeatureTap;
 
   /// Condongkan kamera dengan gesture dua jari (seret menegak).
   ///
@@ -395,7 +422,37 @@ class _AppMapState extends State<AppMap> {
 
   void _onStyleLoaded() {
     unawaited(_projectMarkers());
+    unawaited(_installOverlays());
   }
+
+  /// Dipasang di sini, bukan `onMapCreated`: sumber dan layer perlukan gaya
+  /// yang sudah dimuat. Menukar jenis peta menukar `styleString`, yang
+  /// membuatkan MapLibre buang semua layer dan tembak semula callback ni -
+  /// jadi pemasangan semula datang percuma dan tiada perobohan diperlukan.
+  Future<void> _installOverlays() async {
+    final native = _native;
+    if (native == null) return;
+    final style = _MapLibreStyleController(native);
+    for (final overlay in widget.tileSource.overlays) {
+      try {
+        await overlay.install(style);
+      } catch (error, stack) {
+        // Satu overlay rosak tak patut menjatuhkan peta - basemap masih
+        // berguna tanpanya.
+        debugPrint(
+          '[map] overlay ${overlay.id} gagal dipasang: $error\n$stack',
+        );
+      }
+    }
+  }
+
+  /// Kredit basemap DAN setiap overlay terpasang. Lesen penyedia data
+  /// mewajibkan kredit nampak; menggabungnya di sini bermakna ia muncul
+  /// tepat bila overlay hidup dan hilang bersamanya.
+  List<MapTileAttribution> _attributions() => [
+    ...widget.tileSource.attributions,
+    for (final overlay in widget.tileSource.overlays) ...overlay.attributions,
+  ];
 
   void _onCamera(ml.CameraPosition? position) {
     widget.controller?._onCamera(position);
@@ -404,6 +461,49 @@ class _AppMapState extends State<AppMap> {
     // dibuang setiap frame untuk tiada hasil.
     if (widget.markers.isEmpty) return;
     unawaited(_projectMarkers());
+  }
+
+  Future<void> _onClick(Point<double> point, ml.LatLng latLng) async {
+    final native = _native;
+    final onFeature = widget.onFeatureTap;
+    if (native != null && onFeature != null && widget.tapLayerIds.isNotEmpty) {
+      // Sasaran sentuh jari jauh lebih besar daripada bulatan stesen;
+      // menuntut ketepatan piksel bermakna kebanyakan tap terlepas.
+      //
+      // UNIT PENTING: koordinat yang MapLibre hantar dalam `onMapClick`
+      // ialah piksel VIEW native - piksel FIZIKAL pada Android, mata
+      // logical pada iOS. Disahkan pada peranti 480dpi: x mencecah 426
+      // pada skrin yang hanya 360dp lebar. Nilai tetap 12 jadi ~4dp di
+      // sana, iaitu kotak lebih kecil daripada bulatan yang cuba dikenai.
+      final slop =
+          kMapTapSlop *
+          (defaultTargetPlatform == TargetPlatform.android
+              ? MediaQuery.devicePixelRatioOf(context)
+              : 1.0);
+      try {
+        final features = await native.queryRenderedFeaturesInRect(
+          Rect.fromCenter(
+            center: Offset(point.x.toDouble(), point.y.toDouble()),
+            width: slop * 2,
+            height: slop * 2,
+          ),
+          widget.tapLayerIds,
+          null,
+        );
+        if (features.isNotEmpty) {
+          final properties = (features.first as Map)['properties'];
+          if (properties is Map) {
+            onFeature(Map<String, dynamic>.from(properties));
+            return;
+          }
+        }
+      } catch (error) {
+        // Layer belum wujud (gaya baru bertukar) - jatuh ke onTap biasa
+        // dan bukan menelan ketikan itu terus.
+        debugPrint('[map] query ciri gagal: $error');
+      }
+    }
+    widget.onTap?.call(_fromMl(latLng));
   }
 
   void _onUserLocation(ml.UserLocation location) {
@@ -467,7 +567,10 @@ class _AppMapState extends State<AppMap> {
               left: 12,
               bottom: 12,
               child: MapAttribution(
-                attributions: widget.tileSource.attributions,
+                attributions: _attributions(),
+                onTap: widget.onAttributionTap == null
+                    ? null
+                    : () => widget.onAttributionTap!(_attributions()),
               ),
             ),
         ],
@@ -517,9 +620,9 @@ class _AppMapState extends State<AppMap> {
       foregroundLoadColor: scheme.surface,
       onCameraMove: _onCamera,
       onCameraIdle: () => _onCamera(_native?.cameraPosition),
-      onMapClick: widget.onTap == null
+      onMapClick: (widget.onTap == null && widget.onFeatureTap == null)
           ? null
-          : (point, latLng) => widget.onTap!(_fromMl(latLng)),
+          : (point, latLng) => unawaited(_onClick(point, latLng)),
     );
   }
 
@@ -555,11 +658,111 @@ class _AppMapState extends State<AppMap> {
   }
 }
 
+/// Menterjemah nilai [MapStyleController] kepada panggilan MapLibre.
+///
+/// Ini satu-satunya tempat gaya overlay bertemu jenis native, jadi overlay
+/// kekal boleh diuji tanpa peta.
+class _MapLibreStyleController implements MapStyleController {
+  _MapLibreStyleController(this._native);
+
+  final ml.MapLibreMapController _native;
+
+  /// `[z1, v1, z2, v2, ...]` jadi interpolasi linear ikut zum; satu nilai
+  /// jadi pemalar.
+  static Object _stops(List<double> values) {
+    if (values.length < 4) return values.first;
+    return [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      ...values,
+    ];
+  }
+
+  @override
+  Future<void> addGeoJsonSource(String id, Map<String, dynamic> geojson) =>
+      _native.addGeoJsonSource(id, geojson);
+
+  /// `enableInteraction: false` pada SETIAP layer, dan ia bukan pengoptimuman.
+  ///
+  /// Lalainya `true`, yang mendaftarkan layer ke dalam
+  /// `interactiveFeatureLayerIds` Android. Bila ketikan mengenai layer
+  /// begitu, native menembak `feature#onTap` dan **melangkau
+  /// `map#onMapClick` sepenuhnya** (`featureTapsTriggersMapClick` lalainya
+  /// false). Jadi tap yang mengenai stesen tak pernah sampai ke sini,
+  /// sementara tap yang TERLEPAS sampai dan betul-betul memulangkan sifar
+  /// ciri - kegagalan yang kelihatan tepat seperti hit-test yang rosak.
+  ///
+  /// Kita buat hit-test sendiri melalui `queryRenderedFeaturesInRect`, jadi
+  /// pemintasan itu cuma merampas ketikan yang kita perlukan.
+  @override
+  Future<void> addLineLayer(String sourceId, String layerId, MapLineStyle s) =>
+      _native.addLineLayer(
+        sourceId,
+        layerId,
+        ml.LineLayerProperties(
+          lineColor: s.color,
+          lineWidth: _stops(s.width),
+          lineOpacity: s.opacity,
+          lineJoin: 'round',
+          lineCap: 'round',
+        ),
+        minzoom: s.minZoom,
+        enableInteraction: false,
+      );
+
+  @override
+  Future<void> addCircleLayer(
+    String sourceId,
+    String layerId,
+    MapCircleStyle s,
+  ) => _native.addCircleLayer(
+    sourceId,
+    layerId,
+    ml.CircleLayerProperties(
+      circleColor: s.color,
+      circleRadius: _stops(s.radius),
+      circleStrokeColor: s.strokeColor,
+      circleStrokeWidth: s.strokeWidth,
+    ),
+    minzoom: s.minZoom,
+    enableInteraction: false,
+  );
+
+  @override
+  Future<void> addSymbolLayer(
+    String sourceId,
+    String layerId,
+    MapSymbolStyle s,
+  ) => _native.addSymbolLayer(
+    sourceId,
+    layerId,
+    ml.SymbolLayerProperties(
+      textField: s.textField,
+      textFont: s.font,
+      textSize: s.textSize,
+      textColor: s.color,
+      textHaloColor: s.haloColor,
+      textHaloWidth: s.haloWidth,
+      textOffset: [0, s.offsetY],
+      textAnchor: 'top',
+      textAllowOverlap: false,
+    ),
+    minzoom: s.minZoom,
+    enableInteraction: false,
+  );
+}
+
 /// Atribusi OSM/penyedia. Teks boleh diketik; butang kembang/tutup.
 class MapAttribution extends StatefulWidget {
-  const MapAttribution({super.key, required this.attributions});
+  const MapAttribution({super.key, required this.attributions, this.onTap});
 
   final List<MapTileAttribution> attributions;
+
+  /// Bila diberi, butang menyerahkan paparan kepada pemanggil dan tak
+  /// mengembang sendiri. Baris cip inline jadi sempit sebaik ada lebih
+  /// daripada dua penyedia, dan overlay menjadikan itu perkara biasa.
+  final VoidCallback? onTap;
 
   @override
   State<MapAttribution> createState() => _MapAttributionState();
@@ -577,7 +780,7 @@ class _MapAttributionState extends State<MapAttribution> {
       shadowColor: scheme.shadow.withValues(alpha: 0.25),
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
-      child: _open ? _expanded(scheme) : _collapsed(),
+      child: _open && widget.onTap == null ? _expanded(scheme) : _collapsed(),
     );
   }
 
@@ -586,7 +789,7 @@ class _MapAttributionState extends State<MapAttribution> {
       tooltip: 'Attributions',
       visualDensity: VisualDensity.compact,
       icon: const Icon(Icons.copyright, size: 18),
-      onPressed: () => setState(() => _open = true),
+      onPressed: widget.onTap ?? () => setState(() => _open = true),
     );
   }
 
@@ -634,7 +837,7 @@ class _AttributionChip extends StatelessWidget {
       return Text(attribution.text, style: style);
     }
     return GestureDetector(
-      onTap: () => _openAttribution(attribution.url!),
+      onTap: () => unawaited(openMapAttribution(attribution.url!)),
       child: Text(
         attribution.text,
         style: style?.copyWith(
@@ -646,6 +849,8 @@ class _AttributionChip extends StatelessWidget {
   }
 }
 
-Future<void> _openAttribution(String url) {
+/// Buka pautan penyedia dalam pelayar. Awam supaya sheet atribusi dalam
+/// `map_page` guna laluan yang sama dan bukan menduanya.
+Future<void> openMapAttribution(String url) {
   return launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 }

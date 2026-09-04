@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/shared/ui/map/app_map.dart';
+import 'package:marc/shared/ui/map/map_overlay.dart';
 import 'package:marc/shared/ui/map/map_tile_source.dart';
 
 void main() {
@@ -159,4 +160,7 @@ class _FakeSource implements MapTileSource {
 
   @override
   String? vectorStyleUri(Brightness brightness) => vectorUri;
+
+  @override
+  List<MapOverlay> get overlays => const [];
 }

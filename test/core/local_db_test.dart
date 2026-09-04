@@ -14,16 +14,22 @@ void main() {
     final columns = await db.rawQuery('PRAGMA table_info(drafts)');
     final columnNames = columns.map((c) => c['name'] as String).toSet();
 
-    expect(
-      columnNames,
-      {'key', 'kind', 'content', 'is_announcement', 'updated_at'},
-    );
+    expect(columnNames, {
+      'key',
+      'kind',
+      'content',
+      'is_announcement',
+      'updated_at',
+    });
   });
 
-  test('openLocalDb pulangkan instance Database yang sama bila dipanggil dua kali', () async {
-    final first = await openLocalDb();
-    final second = await openLocalDb();
+  test(
+    'openLocalDb pulangkan instance Database yang sama bila dipanggil dua kali',
+    () async {
+      final first = await openLocalDb();
+      final second = await openLocalDb();
 
-    expect(identical(first, second), isTrue);
-  });
+      expect(identical(first, second), isTrue);
+    },
+  );
 }

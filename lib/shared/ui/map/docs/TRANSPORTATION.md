@@ -55,7 +55,6 @@ Tinggal tujuh laluan rel.
 
 `stops.txt` ada 187 baris dengan `stop_name`, `stop_lat`, `stop_lon`,
 `category`, `route_id`, dan `isOKU` (akses OKU). 151 daripadanya milik tujuh
-laluan rel; selebihnya BRT. 151 daripadanya milik tujuh
 laluan rel; selebihnya BRT.
 
 ## Empat perangkap dalam feed ini
@@ -85,8 +84,6 @@ Gabungan ikut nama hanya selamat selagi nama unik setiap stesen, jadi
 skrip **gagal dengan kuat** bila kelompok tergabung merentangi lebih 300 m.
 Kelompok paling teruk dalam feed semasa menyimpang 147 m dari sentroidnya,
 jadi ambang itu ada kira-kira 2x ruang lega - ia pengawal, bukan formaliti.
-Kelompok paling teruk dalam feed semasa menyimpang 147 m dari sentroidnya,
-jadi ambang itu ada kira-kira 2x ruang lega - ia pengawal, bukan formaliti.
 Gabungan senyap dua stesen berlainan yang berkongsi nama akan meletakkan
 stesen di tempat salah, dan itu lebih teruk daripada bina yang gagal.
 
@@ -99,7 +96,8 @@ membuangnya, kunci lajur pertama jadi `\uFEFFroute_id`.
 
 ## Jadual yang disula
 
-Setiap stesen bawa satu entri per laluan+arah:
+Selain geometri, alat itu menyula blok jadual untuk setiap stesen, satu
+entri per laluan+arah:
 
 | Medan | Sumber | Contoh (Masjid Jamek) |
 |-------|--------|------------------------|
@@ -120,21 +118,23 @@ LRT Shah Alam ada headway berbeza ikut arah.
 
 `frequencies.end_time` ialah bila perkhidmatan tamat di stesen **asal**,
 bukan di stesen ini. Tren terakhir di sini = `end_time` + masa perjalanan
-dari asal. Masjid Jamek ~18 minit menyusur Laluan Ampang: 23:25 + 18 = 23:43.
+dari asal (perbezaan `departure_time`). Masjid Jamek ~18 minit menyusur
+Laluan Ampang, jadi 23:25 + 18 = 23:43.
 
 Ini mesti **berlabel anggaran di mana-mana ia dipapar** - `TransitStationCard`
 membawa nota itu. Tanpanya, seseorang boleh terlepas tren terakhir kerana
 kad kita.
 
-Sebab sama, hari tanpa data `last` atau `freq` **tidak** dipapar walaupun
-`first` diketahui: `first` sama merentas jenis hari, jadi ia sendiri tak
-membuktikan hari itu beroperasi.
+Sebab yang sama, hari tanpa data `last` atau `freq` **tidak** dipapar
+walaupun `first` diketahui: `first` sama merentas jenis hari, jadi ia
+sendiri tak membuktikan hari itu beroperasi.
 
 ### `calendar.txt` tamat 2026-12-31
 
-Hanya `MonFri`, `Sat` dan `Sun` diguna oleh trips. Ketiga-tiganya sah
-sehingga **31 Disember 2026** - selepas itu data jadual luput dan aset
-perlu dijana semula.
+Hanya `MonFri`, `Sat` dan `Sun` yang diguna oleh trips; `weekday`/`weekend`
+dalam fail itu sisa yang tak dirujuk. Ketiga-tiga yang diguna sah sehingga
+**31 Disember 2026** - selepas itu data jadual secara formalnya luput dan
+aset perlu dijana semula.
 
 ## Had: KTM Komuter tiada
 
@@ -170,9 +170,9 @@ dart run tool/build_transit_assets.dart
 Ia muat turun feed, sula, dan tulis semula:
 
 - `assets/transit/rail_lines.geojson` (71 KB, 7 LineString)
-- `assets/transit/rail_stations.geojson` (20 KB, 132 stesen tergabung)
+- `assets/transit/rail_stations.geojson` (83 KB, 132 stesen + jadual)
 
-Kira-kira 22 KB bila gzip. Warna ditulis ke dalam setiap ciri, jadi
+Kira-kira 26 KB bila gzip. Warna ditulis ke dalam setiap ciri, jadi
 penggayaan dipacu data (`["get", "color"]`) dan masa jalan tak perlu
 jadual carian.
 

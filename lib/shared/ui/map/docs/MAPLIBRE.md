@@ -69,34 +69,9 @@ peristiwa klik sampai ke Dart dengan `true`, setiap ketikan sampai dengan
 `false`. Pan dan zum terus berfungsi dalam kedua-dua mod, jadi kerosakan
 ini senyap - peta terasa hidup sepenuhnya, cuma tak boleh diketik.
 
-## Perangkap: `enableInteraction` merampas ketikan atas ciri
-
-`addLineLayer`/`addCircleLayer`/`addSymbolLayer` lalainya
-`enableInteraction: true`, yang mendaftarkan layer ke dalam
-`interactiveFeatureLayerIds` Android. Kesannya dalam `onMapClick` native:
-
-```java
-Pair<Feature,String> pair = firstFeatureOnLayers(rectF);
-if (pair != null) {
-  methodChannel.invokeMethod("feature#onTap", ...);
-  if (featureTapsTriggersMapClick) { ... }   // lalai FALSE
-} else {
-  methodChannel.invokeMethod("map#onMapClick", ...);
-}
-```
-
-Jadi ketikan yang **mengenai** ciri menembak `feature#onTap` dan
-**melangkau `map#onMapClick` sepenuhnya**. Ketikan yang **terlepas** sampai
-seperti biasa.
-
-Kegagalannya sangat mengelirukan: log menunjukkan ketikan tiba dan query
-memulangkan sifar ciri - kelihatan tepat seperti hit-test yang rosak -
-sedangkan itu semuanya ketikan yang terlepas. Ketikan yang berjaya tak
-pernah muncul dalam log langsung.
-
-`AppMap` buat hit-test sendiri melalui `queryRenderedFeaturesInRect`, jadi
-`_MapLibreStyleController` menetapkan `enableInteraction: false` pada
-SETIAP layer. Membuangnya mematikan tap stesen tanpa sebarang ralat.
+Sebab itu `initMapPlatformView` lalainya `useTextureView: false`. Kalau
+gesture perlu dilicinkan semula, tap mesti diuji atas peranti dalam
+pusingan yang sama.
 
 ## Perangkap: koordinat ketikan ialah piksel FIZIKAL pada Android
 
@@ -105,10 +80,10 @@ fizikal pada Android, mata logical pada iOS. Disahkan pada peranti 480dpi
 (faktor 3.0, skrin 360dp lebar): koordinat x mencecah **426**, jauh
 melepasi 360.
 
-Jadi ambang sasaran sentuh mesti didarab dengan `devicePixelRatio` pada
-Android. Nilai 12 yang kelihatan seperti "saiz jari" jadi ~4dp - kotak
-lebih kecil daripada bulatan yang cuba dikenai, dan setiap tap terlepas.
-Lihat `kMapTapSlop`.
+Jadi mana-mana ambang sasaran sentuh mesti didarab dengan
+`devicePixelRatio` pada Android. Nilai 12 yang kelihatan seperti "saiz
+jari" sebenarnya jadi ~4dp, kotak yang lebih kecil daripada bulatan yang
+cuba dikenai - dan setiap tap terlepas. Lihat `kMapTapSlop`.
 
 `queryRenderedFeaturesInRect` menerima ruang yang SAMA, jadi rect itu betul
 selagi ambangnya diskalakan.

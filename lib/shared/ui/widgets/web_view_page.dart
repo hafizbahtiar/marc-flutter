@@ -24,8 +24,7 @@ class _WebViewPageState extends State<WebViewPage> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (progress) =>
-              setState(() => _progress = progress / 100),
+          onProgress: (progress) => setState(() => _progress = progress / 100),
         ),
       )
       ..loadRequest(Uri.parse(widget.url));

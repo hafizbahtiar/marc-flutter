@@ -95,10 +95,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
           children: [
-            const _SettingsGroup(
-              label: 'Paparan',
-              tiles: [_ThemeTile()],
-            ),
+            const _SettingsGroup(label: 'Paparan', tiles: [_ThemeTile()]),
             const _SettingsGroup(
               label: 'Sambungan',
               tiles: [
@@ -228,7 +225,10 @@ class _SettingsGroup extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [SettingsGroupLabel(label), SettingsCard(children: tiles)],
+        children: [
+          SettingsGroupLabel(label),
+          SettingsCard(children: tiles),
+        ],
       ),
     );
   }

@@ -124,10 +124,10 @@ void main() {
 
       final patch = buildActivityPatch(before, after);
 
-      expect(
-        patch,
-        {'location_name': 'Dewan B', 'attendance_threshold_pct': 75},
-      );
+      expect(patch, {
+        'location_name': 'Dewan B',
+        'attendance_threshold_pct': 75,
+      });
     });
   });
 
@@ -166,17 +166,12 @@ void main() {
       expect(sessionsChanged(loaded(), const []), isTrue);
     });
 
-    test('susunan senarai berbeza tetapi sesi yang sama → BUKAN perubahan',
-        () {
+    test('susunan senarai berbeza tetapi sesi yang sama → BUKAN perubahan', () {
       // Aktiviti lama boleh ada `seq` yang tidak mengikut kronologi. Kalau
       // itu dikira sebagai perubahan, membuka borang dan menekan Simpan
       // akan menghantar PUT yang tidak diminta - dan ditolak 409 sebaik ada
       // kehadiran.
-      final a = SessionDraft(
-        title: 'Pagi',
-        startsAt: start,
-        endsAt: end,
-      );
+      final a = SessionDraft(title: 'Pagi', startsAt: start, endsAt: end);
       final b = SessionDraft(
         title: 'Petang',
         startsAt: start.add(const Duration(days: 1)),
@@ -272,14 +267,8 @@ void main() {
     });
 
     test('kapasiti sifar ditolak, kapasiti null (tiada had) diterima', () {
-      expect(
-        validateDraft(okDraft()..capacity = 0, [okSession()]),
-        isNotNull,
-      );
-      expect(
-        validateDraft(okDraft()..capacity = null, [okSession()]),
-        isNull,
-      );
+      expect(validateDraft(okDraft()..capacity = 0, [okSession()]), isNotNull);
+      expect(validateDraft(okDraft()..capacity = null, [okSession()]), isNull);
     });
 
     test('ambang kehadiran di luar 1..100 ditolak', () {
@@ -294,7 +283,10 @@ void main() {
     });
 
     test('tanpa kategori / tajuk / tarikh tutup ditolak', () {
-      expect(validateDraft(okDraft()..categoryId = '', [okSession()]), isNotNull);
+      expect(
+        validateDraft(okDraft()..categoryId = '', [okSession()]),
+        isNotNull,
+      );
       expect(validateDraft(okDraft()..title = '   ', [okSession()]), isNotNull);
       expect(
         validateDraft(okDraft()..registrationClosesAt = null, [okSession()]),

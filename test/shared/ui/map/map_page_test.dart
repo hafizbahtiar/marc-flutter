@@ -5,6 +5,7 @@ import 'package:marc/shared/ui/map/app_map.dart';
 import 'package:marc/shared/ui/map/map_controls.dart';
 import 'package:marc/shared/ui/map/map_page.dart';
 import 'package:marc/shared/ui/map/map_tile_source.dart';
+import 'package:marc/shared/ui/sheet/app_info_sheet.dart';
 
 /// Keadaan terpilih bagi satu pilihan dalam sheet. `showAppActionSheet`
 /// menanda pilihan semasa dengan ikon semak pada `trailing` ListTile,
@@ -204,5 +205,70 @@ void main() {
       reason: 'butang toggle mesti tunjuk tindakan seterusnya, bukan beku',
     );
     expect(find.byTooltip('Tukar ke pandangan 3D'), findsNothing);
+  });
+
+  testWidgets('atribusi overlay muncul hanya bila transport dipilih', (
+    tester,
+  ) async {
+    await pumpMap(tester);
+
+    List<String> attributionTexts() => tester
+        .widget<MapAttribution>(find.byType(MapAttribution))
+        .attributions
+        .map((a) => a.text)
+        .toList();
+
+    expect(
+      attributionTexts(),
+      isNot(contains('data.gov.my')),
+      reason: 'Standard tak guna data transit, jadi jangan kreditkannya',
+    );
+
+    await tester.tap(find.byTooltip('Jenis peta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Transport'));
+    await tester.pumpAndSettle();
+
+    expect(attributionTexts(), containsAll(['data.gov.my', 'Prasarana']));
+  });
+
+  testWidgets('tekan atribusi buka sheet maklumat, bukan kembang inline', (
+    tester,
+  ) async {
+    await pumpMap(tester, initialType: MapTileType.transport);
+
+    expect(find.byType(AppInfoSheet), findsNothing);
+
+    await tester.tap(find.byTooltip('Attributions'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppInfoSheet), findsOneWidget);
+    expect(find.text('Sumber data'), findsOneWidget);
+    expect(find.text('OpenStreetMap contributors'), findsOneWidget);
+
+    // Transport ada lima penyedia; yang kemudian berada di bawah lipatan
+    // pada saiz rehat dan SliverList membina secara malas. Inilah sebab
+    // baris cip inline dulu terlalu sempit untuk kes ni.
+    await tester.drag(find.text('Sumber data'), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.text('data.gov.my'), findsOneWidget);
+    expect(find.text('Prasarana'), findsOneWidget);
+  });
+
+  testWidgets('tutup sheet mengembalikannya, dan back menutupnya dahulu', (
+    tester,
+  ) async {
+    await pumpMap(tester, initialType: MapTileType.transport);
+    await tester.tap(find.byTooltip('Attributions'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AppInfoSheet), findsOneWidget);
+
+    // Kad bukan route, jadi tanpa PopScope back akan meninggalkan halaman
+    // sementara kad masih terbuka di skrin.
+    final popped = await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(popped, isTrue, reason: 'back dimakan oleh kad, bukan halaman');
+    expect(find.byType(AppInfoSheet), findsNothing);
   });
 }

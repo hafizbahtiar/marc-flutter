@@ -224,10 +224,12 @@ class PaymentReceiptRepository {
 
   Future<ReceiptBytesResult> _fetch(String path) async {
     try {
-      final res = await _ref.read(dioProvider).get<List<int>>(
-        path,
-        options: Options(responseType: ResponseType.bytes),
-      );
+      final res = await _ref
+          .read(dioProvider)
+          .get<List<int>>(
+            path,
+            options: Options(responseType: ResponseType.bytes),
+          );
       final data = res.data;
       if (data == null || data.isEmpty) {
         return const ReceiptBytesResult.failed('Gagal muat turun resit.');

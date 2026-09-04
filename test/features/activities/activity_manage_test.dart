@@ -95,35 +95,37 @@ Future<ResponseBody>? _reads(RequestOptions options) {
 
 void main() {
   group('PUT sesi', () {
-    test('409 → mesej khusus "sudah ada kehadiran", bukan ralat generik',
-        () async {
-      final dio = _dioWith((options) async {
-        final read = _reads(options);
-        if (read != null) return read;
-        if (options.method == 'PUT' &&
-            options.path == '/activities/a1/sessions') {
-          // Bentuk sebenar backend - activities.go:1109.
-          return _jsonResponse({
-            'error': 'sesi yang sudah ada kehadiran tidak boleh diganti',
-          }, status: 409);
-        }
-        throw StateError('Unexpected ${options.method} ${options.path}');
-      });
+    test(
+      '409 → mesej khusus "sudah ada kehadiran", bukan ralat generik',
+      () async {
+        final dio = _dioWith((options) async {
+          final read = _reads(options);
+          if (read != null) return read;
+          if (options.method == 'PUT' &&
+              options.path == '/activities/a1/sessions') {
+            // Bentuk sebenar backend - activities.go:1109.
+            return _jsonResponse({
+              'error': 'sesi yang sudah ada kehadiran tidak boleh diganti',
+            }, status: 409);
+          }
+          throw StateError('Unexpected ${options.method} ${options.path}');
+        });
 
-      final result = await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .replaceSessions('a1', [
-            SessionDraft(
-              startsAt: DateTime.utc(2099, 1, 1, 1),
-              endsAt: DateTime.utc(2099, 1, 1, 4),
-            ),
-          ]);
+        final result = await _containerWith(dio)
+            .read(activityManageRepositoryProvider)
+            .replaceSessions('a1', [
+              SessionDraft(
+                startsAt: DateTime.utc(2099, 1, 1, 1),
+                endsAt: DateTime.utc(2099, 1, 1, 4),
+              ),
+            ]);
 
-      expect(result.isOk, isFalse);
-      expect(result.message, sessionsAttendanceConflictMessage);
-      expect(result.message, contains('kehadiran'));
-      expect(result.message, contains('bukti sijil'));
-    });
+        expect(result.isOk, isFalse);
+        expect(result.message, sessionsAttendanceConflictMessage);
+        expect(result.message, contains('kehadiran'));
+        expect(result.message, contains('bukti sijil'));
+      },
+    );
 
     test('200 → berjaya', () async {
       final dio = _dioWith((options) async {
@@ -151,29 +153,31 @@ void main() {
   group('tanda kehadiran', () {
     const path = '/activities/a1/sessions/s1/attendance';
 
-    test('422 → outsideWindow, BUKAN kegagalan biasa (laluan pindaan)',
-        () async {
-      final dio = _dioWith((options) async {
-        if (options.method == 'POST' && options.path == path) {
-          return _jsonResponse({
-            'error': 'di luar tetingkap check-in',
-          }, status: 422);
-        }
-        throw StateError('Unexpected ${options.method} ${options.path}');
-      });
+    test(
+      '422 → outsideWindow, BUKAN kegagalan biasa (laluan pindaan)',
+      () async {
+        final dio = _dioWith((options) async {
+          if (options.method == 'POST' && options.path == path) {
+            return _jsonResponse({
+              'error': 'di luar tetingkap check-in',
+            }, status: 422);
+          }
+          throw StateError('Unexpected ${options.method} ${options.path}');
+        });
 
-      final result = await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .markAttendance(
-            activityId: 'a1',
-            sessionId: 's1',
-            registrationId: 'r1',
-          );
+        final result = await _containerWith(dio)
+            .read(activityManageRepositoryProvider)
+            .markAttendance(
+              activityId: 'a1',
+              sessionId: 's1',
+              registrationId: 'r1',
+            );
 
-      expect(result.ok, isFalse);
-      expect(result.outsideWindow, isTrue);
-      expect(result.message, attendanceOutsideWindowMessage);
-    });
+        expect(result.ok, isFalse);
+        expect(result.outsideWindow, isTrue);
+        expect(result.message, attendanceOutsideWindowMessage);
+      },
+    );
 
     test('pindaan menghantar amend+reason dan diterima', () async {
       Map<String, dynamic>? sent;
@@ -186,7 +190,10 @@ void main() {
               'error': 'di luar tetingkap check-in',
             }, status: 422);
           }
-          return _jsonResponse({'created': true, 'member': <String, dynamic>{}});
+          return _jsonResponse({
+            'created': true,
+            'member': <String, dynamic>{},
+          });
         }
         throw StateError('Unexpected ${options.method} ${options.path}');
       });
@@ -230,8 +237,9 @@ void main() {
 
     test('422 semasa pindaan tidak mengulang tawaran pindaan lagi', () async {
       final dio = _dioWith((options) async {
-        return _jsonResponse({'error': 'di luar tetingkap check-in'},
-            status: 422);
+        return _jsonResponse({
+          'error': 'di luar tetingkap check-in',
+        }, status: 422);
       });
 
       final result = await _containerWith(dio)
@@ -323,9 +331,9 @@ void main() {
         throw StateError('Unexpected ${options.method} ${options.path}');
       });
 
-      final result = await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .issueCertificates('a1');
+      final result = await _containerWith(
+        dio,
+      ).read(activityManageRepositoryProvider).issueCertificates('a1');
 
       expect(result.ok, isTrue, reason: '202 bukan ralat');
       expect(result.partial, isTrue);
@@ -346,9 +354,9 @@ void main() {
         });
       });
 
-      final result = await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .issueCertificates('a1');
+      final result = await _containerWith(
+        dio,
+      ).read(activityManageRepositoryProvider).issueCertificates('a1');
 
       expect(result.ok, isTrue);
       expect(result.partial, isFalse);
@@ -365,9 +373,9 @@ void main() {
         }, status: 422);
       });
 
-      final result = await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .issueCertificates('a1');
+      final result = await _containerWith(
+        dio,
+      ).read(activityManageRepositoryProvider).issueCertificates('a1');
 
       expect(result.ok, isFalse);
       expect(
@@ -396,9 +404,9 @@ void main() {
         return _jsonResponse({'issued': 0, 'files_ready': 0});
       });
 
-      await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .issueCertificates('a1');
+      await _containerWith(
+        dio,
+      ).read(activityManageRepositoryProvider).issueCertificates('a1');
 
       expect(sent!.receiveTimeout, certificatesIssueTimeout);
       expect(sent!.sendTimeout, certificatesIssueTimeout);
@@ -422,9 +430,9 @@ void main() {
         );
       });
 
-      final result = await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .issueCertificates('a1');
+      final result = await _containerWith(
+        dio,
+      ).read(activityManageRepositoryProvider).issueCertificates('a1');
 
       expect(result.ok, isTrue, reason: 'server masih bekerja');
       expect(result.partial, isTrue);
@@ -443,9 +451,9 @@ void main() {
         );
       });
 
-      final result = await _containerWith(dio)
-          .read(activityManageRepositoryProvider)
-          .issueCertificates('a1');
+      final result = await _containerWith(
+        dio,
+      ).read(activityManageRepositoryProvider).issueCertificates('a1');
 
       expect(result.ok, isFalse);
     });

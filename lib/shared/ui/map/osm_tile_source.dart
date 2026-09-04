@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:marc/shared/ui/map/map_overlay.dart';
 import 'package:marc/shared/ui/map/map_tile_source.dart';
+import 'package:marc/shared/ui/map/transit_overlay.dart';
 
 /// Katalog OSM. Variant vektor = OpenFreeMap (data OSM, tanpa API key),
 /// dilukis oleh MapLibre native.
@@ -119,6 +121,16 @@ final class OsmMapTileSource implements MapTileSource {
 
   @override
   String get attribution => attributions.map((a) => a.text).join(', ');
+
+  @override
+  List<MapOverlay> get overlays => switch (type) {
+    // Satu-satunya pengikatan antara jenis jubin dan overlaynya. Layer
+    // `transport` ialah gaya positron - basemap kelabu yang melukis rel
+    // `#dddddd` dan menyorok transit di bawah zum 16; overlay ni yang
+    // menjadikan pilihan itu bermakna.
+    MapTileType.transport => const [TransitOverlay()],
+    _ => const [],
+  };
 
   @override
   bool operator ==(Object other) =>

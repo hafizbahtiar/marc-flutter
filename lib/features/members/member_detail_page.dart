@@ -651,10 +651,7 @@ class _Header extends StatelessWidget {
               Chip(
                 label: Text(detail.roleName),
                 backgroundColor: scheme.primary.withValues(alpha: 0.12),
-                labelStyle: TextStyle(
-                  color: semantic.accentDark,
-                  fontSize: 12,
-                ),
+                labelStyle: TextStyle(color: semantic.accentDark, fontSize: 12),
                 side: BorderSide.none,
                 visualDensity: VisualDensity.compact,
               ),

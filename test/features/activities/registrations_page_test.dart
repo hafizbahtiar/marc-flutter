@@ -92,9 +92,7 @@ Map<String, dynamic> _activityJson() => {
   ],
 };
 
-Map<String, dynamic> _registrationsJson({
-  List<String> attended = const [],
-}) => {
+Map<String, dynamic> _registrationsJson({List<String> attended = const []}) => {
   'registrations': [
     {
       'id': 'r1',
@@ -178,72 +176,66 @@ void main() {
     expect(_switchValue(tester), isFalse);
   });
 
-  testWidgets(
-    'tukar sesi semasa permintaan dalam penerbangan → hasilnya TIDAK '
-    'ditulis ke sesi baharu',
-    (tester) async {
-      // Pintu supaya POST kekal tergantung sementara sesi ditukar.
-      final gate = Completer<void>();
-      var postSeen = false;
+  testWidgets('tukar sesi semasa permintaan dalam penerbangan → hasilnya TIDAK '
+      'ditulis ke sesi baharu', (tester) async {
+    // Pintu supaya POST kekal tergantung sementara sesi ditukar.
+    final gate = Completer<void>();
+    var postSeen = false;
 
-      final dio = Dio(BaseOptions(baseUrl: 'http://test'));
-      dio.httpClientAdapter = _FakeAdapter((options) async {
-        if (options.path == '/activities/a1') {
-          return _jsonResponse(_activityJson());
-        }
-        if (options.path == '/activities/a1/registrations') {
-          return _jsonResponse(_registrationsJson());
-        }
-        if (options.method == 'POST' &&
-            options.path == '/activities/a1/sessions/s1/attendance') {
-          postSeen = true;
-          await gate.future;
-          return _jsonResponse({
-            'created': true,
-            'member': <String, dynamic>{},
-          });
-        }
-        throw StateError('Unexpected ${options.method} ${options.path}');
-      });
-
-      await tester.pumpWidget(_app(dio));
-      await tester.pumpAndSettle();
-      expect(_switchValue(tester), isFalse);
-
-      // Tanda hadir untuk SESI 1 - permintaan tergantung pada pintu.
-      await tester.tap(find.byType(Switch));
-      // Dipam sehingga permintaan benar-benar bermula; dio melalui
-      // beberapa lapisan async sebelum adapter dimasuki.
-      for (var i = 0; i < 20 && !postSeen; i++) {
-        await tester.pump(const Duration(milliseconds: 10));
+    final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+    dio.httpClientAdapter = _FakeAdapter((options) async {
+      if (options.path == '/activities/a1') {
+        return _jsonResponse(_activityJson());
       }
-      expect(postSeen, isTrue);
+      if (options.path == '/activities/a1/registrations') {
+        return _jsonResponse(_registrationsJson());
+      }
+      if (options.method == 'POST' &&
+          options.path == '/activities/a1/sessions/s1/attendance') {
+        postSeen = true;
+        await gate.future;
+        return _jsonResponse({'created': true, 'member': <String, dynamic>{}});
+      }
+      throw StateError('Unexpected ${options.method} ${options.path}');
+    });
 
-      // Tukar ke SESI 2 sementara POST sesi 1 masih dalam penerbangan.
-      await _selectSession(tester, 'Petang');
+    await tester.pumpWidget(_app(dio));
+    await tester.pumpAndSettle();
+    expect(_switchValue(tester), isFalse);
 
-      // Biarkan POST sesi 1 selesai SEKARANG. `pumpAndSettle` selamat di
-      // sini: laluan yang dibuang mengosongkan entri busy, jadi tiada
-      // spinner yang beranimasi selamanya - dan ia turut menghabiskan
-      // bacaan semula senarai yang dicetuskan oleh pembatalan cache.
-      gate.complete();
-      await tester.pumpAndSettle();
-      await _drain(tester);
+    // Tanda hadir untuk SESI 1 - permintaan tergantung pada pintu.
+    await tester.tap(find.byType(Switch));
+    // Dipam sehingga permintaan benar-benar bermula; dio melalui
+    // beberapa lapisan async sebelum adapter dimasuki.
+    for (var i = 0; i < 20 && !postSeen; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+    expect(postSeen, isTrue);
 
-      // Ali TIDAK hadir untuk sesi 2. Sebelum pembetulan ini, penyelesaian
-      // sesi 1 menulis `_marked['r1'] = true` dan sesi 2 memaparkannya
-      // sebagai hadir - pembohongan yang kelihatan berwibawa kerana suis
-      // yang lain semuanya data sebenar.
-      expect(
-        _switchValue(tester),
-        isFalse,
-        reason: 'hasil sesi 1 tidak boleh mendarat dalam paparan sesi 2',
-      );
+    // Tukar ke SESI 2 sementara POST sesi 1 masih dalam penerbangan.
+    await _selectSession(tester, 'Petang');
 
-      // Dan spinner tidak tertinggal hidup pada baris itu.
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-    },
-  );
+    // Biarkan POST sesi 1 selesai SEKARANG. `pumpAndSettle` selamat di
+    // sini: laluan yang dibuang mengosongkan entri busy, jadi tiada
+    // spinner yang beranimasi selamanya - dan ia turut menghabiskan
+    // bacaan semula senarai yang dicetuskan oleh pembatalan cache.
+    gate.complete();
+    await tester.pumpAndSettle();
+    await _drain(tester);
+
+    // Ali TIDAK hadir untuk sesi 2. Sebelum pembetulan ini, penyelesaian
+    // sesi 1 menulis `_marked['r1'] = true` dan sesi 2 memaparkannya
+    // sebagai hadir - pembohongan yang kelihatan berwibawa kerana suis
+    // yang lain semuanya data sebenar.
+    expect(
+      _switchValue(tester),
+      isFalse,
+      reason: 'hasil sesi 1 tidak boleh mendarat dalam paparan sesi 2',
+    );
+
+    // Dan spinner tidak tertinggal hidup pada baris itu.
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
 
   testWidgets(
     'buka semula skrin selepas menanda → suis ON, bukan cache pra-tanda',
