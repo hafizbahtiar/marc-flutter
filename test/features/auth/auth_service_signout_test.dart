@@ -110,7 +110,7 @@ void main() {
         dio.paths,
         ['/me'],
         reason:
-            'mesti ping /me pada resume walaupun token belum luput — '
+            'mesti ping /me pada resume walaupun token belum luput - '
             'itu yang tendang sesi lepas revoke dari web',
       );
     },

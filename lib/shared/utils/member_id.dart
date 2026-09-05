@@ -6,7 +6,7 @@ import 'package:marc/shared/ui/form/app_masks.dart';
 /// (cth `MARC-0110/2026-0001`, `MARC-0110/2026-SA`).
 ///
 /// Format lama `MARC{YYYY}/{MM}/{seq}` (cth `MARC2026/08/0001`) dibiarkan
-/// pada rekod sedia ada — editor mula semula dengan topeng baru.
+/// pada rekod sedia ada - editor mula semula dengan topeng baru.
 final _newFormat = RegExp(r'^MARC-.+/\d{4}-.+$');
 final _legacyFormat = RegExp(r'^MARC\d{4}/\d{2}/\d+$');
 
@@ -18,10 +18,10 @@ String _normalize(String raw) =>
 String unmaskMemberId(String raw) =>
     _normalize(raw).replaceAll(RegExp(r'[/\-]'), '');
 
-/// Topeng nombor ahli — corak sama `PremiseLicenseFileNo` (ilms):
+/// Topeng nombor ahli - corak sama `PremiseLicenseFileNo` (ilms):
 /// prefix `MARC-` di luar medan, body `****/####-****` auto semasa taip.
 abstract final class MemberId {
-  /// Satu sumber kebenaran untuk corak, hint dan awalan — medan borang
+  /// Satu sumber kebenaran untuk corak, hint dan awalan - medan borang
   /// terus guna `AppMasks.memberId`, bukan salin corak di sini.
   static const config = AppMasks.memberId;
 

@@ -112,7 +112,7 @@ class OutstandingFeeCard extends ConsumerWidget {
 /// dengan hero tanpa bersaing dengannya.
 ///
 /// Notifikasi sengaja TIADA: ia sudah jadi tab bottom-nav dengan
-/// lencananya sendiri. Nilai null memberi "—" dan bukan "0" - sifar
+/// lencananya sendiri. Nilai null memberi "-" dan bukan "0" - sifar
 /// ialah kenyataan tentang data, dan semasa ralat kita tidak tahu
 /// apa-apa lagi.
 class MemberStatsBento extends StatelessWidget {
@@ -131,13 +131,13 @@ class MemberStatsBento extends StatelessWidget {
       children: [
         BentoStat(
           label: 'Sijil saya',
-          value: certificatesTotal?.toString() ?? '—',
+          value: certificatesTotal?.toString() ?? '-',
           tone: BentoTone.primarySoft,
           onTap: () => context.push('/my-certificates'),
         ),
         BentoStat(
           label: 'Ahli berdaftar',
-          value: totalMembers?.toString() ?? '—',
+          value: totalMembers?.toString() ?? '-',
           tone: BentoTone.secondarySoft,
           onTap: () => context.push('/members'),
         ),

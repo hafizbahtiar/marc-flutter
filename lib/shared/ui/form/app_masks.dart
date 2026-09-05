@@ -9,7 +9,7 @@ import 'package:marc/shared/ui/form/mask_field.dart';
 /// menolak taipan yang sah. Guna `normalizeMY` (shared/utils/phone.dart)
 /// untuk medan telefon.
 abstract final class AppMasks {
-  /// Badan nombor ahli — awalan `MARC-` dihias di luar medan.
+  /// Badan nombor ahli - awalan `MARC-` dihias di luar medan.
   /// Cth `0110/2026-0001`, `AB1C/2026-SA`.
   static const memberId = MaskConfig(
     mask: '****/####-****',

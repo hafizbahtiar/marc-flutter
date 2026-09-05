@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:marc/shared/ui/map/map_overlay.dart';
 
 /// User-Agent yang kenal pasti app. Dasar jubin OSM memblok
-/// `com.example.app` / string generik — jubin kosong akan terpapar.
+/// `com.example.app` / string generik - jubin kosong akan terpapar.
 const kMapUserAgentPackageName = 'com.hafizbahtiar.marc';
 
-/// Jenis jubin OSM yang disokong. `AppMap` tak kenal enum ni terus —
+/// Jenis jubin OSM yang disokong. `AppMap` tak kenal enum ni terus -
 /// ia cuma terima [MapTileSource], jadi pemanggil boleh tukar
 /// implementasi (OSM atau lain) tanpa sentuh widget peta.
 /// `bright` dulunya bernama `threeD`. Nama itu mengelirukan - ia tak

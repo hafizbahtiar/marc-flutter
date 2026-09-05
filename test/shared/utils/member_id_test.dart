@@ -68,7 +68,7 @@ void main() {
   });
 
   group('memberIdEditorSeed', () {
-    test('kosong dan format baru — body tanpa prefix', () {
+    test('kosong dan format baru - body tanpa prefix', () {
       expect(memberIdEditorSeed(null).initialValue, '');
       expect(memberIdEditorSeed(null).message, isNull);
       expect(

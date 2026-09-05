@@ -175,7 +175,7 @@ class AuthService {
   }
 
   /// Idle / resume: GET /me supaya interceptor sahkan sesi. Bukan
-  /// skip bila access JWT masih dalam TTL — revoke dari device lain
+  /// skip bila access JWT masih dalam TTL - revoke dari device lain
   /// bunuh family terus, tapi access JWT kekal "nampak sah" sampai
   /// 15 min. Ping ni yang tendang ke /login. Refresh 401 (family
   /// mati) → interceptor `clear()` → GoRouter hantar ke /login.

@@ -10,7 +10,7 @@ the OpenFreeMap `positron` style (`osm_tile_source.dart`), a minimal grey
 CARTO basemap whose rail treatment is:
 
 - `railway` painted `#dddddd` (near-invisible light grey), and
-- `railway_transit` — subway/LRT/monorail — gated behind `minzoom: 16`, so
+- `railway_transit` - subway/LRT/monorail - gated behind `minzoom: 16`, so
   it does not exist until the user is zoomed almost to street level.
 
 The layer also credits MeMoMaps, a raster provider that is never fetched:
@@ -27,7 +27,7 @@ to a provider it does not use.
 Decoding a real OpenFreeMap tile over KL Sentral (z14) confirms the
 `transportation` source-layer carries `subclass` values `subway`,
 `light_rail` and `monorail`, and the `poi` layer carries named stations.
-Restyling those is free — no new network, no new data.
+Restyling those is free - no new network, no new data.
 
 But per-line identity is not there. The `transportation_name` schema
 declares `route_1_colour` … `route_16_colour`, yet the KL tile contains
@@ -58,7 +58,7 @@ Official route colours, full `shapes.txt` geometry, and 187 stop rows with
 name, coordinates, `route_id`, and an `isOKU` accessibility flag. 151 of
 those rows belong to the seven rail lines.
 
-**BRT Sunway is excluded** — it is a bus service, and the seven rail lines
+**BRT Sunway is excluded** - it is a bus service, and the seven rail lines
 are the scope.
 
 Two quirks of the feed that the pipeline must handle:
@@ -66,14 +66,14 @@ Two quirks of the feed that the pipeline must handle:
 1. `shapes.txt` holds two shapes per route (direction 0 and 1). One is
    enough to draw the line; the pipeline takes direction 0.
 2. `stops.txt` has a `geometry` column whose every value is the literal
-   string `[object Object]` — a bug in their export. Ignore it and use
+   string `[object Object]` - a bug in their export. Ignore it and use
    `stop_lat` / `stop_lon`.
 
 ### Interchange stations must be merged
 
 The 151 rail stop rows resolve to 132 unique stations: 19 appear once per
 serving route. Masjid Jamek appears three times (AG, KJ, PH); Titiwangsa
-four (AG, PH, PYL, MR). Their coordinates are close but not identical —
+four (AG, PH, PYL, MR). Their coordinates are close but not identical -
 Maluri's two rows sit ~40 m apart.
 
 Rendered unmerged, an interchange is a pile of overlapping dots and a tap
@@ -84,7 +84,7 @@ centroid.
 Merging by name is only safe while names are unique per station, so the
 pipeline **fails loudly** if a merged cluster spans more than 300 m. The
 worst real cluster in the current feed deviates 147 m from its centroid, so
-that threshold has roughly 2x headroom — it is a guard, not a formality. A
+that threshold has roughly 2x headroom - it is a guard, not a formality. A
 silent merge of two genuinely different stations that share a name would
 put a station in the wrong place, and that is worse than a failed build.
 
@@ -94,7 +94,7 @@ Klang Valley commuters count KTM Komuter as part of the network, and it is
 absent here. The separate KTMB feed
 (`https://api.data.gov.my/gtfs-static/ktmb`, 47 KB) has `routes.txt` with
 official colours (Seremban Line `#3C5A9F`, Port Klang Line `#DC2420`) and
-`stops.txt` — but **no `shapes.txt` at all**, so there is no line geometry
+`stops.txt` - but **no `shapes.txt` at all**, so there is no line geometry
 to draw.
 
 Joining its stops in `stop_times` order would produce straight lines cutting
@@ -118,11 +118,11 @@ table.
 Output, listed individually in `pubspec.yaml` (its existing comment already
 warns that directory entries are not recursive):
 
-- `assets/transit/rail_lines.geojson` — 71 KB, 7 LineStrings
-- `assets/transit/rail_stations.geojson` — 20 KB, 132 merged stations
+- `assets/transit/rail_lines.geojson` - 71 KB, 7 LineStrings
+- `assets/transit/rail_stations.geojson` - 20 KB, 132 merged stations
 
 ~22 KB gzipped together. Bundling was chosen over runtime fetching because
-the data changes when a new line opens — a few times a decade, not weekly —
+the data changes when a new line opens - a few times a decade, not weekly -
 and a bundled asset has no offline path, no timeout, no corrupt-zip path,
 and no on-device GTFS parser.
 
@@ -138,7 +138,7 @@ abstract interface class MapOverlay {
 ```
 
 `MapStyleController` is a thin wrapper we own, exposing only what an
-overlay needs — `addGeoJsonSource`, `addLineLayer`, `addCircleLayer`,
+overlay needs - `addGeoJsonSource`, `addLineLayer`, `addCircleLayer`,
 `addSymbolLayer`. Overlays never see a MapLibre type, so they are testable
 against a recording double with no native map.
 
@@ -150,7 +150,7 @@ the transit layers.
 This is deliberately more structure than "draw rail when transport is
 selected" needs. It is what makes the binding a configuration rather than a
 commitment: turning the overlay into an independent toggle later means
-passing `overlays` directly to `AppMap` and adding a button — nothing
+passing `overlays` directly to `AppMap` and adding a button - nothing
 inside `TransitOverlay` changes.
 
 `MapTileSource` is an `abstract interface class`, so implementers must
@@ -159,7 +159,7 @@ accordingly.
 
 ## Lifecycle
 
-Overlays install on `onStyleLoadedCallback`, not `onMapCreated` — sources
+Overlays install on `onStyleLoadedCallback`, not `onMapCreated` - sources
 and layers require a loaded style.
 
 Changing tile type changes `styleString`, which makes MapLibre discard every
@@ -170,7 +170,7 @@ teardown path would be dead code that drifts out of correctness.
 ## Rendering
 
 Lines: zoom-interpolated width, `line-color` from the feature property,
-`line-join: round`. Visible from roughly z9 — the whole point is that these
+`line-join: round`. Visible from roughly z9 - the whole point is that these
 are legible before street level, unlike positron's z16 gate.
 
 Stations: white circle with a route-coloured stroke from ~z11, name labels

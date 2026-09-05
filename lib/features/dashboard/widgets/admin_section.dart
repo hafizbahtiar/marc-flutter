@@ -142,9 +142,9 @@ class _ActivityStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // `attendanceRate` null bermakna tiada sesi tamat bulan ini - BUKAN
-    // sama dengan kehadiran sifar, jadi papar "—".
+    // sama dengan kehadiran sifar, jadi papar "-".
     final kadar = stats.attendanceRate == null
-        ? '—'
+        ? '-'
         : '${(stats.attendanceRate! * 100).round()}%';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -116,7 +116,7 @@ class DashboardPage extends ConsumerWidget {
               DashboardHero(displayName: profileDisplayName),
               const SizedBox(height: 16),
               // Petak kekal boleh diketuk walaupun tanpa data - pintasan
-              // sijil/ahli masih berguna, dan angkanya "—" bukan "0".
+              // sijil/ahli masih berguna, dan angkanya "-" bukan "0".
               const MemberStatsBento(
                 certificatesTotal: null,
                 totalMembers: null,

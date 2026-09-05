@@ -139,7 +139,7 @@ class BentoStat extends StatelessWidget {
   final String label;
 
   /// Sudah diformat oleh pemanggil. Rentetan dan bukan `int` supaya
-  /// "—", "RM 425.00" dan "72%" semuanya melalui petak yang sama.
+  /// "-", "RM 425.00" dan "72%" semuanya melalui petak yang sama.
   final String value;
 
   final BentoTone tone;

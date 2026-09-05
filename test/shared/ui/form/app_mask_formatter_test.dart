@@ -56,7 +56,7 @@ void main() {
       expect(v.selection.baseOffset, 4);
     });
 
-    test('backspace pada literal tak buang data — topeng masuk semula', () {
+    test('backspace pada literal tak buang data - topeng masuk semula', () {
       final v = run('12/34', '1234', oldCursor: 3, nextCursor: 2);
       expect(v.text, '12/34');
     });

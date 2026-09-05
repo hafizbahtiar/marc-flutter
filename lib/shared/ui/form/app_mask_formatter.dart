@@ -2,11 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 
-/// Topeng input — algorithm [mask_text_input_formatter] (siqwin),
+/// Topeng input - algorithm [mask_text_input_formatter] (siqwin),
 /// tanpa package.
 ///
 /// Slot lalai: `#` digit, `*` huruf/digit. Aksara lain (termasuk `A`)
-/// ialah literal — tambah `A` sendiri dalam [filter] jika perlu slot
+/// ialah literal - tambah `A` sendiri dalam [filter] jika perlu slot
 /// huruf, supaya `MARC-####` tak pecah.
 ///
 /// [eager]: literal masuk terus lepas slot; lazy (lalai) tunggu aksara

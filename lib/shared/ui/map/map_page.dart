@@ -19,7 +19,7 @@ import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Halaman ujian peta: tukar variant jubin OSM dan pastikan `AppMap`
-/// boleh diguna semula. Bukan skrin produk — pintu masuk dari Profil.
+/// boleh diguna semula. Bukan skrin produk - pintu masuk dari Profil.
 class MapPage extends StatefulWidget {
   const MapPage({
     super.key,

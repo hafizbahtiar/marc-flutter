@@ -4,7 +4,7 @@
 
 **Goal:** Draw the seven Klang Valley rail lines and their stations on the map in official Rapid KL colours, bound to the "Transport" tile type through a reusable overlay abstraction.
 
-**Architecture:** A `dart run` tool distils the data.gov.my Prasarana GTFS feed into two bundled GeoJSON assets. At runtime a `MapOverlay` — which sees only our own `MapStyleController`, never a MapLibre type — installs GeoJSON sources and line/circle/symbol layers when the style loads. `MapTileSource.overlays` binds the transit overlay to the `transport` source; every other source returns an empty list.
+**Architecture:** A `dart run` tool distils the data.gov.my Prasarana GTFS feed into two bundled GeoJSON assets. At runtime a `MapOverlay` - which sees only our own `MapStyleController`, never a MapLibre type - installs GeoJSON sources and line/circle/symbol layers when the style loads. `MapTileSource.overlays` binds the transit overlay to the `transport` source; every other source returns an empty list.
 
 **Tech Stack:** Dart/Flutter, `maplibre_gl` 0.27.0, `archive` (dev-only, for the build tool).
 
@@ -12,10 +12,10 @@
 
 ## Global Constraints
 
-- **Do not commit.** Stage changes with `git add` only. The working tree holds unrelated uncommitted work — stage only files this plan names.
+- **Do not commit.** Stage changes with `git add` only. The working tree holds unrelated uncommitted work - stage only files this plan names.
 - Code comments in Bahasa Malaysia, matching the surrounding module. Comments explain *why*, never restate *what*.
 - `permission_handler` stays pinned at `12.0.3`; do not add any dependency that raises the Android compileSdk ceiling above 35. `archive` is pure Dart and dev-only, so it is safe.
-- Assets are listed individually in `pubspec.yaml` — directory entries are **not** recursive.
+- Assets are listed individually in `pubspec.yaml` - directory entries are **not** recursive.
 - Route colours come from the feed verbatim. Never hand-type a colour.
 - `annotationConsumeTapEvents` must stay at its default; `MapLibreMap` asserts `length > 0`.
 - Never use `pumpAndSettle` on a widget test containing a map.
@@ -35,7 +35,7 @@
 
 - [ ] **Step 1: Write the failing tests**
 
-Pure-function tests over inline CSV — no network, no zip, no file IO.
+Pure-function tests over inline CSV - no network, no zip, no file IO.
 
 ```dart
 // test/tool/build_transit_assets_test.dart
@@ -180,7 +180,7 @@ void main() {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `flutter test test/tool/build_transit_assets_test.dart`
-Expected: FAIL — `tool/build_transit_assets.dart` does not exist.
+Expected: FAIL - `tool/build_transit_assets.dart` does not exist.
 
 - [ ] **Step 3: Add the dev dependency**
 
@@ -491,7 +491,7 @@ git add pubspec.yaml pubspec.lock tool/build_transit_assets.dart \
 - Produces:
   - `abstract interface class MapOverlay { String get id; List<MapTileAttribution> get attributions; Future<void> install(MapStyleController style); }`
   - `abstract interface class MapStyleController` with `Future<void> addGeoJsonSource(String id, Map<String, dynamic> geojson)`, `Future<void> addLineLayer(String sourceId, String layerId, MapLineStyle style)`, `Future<void> addCircleLayer(String sourceId, String layerId, MapCircleStyle style)`, `Future<void> addSymbolLayer(String sourceId, String layerId, MapSymbolStyle style)`.
-  - Value types `MapLineStyle`, `MapCircleStyle`, `MapSymbolStyle` — plain data, no MapLibre types.
+  - Value types `MapLineStyle`, `MapCircleStyle`, `MapSymbolStyle` - plain data, no MapLibre types.
   - `MapTileSource.overlays` returning `List<MapOverlay>`.
 
 - [ ] **Step 1: Write the failing test**
@@ -558,7 +558,7 @@ void main() {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/shared/ui/map/map_overlay_test.dart`
-Expected: FAIL — `map_overlay.dart` does not exist.
+Expected: FAIL - `map_overlay.dart` does not exist.
 
 - [ ] **Step 3: Write `map_overlay.dart`**
 
@@ -858,7 +858,7 @@ void main() {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/shared/ui/map/transit_overlay_test.dart`
-Expected: FAIL — `transit_overlay.dart` does not exist.
+Expected: FAIL - `transit_overlay.dart` does not exist.
 
 - [ ] **Step 3: Write `transit_overlay.dart`**
 
@@ -1094,7 +1094,7 @@ Append to `test/shared/ui/map/map_page_test.dart`:
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/shared/ui/map/map_page_test.dart`
-Expected: FAIL — `data.gov.my` not found in attributions.
+Expected: FAIL - `data.gov.my` not found in attributions.
 
 - [ ] **Step 3: Merge overlay attributions in `AppMap.build`**
 
@@ -1260,7 +1260,7 @@ git add lib/shared/ui/map/app_map.dart test/shared/ui/map/map_page_test.dart
 
 **Interfaces:**
 - Consumes: `TransitStation` (Task 3); `TransitOverlay.stationLayerIds` (Task 3).
-- Produces: `Future<void> showTransitStationSheet(BuildContext, TransitStation)`; `AppMap.onFeatureTap` of type `void Function(List<String> layerIds, Map<String, dynamic> properties)` — actually `AppMap.onStationTap` of type `void Function(TransitStation station)` is too specific for a generic widget, so `AppMap` exposes `queryLayers` + `onFeatureTap`:
+- Produces: `Future<void> showTransitStationSheet(BuildContext, TransitStation)`; `AppMap.onFeatureTap` of type `void Function(List<String> layerIds, Map<String, dynamic> properties)` - actually `AppMap.onStationTap` of type `void Function(TransitStation station)` is too specific for a generic widget, so `AppMap` exposes `queryLayers` + `onFeatureTap`:
   - `final List<String> tapLayerIds;`
   - `final void Function(Map<String, dynamic> properties)? onFeatureTap;`
 
@@ -1332,7 +1332,7 @@ void main() {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/shared/ui/map/transit_station_sheet_test.dart`
-Expected: FAIL — `transit_station_sheet.dart` does not exist.
+Expected: FAIL - `transit_station_sheet.dart` does not exist.
 
 - [ ] **Step 3: Write the sheet**
 
@@ -1569,7 +1569,7 @@ git add lib/shared/ui/map/transit_station_sheet.dart lib/shared/ui/map/app_map.d
 
 ### Task 6: Verify on device
 
-**Files:** none — this task changes nothing unless it finds a defect.
+**Files:** none - this task changes nothing unless it finds a defect.
 
 - [ ] **Step 1: Full suite**
 
@@ -1590,7 +1590,7 @@ flutter build apk --debug --flavor prod
 
 Open Peta → layer button → Transport. Confirm:
 - seven coloured lines, each in its Rapid KL colour;
-- station circles from ~z11 with **coloured strokes, not black** — a black stroke means the nested `['at', 0, ['get','colors']]` expression was rejected, so take the fallback documented in Task 3 Step 3;
+- station circles from ~z11 with **coloured strokes, not black** - a black stroke means the nested `['at', 0, ['get','colors']]` expression was rejected, so take the fallback documented in Task 3 Step 3;
 - station labels from ~z13;
 - tapping a station opens the sheet with the right lines;
 - the attribution button lists data.gov.my and Prasarana;

@@ -6,7 +6,7 @@ final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 /// Kenapa sesi tempatan habis. [none] = belum/tiada isyarat (buka app
 /// tanpa token, atau dah di-consume). [signedOut] = user tekan Log
 /// keluar. [sessionEnded] = server tolak refresh (revoke, logout-all,
-/// tukar password, token luput) — /login papar dialog.
+/// tukar password, token luput) - /login papar dialog.
 enum AuthEndReason { none, signedOut, sessionEnded }
 
 const sessionEndedTitle = 'Sesi tamat';
@@ -57,7 +57,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState(endReason: reason);
   }
 
-  /// Dialog di /login dah baca isyarat — buang supaya rebuild/rotate
+  /// Dialog di /login dah baca isyarat - buang supaya rebuild/rotate
   /// tak papar semula.
   void consumeEndReason() {
     if (state.endReason == AuthEndReason.none) return;

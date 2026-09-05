@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:marc/shared/ui/form/app_mask_formatter.dart';
 
-/// Satu topeng lengkap — corak, penapis, dan cadangan UI yang pergi
+/// Satu topeng lengkap - corak, penapis, dan cadangan UI yang pergi
 /// bersamanya. Dipakai terus sebagai `maskPreset` pada medan borang,
 /// atau dibina di tempat untuk topeng sekali guna.
 ///
@@ -80,7 +80,7 @@ class MaskConfig {
     hint,
     keyboardType,
     prefixText,
-    // RegExp tiada `==` yang berguna — guna corak supaya padan `_sameFilter`.
+    // RegExp tiada `==` yang berguna - guna corak supaya padan `_sameFilter`.
     Object.hashAllUnordered(
       filter?.entries.map((e) => Object.hash(e.key, e.value.pattern)) ??
           const <int>[],
@@ -164,7 +164,7 @@ class MaskFieldBinding {
   ];
 
   /// Panggil dari `initState` dan `didUpdateWidget`. Selamat dipanggil
-  /// berulang — formatter dibina semula hanya bila [config] berubah nilai.
+  /// berulang - formatter dibina semula hanya bila [config] berubah nilai.
   void update({
     required MaskConfig? config,
     TextEditingController? controller,

@@ -255,12 +255,12 @@ void main() {
 
     expect(find.text('Cuba lagi'), findsOneWidget);
     // Hero kekal dipapar dalam keadaan ralat - ia identiti, bukan data -
-    // jadi pintasan sijil/ahli masih boleh diketuk. Angkanya "—" dan
+    // jadi pintasan sijil/ahli masih boleh diketuk. Angkanya "-" dan
     // BUKAN "0": sifar ialah kenyataan tentang data, dan ketika ini kita
     // tidak tahu apa-apa.
     expect(find.text('Sijil saya'), findsOneWidget);
     expect(find.text('Ahli berdaftar'), findsOneWidget);
-    expect(find.text('—'), findsNWidgets(2));
+    expect(find.text('-'), findsNWidgets(2));
     expect(find.text('0'), findsNothing);
   });
 
@@ -345,14 +345,14 @@ void main() {
     expect(find.textContaining('tidak termasuk derma'), findsNothing);
   });
 
-  testWidgets('attendance_rate null → papar "—", bukan "0%"', (tester) async {
+  testWidgets('attendance_rate null → papar "-", bukan "0%"', (tester) async {
     final dio = _dioYangMemulangkan(_payloadAdmin(attendanceRate: null));
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
     await tester.pumpAndSettle();
 
     expect(find.text('0%'), findsNothing);
-    expect(find.text('—'), findsWidgets);
+    expect(find.text('-'), findsWidgets);
   });
 
   testWidgets('Menunggu kelulusan: ketukan navigasi ke /members/pending', (

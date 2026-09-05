@@ -211,7 +211,7 @@ class ActivityStats {
   final int registrationsThisMonth;
 
   /// 0..1, atau null bila pembahagi sifar (tiada sesi tamat bulan ini).
-  /// Null BUKAN sama dengan 0 - kad papar "—", bukan "0%".
+  /// Null BUKAN sama dengan 0 - kad papar "-", bukan "0%".
   final double? attendanceRate;
 
   factory ActivityStats.fromJson(Map<String, dynamic> json) => ActivityStats(
