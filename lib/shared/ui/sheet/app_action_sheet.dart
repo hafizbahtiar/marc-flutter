@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:marc/shared/ui/sheet/sheet_handle.dart';
 
 /// Satu pilihan dalam [showAppActionSheet].
 ///
@@ -75,13 +76,22 @@ Future<T?> showAppActionSheet<T>(
         message: message == null ? null : Text(message),
         actions: [
           for (final a in actions)
-            CupertinoActionSheetAction(
-              onPressed: a.enabled
-                  ? () => Navigator.of(ctx).pop(a.value)
-                  : () {},
-              isDestructiveAction: a.isDestructive,
-              isDefaultAction: a.isSelected,
-              child: Text(a.label),
+            // onPressed wajib (bukan nullable) - IgnorePointer + Opacity
+            // ganti disabled sebenar supaya baris nampak mati dan tak
+            // bertindak balas, bukan no-op yang masih nampak hidup.
+            IgnorePointer(
+              ignoring: !a.enabled,
+              child: Opacity(
+                opacity: a.enabled ? 1 : 0.38,
+                child: CupertinoActionSheetAction(
+                  onPressed: a.enabled
+                      ? () => Navigator.of(ctx).pop(a.value)
+                      : () {},
+                  isDestructiveAction: a.isDestructive,
+                  isDefaultAction: a.isSelected,
+                  child: Text(a.label),
+                ),
+              ),
             ),
         ],
         cancelButton: CupertinoActionSheetAction(
@@ -130,7 +140,7 @@ class AppActionSheetMetrics {
 
   static const tileHeight = 56.0;
   static const subtitleTileHeight = 72.0;
-  static const handleHeight = 20.0;
+  static const handleHeight = ModalSheetHandle.height;
   static const headerHeight = 48.0;
   static const footerHeight = 12.0;
   static const slackTiles = 2;
@@ -216,7 +226,7 @@ class _MaterialActionSheet<T> extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const _SheetHandle(),
+              const ModalSheetHandle(),
               if (title != null || message != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
@@ -289,28 +299,6 @@ class _MaterialActionSheet<T> extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _SheetHandle extends StatelessWidget {
-  const _SheetHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppActionSheetMetrics.handleHeight,
-      child: Center(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: const SizedBox(width: 32, height: 4),
-        ),
-      ),
     );
   }
 }

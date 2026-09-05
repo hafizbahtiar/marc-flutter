@@ -109,8 +109,8 @@ class PendingMembersPage extends ConsumerWidget {
 
     // Ahli lama (migrasi manual->digital) yang dah bayar tunai sebelum
     // sistem ni wujud - admin/superadmin sahaja (server hakim sebenar,
-    // ni cuma UI). Nota WAJIB - showEditTextDialog pulang null kalau
-    // kosong, jadi guard `reason == null` di bawah dah cukup.
+    // ni cuma UI). Simpan mati sampai ada nota; Batal/tutup pulang
+    // null, jadi guard `reason == null` di bawah dah cukup.
     Future<void> handleApproveBypass(MemberRow row) async {
       final name = row.displayName ?? row.memberId ?? 'Belum disahkan';
       final ok = await showConfirmDialog(

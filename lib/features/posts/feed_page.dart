@@ -2,14 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:marc/app/theme.dart';
-import 'package:marc/core/api_client.dart';
 import 'package:marc/core/error_utils.dart';
 import 'package:marc/features/posts/post_providers.dart';
 import 'package:marc/features/posts/widgets/post_card.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
 import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/widgets/email_not_verified_view.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 import 'package:marc/shared/ui/widgets/pending_status_view.dart';
 
@@ -124,7 +123,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     }
 
     if (profileStatus == 'approved' && profileEmailVerified == false) {
-      return _EmailNotVerifiedView(
+      return EmailNotVerifiedView(
         onRefresh: () async {
           try {
             final _ = await ref.refresh(myProfileProvider.future);
@@ -281,100 +280,6 @@ class _FeedPageState extends ConsumerState<FeedPage> {
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-/// Gate untuk ahli yang approved tapi email belum disahkan. Backend
-/// (RequireVerifiedEmail) 403 semua route Posts/comments/uploads/
-/// notifications untuk kes ni - beri jalan keluar terus di sini (hantar
-/// semula email pengesahan, atau semak semula status) supaya user tak
-/// terperangkap pada Feed yang error generic.
-class _EmailNotVerifiedView extends ConsumerStatefulWidget {
-  const _EmailNotVerifiedView({required this.onRefresh});
-
-  final Future<void> Function() onRefresh;
-
-  @override
-  ConsumerState<_EmailNotVerifiedView> createState() =>
-      _EmailNotVerifiedViewState();
-}
-
-class _EmailNotVerifiedViewState extends ConsumerState<_EmailNotVerifiedView> {
-  bool _sending = false;
-
-  Future<void> _requestVerification() async {
-    setState(() => _sending = true);
-    try {
-      await ref.read(dioProvider).post('/auth/verify-email/request');
-      if (!mounted) return;
-      MySnackBar.success(
-        context,
-        'Email pengesahan dihantar. Sila semak inbox anda.',
-      );
-    } catch (e) {
-      if (!mounted) return;
-      MySnackBar.error(
-        context,
-        e is DioException
-            ? extractErrorMessage(e)
-            : 'Gagal hantar email pengesahan. Cuba lagi.',
-      );
-    } finally {
-      if (mounted) setState(() => _sending = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('MARC')),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.mark_email_unread_outlined,
-                  size: 48,
-                  color: Theme.of(
-                    context,
-                  ).extension<AppSemanticColors>()!.warning,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Sila sahkan email anda untuk teruskan.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    OutlinedButton(
-                      onPressed: _sending ? null : _requestVerification,
-                      child: _sending
-                          ? const SizedBox(
-                              height: 14,
-                              width: 14,
-                              child: CircularProgressIndicator.adaptive(),
-                            )
-                          : const Text('Hantar semula'),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: widget.onRefresh,
-                      child: const Text('Semak semula'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

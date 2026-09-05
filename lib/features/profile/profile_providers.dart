@@ -314,6 +314,19 @@ class ProfileRepository {
     _ref.invalidate(memberDetailProvider(userId));
   }
 
+  /// Betulkan nombor ahli yang SUDAH wujud (rank admin/superadmin).
+  /// Ahli belum verify (member_id null) ditolak 409 di backend.
+  Future<void> correctMemberID(String userId, String memberId) async {
+    final dio = _ref.read(dioProvider);
+    await dio.patch(
+      '/members/$userId/member-id',
+      data: {'member_id': memberId},
+    );
+    _ref.invalidate(membersProvider);
+    _ref.invalidate(pendingMembersProvider);
+    _ref.invalidate(memberDetailProvider(userId));
+  }
+
   /// Tukar role ahli (Stage 12) - backend kuatkuasakan hierarki rank,
   /// client cuma hantar niat.
   Future<void> updateMemberRole(String userId, String roleKey) async {

@@ -6,6 +6,7 @@ import 'package:marc/app/theme.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/widgets/member_avatar.dart';
+import 'package:marc/shared/utils/member_id.dart';
 
 const _placeholderRow = MemberRow(
   userId: '00000000-0000-0000-0000-000000000000',
@@ -103,8 +104,10 @@ class _MembersPageState extends ConsumerState<MembersPage> {
       }
       if (_query.isEmpty) return true;
       final name = row.displayName?.toLowerCase() ?? '';
-      final memberId = row.memberId?.toLowerCase() ?? '';
-      return name.contains(_query) || memberId.contains(_query);
+      if (name.contains(_query)) return true;
+      final memberId = row.memberId;
+      if (memberId == null) return false;
+      return unmaskMemberId(memberId).contains(unmaskMemberId(_query));
     }).toList();
   }
 

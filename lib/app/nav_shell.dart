@@ -23,11 +23,19 @@ class NavShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: shell.currentIndex,
         onDestinationSelected: _onTap,
+        // Urutan MESTI sepadan dengan urutan `branches` dalam
+        // router.dart - goBranch memilih mengikut indeks, bukan nama.
+        // Diuji oleh test/app/nav_shell_test.dart.
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Utama',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.campaign_outlined),
+            selectedIcon: Icon(Icons.campaign),
+            label: 'Hebahan',
           ),
           NavigationDestination(
             icon: Icon(Icons.event_outlined),

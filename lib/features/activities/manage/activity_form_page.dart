@@ -9,6 +9,7 @@ import 'package:marc/features/activities/activity_providers.dart';
 import 'package:marc/features/activities/manage/activity_draft.dart';
 import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
+import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/form/custom_datefield.dart';
 import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
@@ -457,7 +458,8 @@ class _ActivityFormState extends ConsumerState<_ActivityForm> {
                 const Expanded(
                   child: FormFieldLabel('Kategori', padding: EdgeInsets.zero),
                 ),
-                if (ref.watch(isManagerOrAboveProvider))
+                // Pintasan - pintu utama di Tetapan (admin/superadmin).
+                if (ref.watch(isAdminOrAboveProvider))
                   TextButton(
                     onPressed: () => context.push('/activities/categories'),
                     child: const Text('Urus kategori'),

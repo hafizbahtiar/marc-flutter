@@ -1,27 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:marc/shared/ui/form/custom_textfield.dart';
+import 'package:flutter/services.dart';
+import 'package:marc/shared/ui/dialog/app_dialog_action.dart';
+import 'package:marc/shared/ui/dialog/app_dialog_field.dart';
+import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
 
-/// Satu tindakan dalam [AppDialogShell] / [showAppDialog].
-///
-/// `isPrimary` = tindakan positif (Simpan/Padam/Ya) - dirender sebagai
-/// butang elevated di Material, `isDefaultAction` di Cupertino. Tindakan
-/// bukan primary jadi outlined.
-class AppDialogAction {
-  const AppDialogAction({
-    required this.label,
-    required this.onPressed,
-    this.isPrimary = false,
-    this.isDestructive = false,
-  });
-
-  final String label;
-
-  /// `null` = butang dimatikan (cth semasa borang tak sah).
-  final VoidCallback? onPressed;
-  final bool isPrimary;
-  final bool isDestructive;
-}
+export 'package:marc/shared/ui/dialog/app_dialog_action.dart';
 
 /// Rangka dialog adaptive yang boleh guna semula - CupertinoAlertDialog
 /// di iOS/macOS, AlertDialog di platform lain.
@@ -36,8 +20,8 @@ class AppDialogAction {
 /// Guna widget ni terus bila dialog perlu state sendiri; guna
 /// [showAppDialog] untuk kes ringkas tanpa state, `showConfirmDialog`
 /// (shared/ui/widgets/confirm_dialog.dart) untuk kes confirm dua-butang,
-/// [showAppAlertDialog] untuk kes info satu-butang, dan [showAppInputDialog]
-/// bila perlu medan input (cth reason/description sebelum reject/cancel).
+/// [showAppAlertDialog] untuk kes info satu-butang. Medan input /
+/// borang guna [showAppFormSheet] / [showAppInputDialog], bukan dialog.
 class AppDialogShell extends StatelessWidget {
   const AppDialogShell({
     super.key,
@@ -84,10 +68,15 @@ class AppDialogShell extends StatelessWidget {
 
     return AlertDialog(
       title: Text(title),
-      content: body,
+      // AlertDialog balut content dengan Flexible. Widget yang suka
+      // meregang (Column lalai MainAxisSize.max, TextField) akan isi
+      // sisa tinggi skrin. heightFactor: 1 paksa shrink-wrap ke anak.
+      content: body == null
+          ? null
+          : Align(alignment: Alignment.topLeft, heightFactor: 1, child: body),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-      actions: [_MaterialActionRow(actions: actions)],
+      actions: [AppDialogActionRow(actions: actions)],
     );
   }
 }
@@ -157,9 +146,9 @@ Future<void> showAppAlertDialog(
   );
 }
 
-/// Papar dialog dengan satu medan teks (cth sebab penolakan/pembatalan,
-/// description) - butang positif mati sehingga [validator] lulus (lalai:
-/// tak boleh kosong selepas trim).
+/// Papar satu medan teks dalam [AppFormSheet] (bukan dialog) - butang
+/// positif mati sehingga [validator] lulus (lalai: tak boleh kosong
+/// selepas trim).
 ///
 /// Pulang teks (trimmed) bila disahkan, `null` bila dibatal/ditutup.
 ///
@@ -189,12 +178,17 @@ Future<String?> showAppInputDialog(
   TextCapitalization textCapitalization = TextCapitalization.sentences,
   bool isDestructive = false,
   bool Function(String value)? validator,
+  List<TextInputFormatter>? inputFormatters,
+  String? mask,
+  Map<String, RegExp>? maskFilter,
+  bool maskEager = false,
+  String? prefixText,
   bool barrierDismissible = true,
 }) {
-  return showAdaptiveDialog<String>(
-    context: context,
+  return showAppFormSheetRoute<String>(
+    context,
     barrierDismissible: barrierDismissible,
-    builder: (_) => _AppInputDialog(
+    builder: (_) => _AppInputSheet(
       title: title,
       message: message,
       positiveLabel: positiveLabel,
@@ -207,12 +201,17 @@ Future<String?> showAppInputDialog(
       textCapitalization: textCapitalization,
       isDestructive: isDestructive,
       validator: validator ?? (value) => value.trim().isNotEmpty,
+      inputFormatters: inputFormatters,
+      mask: mask,
+      maskFilter: maskFilter,
+      maskEager: maskEager,
+      prefixText: prefixText,
     ),
   );
 }
 
-class _AppInputDialog extends StatefulWidget {
-  const _AppInputDialog({
+class _AppInputSheet extends StatefulWidget {
+  const _AppInputSheet({
     required this.title,
     required this.message,
     required this.positiveLabel,
@@ -225,6 +224,11 @@ class _AppInputDialog extends StatefulWidget {
     required this.textCapitalization,
     required this.isDestructive,
     required this.validator,
+    required this.inputFormatters,
+    required this.mask,
+    required this.maskFilter,
+    required this.maskEager,
+    required this.prefixText,
   });
 
   final String title;
@@ -239,14 +243,22 @@ class _AppInputDialog extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final bool isDestructive;
   final bool Function(String value) validator;
+  final List<TextInputFormatter>? inputFormatters;
+  final String? mask;
+  final Map<String, RegExp>? maskFilter;
+  final bool maskEager;
+  final String? prefixText;
 
   @override
-  State<_AppInputDialog> createState() => _AppInputDialogState();
+  State<_AppInputSheet> createState() => _AppInputSheetState();
 }
 
-class _AppInputDialogState extends State<_AppInputDialog> {
-  /// StatefulWidget, bukan controller tempatan dalam fungsi show*: lihat
-  /// nota pemilikan controller dalam `edit_text_dialog.dart`.
+class _AppInputSheetState extends State<_AppInputSheet> {
+  /// StatefulWidget SEMATA-MATA sebab pemilikan controller. Versi lama
+  /// cipta TextEditingController lalu `dispose()` dalam `finally` selepas
+  /// `await showDialog` - Future siap bila `pop`, tapi route masih
+  /// beranimasi keluar dan TextField masih dibina, jadi app crash dengan
+  /// "A TextEditingController was used after being disposed".
   late final TextEditingController _controller = TextEditingController(
     text: widget.initialValue,
   );
@@ -270,45 +282,24 @@ class _AppInputDialogState extends State<_AppInputDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final platform = Theme.of(context).platform;
-    final isApple =
-        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
-    final body = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (widget.message != null) ...[
-          Text(widget.message!),
-          const SizedBox(height: 14),
-        ],
-        if (isApple)
-          CupertinoTextField(
-            controller: _controller,
-            placeholder: widget.hint,
-            maxLines: widget.maxLines,
-            maxLength: widget.maxLength,
-            keyboardType: widget.keyboardType,
-            textCapitalization: widget.textCapitalization,
-            autofocus: true,
-            onChanged: _onChanged,
-          )
-        else
-          CustomTextField(
-            controller: _controller,
-            hint: widget.hint,
-            maxLines: widget.maxLines,
-            maxLength: widget.maxLength,
-            keyboardType: widget.keyboardType,
-            textCapitalization: widget.textCapitalization,
-            autofocus: true,
-            onChanged: _onChanged,
-          ),
-      ],
-    );
-
-    return AppDialogShell(
+    return AppFormSheet(
       title: widget.title,
-      content: body,
+      message: widget.message,
+      content: AppDialogTextField(
+        controller: _controller,
+        hint: widget.hint,
+        maxLines: widget.maxLines,
+        maxLength: widget.maxLength,
+        keyboardType: widget.keyboardType,
+        textCapitalization: widget.textCapitalization,
+        autofocus: true,
+        onChanged: _onChanged,
+        inputFormatters: widget.inputFormatters,
+        mask: widget.mask,
+        maskFilter: widget.maskFilter,
+        maskEager: widget.maskEager,
+        prefixText: widget.prefixText,
+      ),
       actions: [
         AppDialogAction(
           label: widget.negativeLabel,
@@ -321,66 +312,6 @@ class _AppInputDialogState extends State<_AppInputDialog> {
           onPressed: _valid ? _submit : null,
         ),
       ],
-    );
-  }
-}
-
-/// Butang sebaris, lebar sama rata. Setiap butang dibalut Expanded supaya
-/// dapat had lebar yang jelas - `filledButtonTheme` global kita set
-/// `minimumSize: Size.fromHeight(54)`, iaitu lebar tak terhingga, yang
-/// meletup dalam susun atur mendatar yang tak berhad.
-class _MaterialActionRow extends StatelessWidget {
-  const _MaterialActionRow({required this.actions});
-
-  final List<AppDialogAction> actions;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (var i = 0; i < actions.length; i++) ...[
-          if (i > 0) const SizedBox(width: 12),
-          Expanded(child: _actionButton(context, actions[i])),
-        ],
-      ],
-    );
-  }
-
-  Widget _actionButton(BuildContext context, AppDialogAction a) {
-    final scheme = Theme.of(context).colorScheme;
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    );
-    const minimumSize = Size.fromHeight(48);
-    final textStyle = Theme.of(
-      context,
-    ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600);
-
-    if (a.isPrimary) {
-      return ElevatedButton(
-        onPressed: a.onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: a.isDestructive ? scheme.error : scheme.primary,
-          foregroundColor: a.isDestructive ? scheme.onError : scheme.onPrimary,
-          minimumSize: minimumSize,
-          shape: shape,
-          textStyle: textStyle,
-          elevation: 1,
-        ),
-        child: Text(a.label),
-      );
-    }
-
-    return OutlinedButton(
-      onPressed: a.onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: a.isDestructive ? scheme.error : scheme.onSurface,
-        minimumSize: minimumSize,
-        shape: shape,
-        textStyle: textStyle,
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
-      child: Text(a.label),
     );
   }
 }

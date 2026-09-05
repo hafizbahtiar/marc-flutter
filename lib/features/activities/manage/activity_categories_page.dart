@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/features/activities/activity_models.dart';
@@ -6,13 +5,14 @@ import 'package:marc/features/activities/manage/manage_providers.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
-import 'package:marc/shared/ui/form/custom_textfield.dart';
+import 'package:marc/shared/ui/dialog/app_dialog_field.dart';
+import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
-/// Skrin CRUD kategori aktiviti - manager ke atas SAHAJA (bukan sekadar
-/// pengurusan). Kategori ialah infrastruktur dikongsi SEMUA aktiviti, bukan
-/// tindakan pengurusan harian (cth luluskan ahli/terbit aktiviti) yang
-/// supervisor pun boleh buat - lihat `isManagerOrAboveProvider`.
+/// Skrin CRUD kategori aktiviti - admin/superadmin SAHAJA. Kategori
+/// ialah infrastruktur dikongsi SEMUA aktiviti, bukan tindakan
+/// pengurusan harian (cth luluskan ahli/terbit aktiviti). Pintu masuk
+/// di Tetapan, bukan borang aktiviti - lihat `isAdminOrAboveProvider`.
 ///
 /// Kategori TIDAK PERNAH dipadam terus (`category_id` di `activities` ialah
 /// `on delete restrict`) - "padam" di sini bermakna nyahaktifkan
@@ -27,7 +27,7 @@ class ActivityCategoriesPage extends ConsumerWidget {
       title: 'Urus Kategori',
       child: Consumer(
         builder: (context, ref, _) {
-          // `isManagerOrAboveProvider` bergantung pada `rolesProvider`
+          // `isAdminOrAboveProvider` bergantung pada `rolesProvider`
           // (panggilan `/roles` berasingan drpd `/me`) - ia jadi `false`
           // sama ada betul-betul bukan manager ATAU sekadar masih memuat/
           // gagal. `ManagementGate` cuma jaga keadaan `myProfileProvider`,
@@ -65,14 +65,14 @@ class ActivityCategoriesPage extends ConsumerWidget {
               ),
             );
           }
-          if (!ref.watch(isManagerOrAboveProvider)) {
+          if (!ref.watch(isAdminOrAboveProvider)) {
             return const Scaffold(
               appBar: _CategoriesAppBar(),
               body: Center(
                 child: Padding(
                   padding: EdgeInsets.all(28),
                   child: Text(
-                    'Skrin ini untuk manager ke atas sahaja.',
+                    'Skrin ini untuk admin ke atas sahaja.',
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -102,7 +102,7 @@ class _CategoriesBody extends ConsumerWidget {
 
   Future<void> _openCreate(BuildContext context, WidgetRef ref) async {
     final formKey = GlobalKey<_CategoryFormState>();
-    final result = await showAppDialog<_CategoryFormResult>(
+    final result = await showAppFormSheet<_CategoryFormResult>(
       context,
       title: 'Kategori Baharu',
       content: _CategoryForm(key: formKey),
@@ -141,7 +141,7 @@ class _CategoriesBody extends ConsumerWidget {
     ActivityCategory category,
   ) async {
     final formKey = GlobalKey<_CategoryFormState>();
-    final result = await showAppDialog<_CategoryFormResult>(
+    final result = await showAppFormSheet<_CategoryFormResult>(
       context,
       title: 'Sunting Kategori',
       content: _CategoryForm(key: formKey, existing: category),
@@ -273,7 +273,7 @@ class _CategoryFormResult {
 
 /// Kandungan dialog cipta/sunting - [existing] null bermakna mod cipta.
 ///
-/// StatefulWidget memegang controller sendiri (padanan `_EditTextDialog`):
+/// StatefulWidget memegang controller sendiri (padanan `_AppInputSheet`):
 /// dialog Material/Cupertino animasi keluar beberapa frame selepas
 /// `Navigator.pop`, jadi controller mesti hidup selagi widget hidup, bukan
 /// dibuang serta-merta selepas `pop`.
@@ -333,34 +333,6 @@ class _CategoryFormState extends State<_CategoryForm> {
 
   @override
   Widget build(BuildContext context) {
-    final platform = Theme.of(context).platform;
-    final isApple =
-        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
-
-    Widget field(
-      TextEditingController controller,
-      String label, {
-      String? hint,
-      bool enabled = true,
-      TextInputType? keyboardType,
-    }) {
-      if (isApple) {
-        return CupertinoTextField(
-          controller: controller,
-          placeholder: hint ?? label,
-          enabled: enabled,
-          keyboardType: keyboardType,
-        );
-      }
-      return CustomTextField(
-        controller: controller,
-        label: label,
-        hint: hint,
-        enabled: enabled,
-        keyboardType: keyboardType,
-      );
-    }
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -368,13 +340,22 @@ class _CategoryFormState extends State<_CategoryForm> {
         // `key` dibekukan semasa sunting - padanan backend (lihat komen di
         // atas class), bukan cuma UI: PATCH tidak menghantar medan ini
         // langsung dalam mod sunting.
-        field(_key, 'Kunci', hint: 'cth: badminton', enabled: !_isEdit),
+        AppDialogTextField(
+          controller: _key,
+          label: 'Kunci',
+          hint: 'cth: badminton',
+          enabled: !_isEdit,
+        ),
         const SizedBox(height: 12),
-        field(_name, 'Nama', hint: 'cth: Badminton'),
+        AppDialogTextField(
+          controller: _name,
+          label: 'Nama',
+          hint: 'cth: Badminton',
+        ),
         const SizedBox(height: 12),
-        field(
-          _sortOrder,
-          'Susunan',
+        AppDialogTextField(
+          controller: _sortOrder,
+          label: 'Susunan',
           hint: '0',
           keyboardType: TextInputType.number,
         ),

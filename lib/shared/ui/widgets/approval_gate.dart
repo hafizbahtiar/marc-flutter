@@ -12,10 +12,10 @@ import 'package:marc/features/profile/profile_providers.dart';
 /// SEBELUM approve, tak macam dulu bila ia terkurung dalam Feed yang
 /// dah ada gate sendiri).
 ///
-/// Versi RINGAN drpd gate dalam `feed_page.dart`
-/// (`_PendingStatusView`/`_EmailNotVerifiedView`) - TIADA butang bayar
-/// (Feed kekal tempat kanonik urusan pendaftaran/bayaran), cuma arahan
-/// pergi ke situ.
+/// Versi RINGAN drpd gate dalam `dashboard_page.dart`
+/// (`PendingStatusView`/`EmailNotVerifiedView`) - TIADA butang bayar
+/// (Dashboard, tab Utama, kekal tempat kanonik urusan
+/// pendaftaran/bayaran), cuma arahan pergi ke situ.
 class ApprovalGate extends ConsumerWidget {
   const ApprovalGate({
     super.key,
@@ -59,7 +59,7 @@ class ApprovalGate extends ConsumerWidget {
         message: isRejected
             ? 'Pendaftaran anda tidak diluluskan. Sila hubungi pihak pengurusan MARC.'
             : 'Skrin ini akan tersedia sebaik pendaftaran anda diluluskan pengurusan.',
-        // Ahli pending mungkin masih kena bayar/semak status - Feed
+        // Ahli pending mungkin masih kena bayar/semak status - Dashboard
         // (tab Utama) ada gate penuh dgn butang bayar + "Semak semula".
         showGoToFeed: !isRejected,
       );
@@ -117,7 +117,7 @@ class _GateScaffold extends StatelessWidget {
                 if (showGoToFeed) ...[
                   const SizedBox(height: 20),
                   OutlinedButton(
-                    onPressed: () => context.go('/feed'),
+                    onPressed: () => context.go('/dashboard'),
                     child: const Text('Pergi ke Utama'),
                   ),
                 ],

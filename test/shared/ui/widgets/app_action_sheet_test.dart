@@ -188,6 +188,51 @@ void main() {
     expect(dipilih, _Action.edit);
   });
 
+  testWidgets('iOS: tindakan disabled nampak pudar dan tak menutup sheet', (
+    tester,
+  ) async {
+    _Action? dipilih = _Action.edit;
+    await tester.pumpWidget(
+      _host(TargetPlatform.iOS, (context) async {
+        dipilih = await showAppActionSheet<_Action>(
+          context,
+          title: 'Ahli',
+          actions: const [
+            AppSheetAction(
+              value: _Action.edit,
+              label: 'Luluskan',
+              enabled: false,
+            ),
+            AppSheetAction(
+              value: _Action.delete,
+              label: 'Tolak',
+              isDestructive: true,
+            ),
+          ],
+        );
+      }),
+    );
+    await tester.tap(find.text('buka'));
+    await tester.pumpAndSettle();
+
+    final faded = tester.widget<Opacity>(
+      find.ancestor(of: find.text('Luluskan'), matching: find.byType(Opacity)),
+    );
+    expect(faded.opacity, lessThan(1));
+
+    final blocked = tester.widget<IgnorePointer>(
+      find
+          .ancestor(
+            of: find.text('Luluskan'),
+            matching: find.byType(IgnorePointer),
+          )
+          .first,
+    );
+    expect(blocked.ignoring, isTrue);
+    expect(find.byType(CupertinoActionSheet), findsOneWidget);
+    expect(dipilih, _Action.edit);
+  });
+
   testWidgets('Material: senarai panjang tak overflow dan boleh di-scroll', (
     tester,
   ) async {

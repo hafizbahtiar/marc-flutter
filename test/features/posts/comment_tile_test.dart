@@ -7,6 +7,7 @@ import 'package:marc/features/posts/post_models.dart';
 import 'package:marc/features/posts/widgets/comment_tile.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
 import 'package:marc/shared/ui/widgets/edited_badge.dart';
 
 const _memberId = 'MARC2026/08/0001';
@@ -138,7 +139,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('pilih Edit buka dialog edit', (tester) async {
+    testWidgets('pilih Edit buka sheet edit', (tester) async {
       await tester.pumpWidget(
         _wrap(
           CommentThread(
@@ -156,7 +157,8 @@ void main() {
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(AppFormSheet), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
       expect(find.text('Edit comment'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

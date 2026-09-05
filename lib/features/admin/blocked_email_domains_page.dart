@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marc/features/activities/manage/management_gate.dart';
@@ -7,8 +6,9 @@ import 'package:marc/features/admin/blocked_email_domains_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/utils/relative_time.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/app_dialog_field.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
-import 'package:marc/shared/ui/form/custom_textfield.dart';
+import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin urus domain emel pelupusan (`blocked_email_domains`) -
@@ -104,7 +104,7 @@ class _DomainsBody extends ConsumerWidget {
 
   Future<void> _openAdd(BuildContext context, WidgetRef ref) async {
     final formKey = GlobalKey<_DomainFormState>();
-    final domain = await showAppDialog<String>(
+    final domain = await showAppFormSheet<String>(
       context,
       title: 'Sekat Domain',
       content: _DomainForm(key: formKey),
@@ -257,27 +257,16 @@ class _DomainFormState extends State<_DomainForm> {
 
   @override
   Widget build(BuildContext context) {
-    final platform = Theme.of(context).platform;
-    final isApple =
-        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (isApple)
-          CupertinoTextField(
-            controller: _domain,
-            placeholder: 'cth: contoh-pelupusan.com',
-            autofocus: true,
-          )
-        else
-          CustomTextField(
-            controller: _domain,
-            label: 'Domain',
-            hint: 'cth: contoh-pelupusan.com',
-            autofocus: true,
-          ),
+        AppDialogTextField(
+          controller: _domain,
+          label: 'Domain',
+          hint: 'cth: contoh-pelupusan.com',
+          autofocus: true,
+        ),
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(

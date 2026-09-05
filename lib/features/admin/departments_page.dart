@@ -5,8 +5,9 @@ import 'package:marc/features/admin/departments_models.dart';
 import 'package:marc/features/admin/departments_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/app_dialog_field.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
-import 'package:marc/shared/ui/form/custom_textfield.dart';
+import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
 
 /// Skrin urus bahagian/jabatan organisasi (`departments`) - superadmin
@@ -90,7 +91,7 @@ class _DepartmentsBody extends ConsumerWidget {
 
   Future<void> _openAdd(BuildContext context, WidgetRef ref) async {
     final formKey = GlobalKey<_DepartmentFormState>();
-    final result = await showAppDialog<(String, String)>(
+    final result = await showAppFormSheet<(String, String)>(
       context,
       title: 'Tambah Bahagian',
       content: _DepartmentForm(key: formKey),
@@ -126,7 +127,7 @@ class _DepartmentsBody extends ConsumerWidget {
     Department d,
   ) async {
     final formKey = GlobalKey<_DepartmentFormState>();
-    final result = await showAppDialog<(String, String)>(
+    final result = await showAppFormSheet<(String, String)>(
       context,
       title: 'Edit Bahagian',
       content: _DepartmentForm(key: formKey, existing: d),
@@ -288,7 +289,7 @@ class _DepartmentFormState extends State<_DepartmentForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CustomTextField(
+        AppDialogTextField(
           controller: _code,
           label: 'Kod',
           hint: 'cth: BKP',
@@ -296,7 +297,7 @@ class _DepartmentFormState extends State<_DepartmentForm> {
           autofocus: !_isEdit,
         ),
         const SizedBox(height: 12),
-        CustomTextField(
+        AppDialogTextField(
           controller: _name,
           label: 'Nama penuh',
           hint: 'cth: Bahagian Kewangan',

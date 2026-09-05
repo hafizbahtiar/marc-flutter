@@ -213,6 +213,28 @@ void main() {
     },
   );
 
+  testWidgets('carian no. ahli padan tanpa peka pemisah', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        viewer: _viewer,
+        rows: [
+          _row(
+            userId: 'user-baru',
+            memberId: 'MARC-0110/2026-0001',
+            roleRank: 10,
+            displayName: 'Aina Baru',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'marc011020260001');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aina Baru'), findsOneWidget);
+  });
+
   testWidgets(
     'penapis bahagian (chip) sempitkan senarai kepada satu bahagian',
     (tester) async {

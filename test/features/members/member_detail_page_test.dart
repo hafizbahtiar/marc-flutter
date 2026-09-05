@@ -296,6 +296,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Betulkan Nombor Staff'), findsOneWidget);
+    expect(find.text('Betulkan Nombor Ahli'), findsOneWidget);
   });
 
   testWidgets('manager tak nampak Betulkan Nombor Staff', (tester) async {
@@ -320,6 +321,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Betulkan Nombor Staff'), findsNothing);
+    expect(find.text('Betulkan Nombor Ahli'), findsNothing);
   });
 
   testWidgets(

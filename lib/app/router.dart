@@ -21,6 +21,7 @@ import 'package:marc/features/activities/manage/session_checkin_qr_page.dart';
 import 'package:marc/features/activities/self_checkin_scanner_page.dart';
 import 'package:marc/features/audit/audit_page.dart';
 import 'package:marc/features/checkout/checkout_page.dart';
+import 'package:marc/features/dashboard/dashboard_page.dart';
 import 'package:marc/features/donation/donation_page.dart';
 import 'package:marc/features/members/member_detail_page.dart';
 import 'package:marc/features/members/members_page.dart';
@@ -75,7 +76,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
       final onAuthPage =
           loc == '/login' || loc == '/register' || loc == '/forgot-password';
-      if (loggedIn && onAuthPage) return '/feed';
+      if (loggedIn && onAuthPage) return '/dashboard';
       if (!loggedIn && !onAuthPage) return '/login';
       return null;
     },
@@ -138,8 +139,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         // deep-link `marc://...` cetuskan navigasi terus ke `/checkout`
         // (skim `marc` didaftar utk Stripe redirect,
         // `flutter_deeplinking_enabled` lalai ON) - redirect (bukan `!`
-        // yang crash) ke `/feed` untuk kes tu, Opus verify 2026-08-24.
-        redirect: (_, state) => state.extra is CheckoutRequest ? null : '/feed',
+        // yang crash) ke `/dashboard` untuk kes tu, Opus verify 2026-08-24.
+        redirect: (_, state) =>
+            state.extra is CheckoutRequest ? null : '/dashboard',
         builder: (_, state) =>
             CheckoutPage(request: state.extra! as CheckoutRequest),
       ),
@@ -269,6 +271,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => NavShell(shell: shell),
         branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/dashboard',
+                builder: (_, _) => const DashboardPage(),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/feed', builder: (_, _) => const FeedPage()),

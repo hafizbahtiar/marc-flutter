@@ -119,6 +119,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
               ],
             ),
+            // Infrastruktur dikongsi SEMUA aktiviti - admin/superadmin,
+            // bukan manager (pengurusan harian). Pintu di sini, bukan
+            // dalam borang cipta aktiviti.
+            if (ref.watch(isAdminOrAboveProvider))
+              const _SettingsGroup(
+                label: 'Aktiviti',
+                tiles: [
+                  _NavTile(
+                    icon: Icons.category_outlined,
+                    label: 'Urus Kategori',
+                    route: '/activities/categories',
+                  ),
+                ],
+              ),
             // Root-level config org-wide (bukan management umum) - superadmin
             // SAHAJA, padanan siling backend `authz.IsAtLeastRole(...,
             // "superadmin")`. Kumpulan BERASINGAN drpd yang lain, elak kelirukan

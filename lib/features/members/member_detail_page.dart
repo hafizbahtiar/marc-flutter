@@ -11,14 +11,17 @@ import 'package:marc/features/members/member_detail_model.dart';
 import 'package:marc/features/members/member_providers.dart';
 import 'package:marc/features/profile/address_providers.dart';
 import 'package:marc/features/profile/profile_providers.dart';
-import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
+import 'package:marc/shared/ui/dialog/app_dialog_field.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
 import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/sheet/app_action_sheet.dart';
+import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
 import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/media/image_viewer_page.dart';
 import 'package:marc/shared/ui/widgets/member_avatar.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/utils/member_id.dart';
 import 'package:marc/shared/utils/validators.dart';
 
 /// Sahkan & tukar status aktif/tak aktif ahli - management sahaja
@@ -124,7 +127,7 @@ Future<void> _showEditRoleSheet(
 }
 
 /// Borang pilih bahagian (dropdown, opsyenal "Tiada bahagian") + jawatan
-/// (teks bebas). `key` diguna oleh pemanggil (`showAppDialog`) utk cetus
+/// (teks bebas). `key` diguna oleh pemanggil (`showAppFormSheet`) utk cetus
 /// `submit()` dari butang "Simpan" di luar widget ni.
 class _DepartmentPositionForm extends StatefulWidget {
   const _DepartmentPositionForm({
@@ -197,7 +200,7 @@ class _DepartmentPositionFormState extends State<_DepartmentPositionForm> {
           onChanged: (v) => setState(() => _departmentCode = v),
         ),
         const SizedBox(height: 12),
-        CustomTextField(
+        AppDialogTextField(
           controller: _position,
           label: 'Jawatan',
           hint: 'cth: Penolong Pegawai',
@@ -232,7 +235,7 @@ Future<void> _showEditDepartmentDialog(
   if (!context.mounted) return;
 
   final formKey = GlobalKey<_DepartmentPositionFormState>();
-  final result = await showAppDialog<(String?, String?)>(
+  final result = await showAppFormSheet<(String?, String?)>(
     context,
     title: 'Bahagian & Jawatan',
     content: _DepartmentPositionForm(
@@ -279,7 +282,13 @@ Future<void> _showEditDepartmentDialog(
   }
 }
 
-enum _MemberAction { editRole, toggleActive, editDepartment, correctStaffId }
+enum _MemberAction {
+  editRole,
+  toggleActive,
+  editDepartment,
+  correctStaffId,
+  correctMemberId,
+}
 
 /// Sheet tindakan management utk satu ahli - dipindah dari `members_page.dart`
 /// (dulu dicetus terus dari ketukan baris senarai; kini dari butang AppBar
@@ -324,12 +333,19 @@ Future<void> _showMemberActionsSheet(
           label: 'Tukar bahagian & jawatan',
           icon: Icons.apartment_outlined,
         ),
-      if (isAdminOrAbove)
+      if (isAdminOrAbove) ...[
         const AppSheetAction(
           value: _MemberAction.correctStaffId,
           label: 'Betulkan Nombor Staff',
           icon: Icons.badge_outlined,
         ),
+        if (row.memberId != null)
+          const AppSheetAction(
+            value: _MemberAction.correctMemberId,
+            label: 'Betulkan Nombor Ahli',
+            icon: Icons.pin_outlined,
+          ),
+      ],
     ],
   );
   if (action == null || !context.mounted) return;
@@ -343,6 +359,8 @@ Future<void> _showMemberActionsSheet(
       await _showEditDepartmentDialog(context, ref, row);
     case _MemberAction.correctStaffId:
       await _correctStaffId(context, ref, row);
+    case _MemberAction.correctMemberId:
+      await _correctMemberId(context, ref, row);
   }
 }
 
@@ -377,6 +395,48 @@ Future<void> _correctStaffId(
         e is DioException
             ? extractErrorMessage(e)
             : 'Gagal betulkan nombor staff.',
+      );
+    }
+  }
+}
+
+Future<void> _correctMemberId(
+  BuildContext context,
+  WidgetRef ref,
+  MemberRow row,
+) async {
+  final seed = memberIdEditorSeed(row.memberId);
+  final value = await showAppInputDialog(
+    context,
+    title: 'Betulkan Nombor Ahli',
+    message: seed.message,
+    hint: MemberId.hint,
+    initialValue: seed.initialValue,
+    maxLines: 1,
+    maxLength: 14,
+    textCapitalization: TextCapitalization.characters,
+    prefixText: MemberId.prefix,
+    mask: MemberId.mask,
+    validator: (v) => MemberId.validateBody(v) == null,
+    positiveLabel: 'Simpan',
+  );
+  if (value == null || !context.mounted) return;
+  final masked = MemberId.formatForSubmit(value);
+
+  try {
+    await ref
+        .read(profileRepositoryProvider)
+        .correctMemberID(row.userId, masked);
+    if (context.mounted) {
+      MySnackBar.success(context, 'Nombor ahli dikemas kini.');
+    }
+  } catch (e) {
+    if (context.mounted) {
+      MySnackBar.error(
+        context,
+        e is DioException
+            ? extractErrorMessage(e)
+            : 'Gagal betulkan nombor ahli.',
       );
     }
   }

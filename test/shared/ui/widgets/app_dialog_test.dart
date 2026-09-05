@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:marc/app/theme.dart';
 import 'package:marc/shared/ui/dialog/app_dialog.dart';
 import 'package:marc/shared/ui/dialog/confirm_dialog.dart';
+import 'package:marc/shared/ui/dialog/edit_text_dialog.dart';
+import 'package:marc/shared/ui/form/custom_textfield.dart';
+import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
 
 Widget _host(TargetPlatform platform, void Function(BuildContext) onTap) {
   return MaterialApp(
@@ -18,6 +21,25 @@ Widget _host(TargetPlatform platform, void Function(BuildContext) onTap) {
         ),
       ),
     ),
+  );
+}
+
+void _phoneViewport(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1080, 2340);
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
+
+Size _dialogCardSize(WidgetTester tester) {
+  // AlertDialog sendiri isi overlay; ukur kad permukaan dalamannya.
+  return tester.getSize(
+    find
+        .descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(Material),
+        )
+        .first,
   );
 }
 
@@ -66,6 +88,96 @@ void main() {
       expect(batal.width, moreOrLessEquals(padam.width, epsilon: 0.5));
       expect(batal.right, lessThanOrEqualTo(padam.left));
       expect(batal.height, greaterThanOrEqualTo(48));
+    });
+
+    testWidgets('dialog dengan medan tak meregang isi skrin', (tester) async {
+      _phoneViewport(tester);
+
+      await tester.pumpWidget(
+        _host(
+          TargetPlatform.android,
+          (context) => showAppDialog<void>(
+            context,
+            title: 'Tambah Bahagian',
+            content: const CustomTextField(label: 'Kod', hint: 'BKP'),
+            actions: (ctx) => [
+              AppDialogAction(
+                label: 'Batal',
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              AppDialogAction(
+                label: 'Tambah',
+                isPrimary: true,
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.text('buka'));
+      await tester.pumpAndSettle();
+
+      final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+      expect(_dialogCardSize(tester).height, lessThan(screen.height * 0.55));
+    });
+
+    testWidgets('showEditTextDialog buka form sheet, bukan dialog', (
+      tester,
+    ) async {
+      _phoneViewport(tester);
+
+      await tester.pumpWidget(
+        _host(
+          TargetPlatform.android,
+          (context) => showEditTextDialog(
+            context,
+            title: 'Edit post',
+            initialValue: 'hello',
+            maxLines: 5,
+          ),
+        ),
+      );
+      await tester.tap(find.text('buka'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppFormSheet), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+      expect(
+        tester.getSize(find.byType(AppFormSheet)).height,
+        lessThan(screen.height * 0.55),
+      );
+    });
+
+    testWidgets('showEditTextDialog: Simpan mati bila medan kosong', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          TargetPlatform.android,
+          (context) => showEditTextDialog(
+            context,
+            title: 'Nombor Telefon',
+            initialValue: '',
+            maxLines: 1,
+          ),
+        ),
+      );
+      await tester.tap(find.text('buka'));
+      await tester.pumpAndSettle();
+
+      final simpan = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'Simpan'),
+      );
+      expect(simpan.onPressed, isNull);
+
+      await tester.enterText(find.byType(TextField), '0123456789');
+      await tester.pump();
+
+      final hidup = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'Simpan'),
+      );
+      expect(hidup.onPressed, isNotNull);
     });
 
     testWidgets('tindakan memusnah guna warna error', (tester) async {
