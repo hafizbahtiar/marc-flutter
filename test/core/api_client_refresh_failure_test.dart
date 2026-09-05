@@ -135,12 +135,18 @@ void main() {
         fail('sepatutnya throw');
       } on DioException catch (_) {}
 
+      final auth = container.read(authNotifierProvider);
       expect(
-        container.read(authNotifierProvider).isLoggedIn,
+        auth.isLoggedIn,
         isFalse,
         reason:
             'refresh token betul-betul ditolak server (401) - sesi '
             'memang tak sah, patut di-clear.',
+      );
+      expect(
+        auth.endReason,
+        AuthEndReason.sessionEnded,
+        reason: '/login patut papar dialog Sesi tamat, bukan senyap',
       );
     },
   );

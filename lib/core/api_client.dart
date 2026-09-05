@@ -89,7 +89,9 @@ class _AuthInterceptor extends Interceptor {
     // (bukan sekadar luput). Jangan cuba refresh lagi, terus anggap sesi
     // tak sah, elak infinite refresh-retry-401-refresh-retry loop.
     if (alreadyRetried) {
-      await _ref.read(authNotifierProvider.notifier).clear();
+      await _ref
+          .read(authNotifierProvider.notifier)
+          .clear(reason: AuthEndReason.sessionEnded);
       handler.next(err);
       return;
     }
@@ -110,7 +112,9 @@ class _AuthInterceptor extends Interceptor {
         return;
       }
       if (outcome == _RefreshOutcome.rejected) {
-        await _ref.read(authNotifierProvider.notifier).clear();
+        await _ref
+            .read(authNotifierProvider.notifier)
+            .clear(reason: AuthEndReason.sessionEnded);
       }
       handler.next(err);
       return;

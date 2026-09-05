@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:marc/core/auth_state.dart';
 import 'package:marc/features/auth/auth_providers.dart';
 import 'package:marc/features/auth/widgets/button_busy.dart';
+import 'package:marc/shared/ui/dialog/app_dialog.dart';
 import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/utils/validators.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
@@ -18,6 +20,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (ref.read(authNotifierProvider).endReason !=
+          AuthEndReason.sessionEnded) {
+        return;
+      }
+      ref.read(authNotifierProvider.notifier).consumeEndReason();
+      showAppAlertDialog(
+        context,
+        title: sessionEndedTitle,
+        message: sessionEndedMessage,
+      );
+    });
+  }
 
   @override
   void dispose() {

@@ -88,6 +88,46 @@ void main() {
       );
     },
   );
+
+  test(
+    'ensureFreshSession: ping /me walaupun access JWT belum luput '
+    '(revoke device lain bunuh family, access masih nampak sah)',
+    () async {
+      final storage = _FakeTokenStorage();
+      final notifier = AuthNotifier(storage);
+      await notifier.hydrate();
+      final dio = _RecordingDio();
+      final service = AuthService(
+        dio,
+        notifier,
+        storage,
+        _RecordingPushService(),
+      );
+
+      await service.ensureFreshSession();
+
+      expect(
+        dio.paths,
+        ['/me'],
+        reason:
+            'mesti ping /me pada resume walaupun token belum luput — '
+            'itu yang tendang sesi lepas revoke dari web',
+      );
+    },
+  );
+
+  test('ensureFreshSession: tiada access → tak ping', () async {
+    final storage = _FakeTokenStorage();
+    await storage.clear();
+    final notifier = AuthNotifier(storage);
+    await notifier.hydrate();
+    final dio = _RecordingDio();
+    final service = AuthService(dio, notifier, storage, _RecordingPushService());
+
+    await service.ensureFreshSession();
+
+    expect(dio.paths, isEmpty);
+  });
 }
 
 // Dio palsu minimum - signOut() cuma panggil _dio.post(...).catchError(...)
@@ -99,6 +139,25 @@ class _NoopDio implements Dio {
     if (invocation.memberName == #post) {
       return Future<Response>.value(
         Response(requestOptions: RequestOptions(path: '/auth/logout')),
+      );
+    }
+    return super.noSuchMethod(invocation);
+  }
+}
+
+class _RecordingDio implements Dio {
+  final paths = <String>[];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #get) {
+      final path = invocation.positionalArguments.first as String;
+      paths.add(path);
+      return Future<Response>.value(
+        Response(
+          requestOptions: RequestOptions(path: path),
+          statusCode: 200,
+        ),
       );
     }
     return super.noSuchMethod(invocation);

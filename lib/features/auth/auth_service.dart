@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:marc/core/app_log.dart';
 import 'package:marc/core/auth_state.dart';
 import 'package:marc/core/error_utils.dart';
-import 'package:marc/core/jwt.dart';
 import 'package:marc/core/token_storage.dart';
 import 'package:marc/features/notifications/push_service.dart';
 
@@ -175,14 +174,14 @@ class AuthService {
     );
   }
 
-  /// Idle / resume: kalau access dah luput, GET /me supaya interceptor
-  /// cuba refresh. Refresh 401 (token mati) → interceptor `clear()` →
-  /// GoRouter hantar ke /login. Access masih sah → no-op (elak ping
-  /// setiap kali app ke foreground).
+  /// Idle / resume: GET /me supaya interceptor sahkan sesi. Bukan
+  /// skip bila access JWT masih dalam TTL — revoke dari device lain
+  /// bunuh family terus, tapi access JWT kekal "nampak sah" sampai
+  /// 15 min. Ping ni yang tendang ke /login. Refresh 401 (family
+  /// mati) → interceptor `clear()` → GoRouter hantar ke /login.
   Future<void> ensureFreshSession() async {
     final access = await _tokenStorage.readAccessToken();
     if (access == null) return;
-    if (!isAccessTokenExpired(access)) return;
     try {
       await _dio.get('/me');
     } on DioException {
