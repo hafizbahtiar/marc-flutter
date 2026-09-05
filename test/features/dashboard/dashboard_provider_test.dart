@@ -70,7 +70,11 @@ void main() {
 
     final data = await container.read(dashboardProvider.future);
 
-    expect(adapter.paths, isEmpty, reason: '403 yang boleh diramal tidak patut dipanggil');
+    expect(
+      adapter.paths,
+      isEmpty,
+      reason: '403 yang boleh diramal tidak patut dipanggil',
+    );
     expect(data, isNull);
   });
 }

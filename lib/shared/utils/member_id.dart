@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:marc/shared/ui/form/app_mask_formatter.dart';
+import 'package:marc/shared/ui/form/app_masks.dart';
 
 /// Format rasmi no. ahli: `MARC-{staff}/{tahun}-{kod}`
 /// (cth `MARC-0110/2026-0001`, `MARC-0110/2026-SA`).
@@ -20,21 +21,31 @@ String unmaskMemberId(String raw) =>
 /// Topeng nombor ahli — corak sama `PremiseLicenseFileNo` (ilms):
 /// prefix `MARC-` di luar medan, body `****/####-****` auto semasa taip.
 abstract final class MemberId {
-  static const prefix = 'MARC-';
-  static const mask = '****/####-****';
-  static const hint = '0110/2026-0001';
+  /// Satu sumber kebenaran untuk corak, hint dan awalan — medan borang
+  /// terus guna `AppMasks.memberId`, bukan salin corak di sini.
+  static const config = AppMasks.memberId;
+
+  static String get prefix => config.prefixText!;
+  static String get mask => config.mask;
+  static String get hint => config.hint!;
+
   static final bodyFormat = RegExp(r'^[A-Z0-9]{4}/\d{4}-[A-Z0-9]{1,4}$');
 
   static String removePrefix(String? value) {
     if (value == null || value.isEmpty) return '';
-    return value.trim().replaceFirst(RegExp(r'^MARC-?', caseSensitive: false), '');
+    return value.trim().replaceFirst(
+      RegExp(r'^MARC-?', caseSensitive: false),
+      '',
+    );
   }
 
   static TextEditingValue maskValue(String input) {
-    return AppMaskTextInputFormatter(mask: mask).formatEditUpdate(
-      TextEditingValue.empty,
-      TextEditingValue(text: input.toUpperCase()),
-    );
+    return AppMaskTextInputFormatter(
+      mask: config.mask,
+      filter: config.filter,
+      eager: config.eager,
+      upperCase: config.upperCase,
+    ).formatEditUpdate(TextEditingValue.empty, TextEditingValue(text: input));
   }
 
   static String formatForSubmit(String? value) {
@@ -97,17 +108,4 @@ bool isLegacyMemberId(String? raw) {
     initialValue: '',
     message: 'Nombor semasa: $s. Isi semula ikut topeng.',
   );
-}
-
-/// Body sahaja — prefix [MemberId.prefix] dihias di luar medan.
-class MemberIdInputFormatter extends TextInputFormatter {
-  const MemberIdInputFormatter();
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    return MemberId.maskValue(newValue.text);
-  }
 }

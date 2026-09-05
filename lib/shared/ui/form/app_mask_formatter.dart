@@ -11,14 +11,18 @@ import 'package:flutter/services.dart';
 ///
 /// [eager]: literal masuk terus lepas slot; lazy (lalai) tunggu aksara
 /// data seterusnya.
+///
+/// [upperCase]: aksara data ditukar huruf besar sebelum diuji dengan
+/// [filter] - jadi filter huruf besar sahaja (`[A-Z]`) tetap terima
+/// taipan huruf kecil.
 class AppMaskTextInputFormatter extends TextInputFormatter {
   AppMaskTextInputFormatter({
-    required String mask,
+    required this._mask,
     Map<String, RegExp>? filter,
     String? initialText,
     this.eager = false,
-  }) : _mask = mask,
-       filter = filter ?? defaultFilter {
+    this.upperCase = false,
+  }) : filter = filter ?? defaultFilter {
     _updateFilter(this.filter);
     _calcMaskLength();
     if (initialText != null) {
@@ -39,6 +43,7 @@ class AppMaskTextInputFormatter extends TextInputFormatter {
 
   String _mask;
   final bool eager;
+  final bool upperCase;
   Map<String, RegExp> filter;
   List<String> _maskChars = [];
   int _maskLength = 0;
@@ -53,6 +58,10 @@ class AppMaskTextInputFormatter extends TextInputFormatter {
 
   bool isFill() => _resultTextArray.length == _maskLength;
 
+  /// Cukup slot untuk [text]? Tak sentuh keadaan formatter, jadi selamat
+  /// dipanggil dari `validator`.
+  bool isFillText(String text) => unmaskText(text).length == _maskLength;
+
   void clear() {
     _resultTextMasked = '';
     _resultTextArray.clear();
@@ -63,6 +72,7 @@ class AppMaskTextInputFormatter extends TextInputFormatter {
       mask: _mask,
       filter: filter,
       eager: eager,
+      upperCase: upperCase,
       initialText: text,
     ).getMaskedText();
   }
@@ -72,6 +82,7 @@ class AppMaskTextInputFormatter extends TextInputFormatter {
       mask: _mask,
       filter: filter,
       eager: eager,
+      upperCase: upperCase,
       initialText: text,
     ).getUnmaskedText();
   }
@@ -217,10 +228,11 @@ class AppMaskTextInputFormatter extends TextInputFormatter {
       }
     }
 
-    final replacementText = afterText.substring(
+    var replacementText = afterText.substring(
       afterChangeStart,
       min(afterChangeEnd, afterText.length),
     );
+    if (upperCase) replacementText = replacementText.toUpperCase();
     var targetCursorPosition = currentResultSelectionStart;
     if (replacementText.isEmpty) {
       _resultTextArray.removeRange(
@@ -320,7 +332,7 @@ class AppMaskTextInputFormatter extends TextInputFormatter {
         if (!isMaskChar &&
             curTextPos < _resultTextArray.length &&
             curMaskChar == _resultTextArray[curTextPos]) {
-          if (!( !eager && lengthAdded <= 1)) {
+          if (!(!eager && lengthAdded <= 1)) {
             maskInside++;
             curTextPos++;
           }
@@ -346,8 +358,7 @@ class AppMaskTextInputFormatter extends TextInputFormatter {
       maskPos++;
     }
 
-    if (nonMaskedCount > 0 &&
-        nonMaskedCount <= _resultTextMasked.length) {
+    if (nonMaskedCount > 0 && nonMaskedCount <= _resultTextMasked.length) {
       _resultTextMasked = _resultTextMasked.substring(
         0,
         _resultTextMasked.length - nonMaskedCount,

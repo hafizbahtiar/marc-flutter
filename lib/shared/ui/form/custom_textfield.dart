@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:marc/shared/ui/form/app_mask_formatter.dart';
+import 'package:marc/shared/ui/form/mask_field.dart';
 
 /// Label di atas medan borang - bukan floating `InputDecoration.label`.
 ///
@@ -61,6 +61,11 @@ class CustomTextField extends StatefulWidget {
     this.mask,
     this.maskFilter,
     this.maskEager = false,
+    this.maskUpperCase = false,
+    this.maskPreset,
+    this.maskController,
+    this.maskRequiredMessage,
+    this.onUnmaskedChanged,
     this.obscureText = false,
     this.maxLines = 1,
     this.minLines,
@@ -75,6 +80,10 @@ class CustomTextField extends StatefulWidget {
   }) : assert(
          controller == null || initialValue == null,
          'controller dan initialValue tak boleh sekali gus',
+       ),
+       assert(
+         maskPreset == null || mask == null,
+         'maskPreset dan mask tak boleh sekali gus',
        );
 
   final String? label;
@@ -90,9 +99,31 @@ class CustomTextField extends StatefulWidget {
 
   /// Topeng tetap (cth `****/####-****`). Null = tiada topeng.
   /// Prefix kekal (cth `MARC-`) guna [prefixText], bukan dalam nilai.
+  ///
+  /// Untuk topeng yang dipakai lebih daripada sekali, guna [maskPreset]
+  /// (`AppMasks.icMY`, dll) supaya corak, hint dan papan kekunci datang
+  /// sekali gus.
   final String? mask;
   final Map<String, RegExp>? maskFilter;
   final bool maskEager;
+
+  /// Aksara data auto huruf besar (cth kod ahli).
+  final bool maskUpperCase;
+
+  /// Topeng siap pakai dari `AppMasks`. Ia turut membekalkan [hint],
+  /// [keyboardType] dan [prefixText] bila yang berkenaan tak diberi.
+  /// Tak boleh sekali gus dengan [mask].
+  final MaskConfig? maskPreset;
+
+  /// Pegangan untuk baca teks tanpa topeng / status penuh dari luar.
+  final MaskFieldController? maskController;
+
+  /// Mesej ralat bila topeng belum penuh. Null = tiada semakan.
+  /// [validator] sendiri diutamakan bila kedua-duanya gagal.
+  final String? maskRequiredMessage;
+
+  /// Sama macam [onChanged] tapi tanpa pemisah topeng (`011020260001`).
+  final ValueChanged<String>? onUnmaskedChanged;
   final bool obscureText;
   final int maxLines;
   final int? minLines;
@@ -111,28 +142,30 @@ class CustomTextField extends StatefulWidget {
 
 class _CustomTextFieldState extends State<CustomTextField> {
   late bool _obscure = widget.obscureText;
-  AppMaskTextInputFormatter? _maskFormatter;
+  final _mask = MaskFieldBinding();
 
-  List<TextInputFormatter> get _formatters => [
-    if (_maskFormatter != null) _maskFormatter!,
-    ...?widget.inputFormatters,
-  ];
+  MaskConfig? get _maskConfig {
+    if (widget.maskPreset != null) return widget.maskPreset;
+    final mask = widget.mask;
+    if (mask == null) return null;
+    return MaskConfig(
+      mask: mask,
+      filter: widget.maskFilter,
+      eager: widget.maskEager,
+      upperCase: widget.maskUpperCase,
+    );
+  }
 
   String? get _initialValue {
     final raw = widget.initialValue;
-    if (raw == null || _maskFormatter == null || widget.controller != null) {
-      return raw;
-    }
-    return _maskFormatter!
-        .formatEditUpdate(TextEditingValue.empty, TextEditingValue(text: raw))
-        .text;
+    if (raw == null || widget.controller != null) return raw;
+    return _mask.maskInitial(raw);
   }
 
   @override
   void initState() {
     super.initState();
-    _syncMaskFormatter();
-    _applyMaskToController(widget.controller);
+    _syncMask();
   }
 
   @override
@@ -141,45 +174,39 @@ class _CustomTextFieldState extends State<CustomTextField> {
     if (widget.obscureText != oldWidget.obscureText) {
       _obscure = widget.obscureText;
     }
-    if (widget.mask != oldWidget.mask ||
-        widget.maskEager != oldWidget.maskEager) {
-      _syncMaskFormatter(forceNew: true);
+    if (widget.maskController != oldWidget.maskController) {
+      oldWidget.maskController?.detach(_mask);
     }
-    if (widget.mask != oldWidget.mask ||
-        widget.maskEager != oldWidget.maskEager ||
-        widget.controller != oldWidget.controller) {
-      _applyMaskToController(widget.controller);
+    _syncMask();
+  }
+
+  @override
+  void dispose() {
+    widget.maskController?.detach(_mask);
+    _mask.dispose();
+    super.dispose();
+  }
+
+  void _syncMask() {
+    _mask.update(config: _maskConfig, controller: widget.controller);
+    widget.maskController?.attach(_mask);
+    if (widget.controller == null) {
+      _mask.syncText(_initialValue ?? '');
     }
   }
 
-  void _syncMaskFormatter({bool forceNew = false}) {
-    if (widget.mask == null) {
-      _maskFormatter = null;
-      return;
-    }
-    if (_maskFormatter == null || forceNew) {
-      _maskFormatter = AppMaskTextInputFormatter(
-        mask: widget.mask!,
-        filter: widget.maskFilter,
-        eager: widget.maskEager,
-        initialText: widget.initialValue ?? widget.controller?.text,
-      );
-    }
+  void _handleChanged(String value) {
+    _mask.syncText(value);
+    widget.onChanged?.call(value);
+    widget.onUnmaskedChanged?.call(_mask.unmask(value));
   }
 
-  void _applyMaskToController(TextEditingController? controller) {
-    if (_maskFormatter == null ||
-        controller == null ||
-        controller.text.isEmpty) {
-      return;
-    }
-    final next = _maskFormatter!.formatEditUpdate(
-      TextEditingValue.empty,
-      controller.value,
-    );
-    if (next.text != controller.text) {
-      controller.value = next;
-    }
+  String? _validate(String? value) {
+    final own = widget.validator?.call(value);
+    if (own != null) return own;
+    final message = widget.maskRequiredMessage;
+    if (message != null && !_mask.isFillText(value ?? '')) return message;
+    return null;
   }
 
   @override
@@ -200,19 +227,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
           enabled: widget.enabled,
           autofocus: widget.autofocus,
           obscureText: _obscure,
-          keyboardType: widget.keyboardType,
+          keyboardType: widget.keyboardType ?? _maskConfig?.keyboardType,
           textInputAction: widget.textInputAction,
           textCapitalization: widget.textCapitalization,
-          inputFormatters: _formatters,
-          validator: widget.validator,
-          onChanged: widget.onChanged,
+          inputFormatters: _mask.formatters(widget.inputFormatters),
+          validator:
+              widget.validator == null && widget.maskRequiredMessage == null
+              ? null
+              : _validate,
+          onChanged: _handleChanged,
           onFieldSubmitted: widget.onFieldSubmitted,
           maxLines: lines,
           minLines: widget.minLines,
           maxLength: widget.maxLength,
           decoration: InputDecoration(
-            hintText: widget.hint,
-            prefixText: widget.prefixText,
+            hintText: widget.hint ?? _maskConfig?.hint,
+            prefixText: widget.prefixText ?? _maskConfig?.prefixText,
             floatingLabelBehavior: FloatingLabelBehavior.never,
             prefixIcon: widget.prefixIcon == null
                 ? null

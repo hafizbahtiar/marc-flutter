@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:marc/shared/ui/form/mask_field.dart';
 import 'package:marc/shared/ui/dialog/app_dialog_action.dart';
 import 'package:marc/shared/ui/dialog/app_dialog_field.dart';
 import 'package:marc/shared/ui/sheet/app_form_sheet.dart';
@@ -182,6 +183,8 @@ Future<String?> showAppInputDialog(
   String? mask,
   Map<String, RegExp>? maskFilter,
   bool maskEager = false,
+  bool maskUpperCase = false,
+  MaskConfig? maskPreset,
   String? prefixText,
   bool barrierDismissible = true,
 }) {
@@ -205,6 +208,8 @@ Future<String?> showAppInputDialog(
       mask: mask,
       maskFilter: maskFilter,
       maskEager: maskEager,
+      maskUpperCase: maskUpperCase,
+      maskPreset: maskPreset,
       prefixText: prefixText,
     ),
   );
@@ -228,6 +233,8 @@ class _AppInputSheet extends StatefulWidget {
     required this.mask,
     required this.maskFilter,
     required this.maskEager,
+    required this.maskUpperCase,
+    required this.maskPreset,
     required this.prefixText,
   });
 
@@ -247,6 +254,8 @@ class _AppInputSheet extends StatefulWidget {
   final String? mask;
   final Map<String, RegExp>? maskFilter;
   final bool maskEager;
+  final bool maskUpperCase;
+  final MaskConfig? maskPreset;
   final String? prefixText;
 
   @override
@@ -298,6 +307,8 @@ class _AppInputSheetState extends State<_AppInputSheet> {
         mask: widget.mask,
         maskFilter: widget.maskFilter,
         maskEager: widget.maskEager,
+        maskUpperCase: widget.maskUpperCase,
+        maskPreset: widget.maskPreset,
         prefixText: widget.prefixText,
       ),
       actions: [

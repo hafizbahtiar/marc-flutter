@@ -54,9 +54,13 @@ Dio _dioYangMerekod(List<String> dipanggil) {
   return Dio()
     ..httpClientAdapter = _FakeAdapter((options) async {
       dipanggil.add(options.path);
-      return ResponseBody.fromString('{}', 200, headers: {
-        Headers.contentTypeHeader: [Headers.jsonContentType],
-      });
+      return ResponseBody.fromString(
+        '{}',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
     });
 }
 
@@ -130,7 +134,10 @@ GoRouter _testRouter() {
       GoRoute(path: '/my-certificates', builder: (_, _) => kosong('sijil')),
       GoRoute(path: '/members', builder: (_, _) => kosong('ahli')),
       GoRoute(path: '/members/pending', builder: (_, _) => kosong('pending')),
-      GoRoute(path: '/my-activities', builder: (_, _) => kosong('aktiviti-saya')),
+      GoRoute(
+        path: '/my-activities',
+        builder: (_, _) => kosong('aktiviti-saya'),
+      ),
       GoRoute(path: '/activities', builder: (_, _) => kosong('aktiviti')),
       GoRoute(
         path: '/activities/:id',
@@ -156,7 +163,9 @@ Widget _app(Dio dio, GoRouter router, {required Profile profile}) {
 }
 
 void main() {
-  testWidgets('ahli pending → PendingStatusView, /dashboard tidak dipanggil', (tester) async {
+  testWidgets('ahli pending → PendingStatusView, /dashboard tidak dipanggil', (
+    tester,
+  ) async {
     final dipanggil = <String>[];
     final dio = _dioYangMerekod(dipanggil);
 
@@ -167,7 +176,9 @@ void main() {
     expect(dipanggil, isEmpty);
   });
 
-  testWidgets('ahli approved tanpa blok admin → tiada kad admin', (tester) async {
+  testWidgets('ahli approved tanpa blok admin → tiada kad admin', (
+    tester,
+  ) async {
     final dio = _dioYangMemulangkan(_payloadAhli());
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
@@ -184,9 +195,7 @@ void main() {
   testWidgets('jalur statistik hero: sijil dan ahli, tiada notifikasi', (
     tester,
   ) async {
-    final dio = _dioYangMemulangkan(
-      _payloadAhli(certs: 7, members: 312),
-    );
+    final dio = _dioYangMemulangkan(_payloadAhli(certs: 7, members: 312));
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
     await tester.pumpAndSettle();
@@ -236,7 +245,9 @@ void main() {
     );
   });
 
-  testWidgets('ralat rangkaian → kad "Cuba lagi", skrin tidak kosong', (tester) async {
+  testWidgets('ralat rangkaian → kad "Cuba lagi", skrin tidak kosong', (
+    tester,
+  ) async {
     final dio = _dioYangGagal();
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
@@ -253,56 +264,52 @@ void main() {
     expect(find.text('0'), findsNothing);
   });
 
-  testWidgets(
-    'OutstandingFeeCard: butang bayar navigasi ke /checkout',
-    (tester) async {
-      final router = GoRouter(
-        initialLocation: '/kad',
-        routes: [
-          GoRoute(
-            path: '/kad',
-            builder: (_, _) =>
-                const Scaffold(body: OutstandingFeeCard(feeCents: 5000)),
-          ),
-          GoRoute(
-            path: '/checkout',
-            builder: (_, _) => const Scaffold(body: Text('checkout')),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+  testWidgets('OutstandingFeeCard: butang bayar navigasi ke /checkout', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/kad',
+      routes: [
+        GoRoute(
+          path: '/kad',
+          builder: (_, _) =>
+              const Scaffold(body: OutstandingFeeCard(feeCents: 5000)),
         ),
-      );
-      await tester.pumpAndSettle();
+        GoRoute(
+          path: '/checkout',
+          builder: (_, _) => const Scaffold(body: Text('checkout')),
+        ),
+      ],
+    );
 
-      expect(find.text('MYR 50.00'), findsOneWidget);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Bayar sekarang'));
-      await tester.pumpAndSettle();
+    expect(find.text('MYR 50.00'), findsOneWidget);
 
-      expect(find.text('checkout'), findsOneWidget);
-    },
-  );
+    await tester.tap(find.text('Bayar sekarang'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('checkout'), findsOneWidget);
+  });
 
   // Kad yuran hanya WUJUD bila ada hutang - ia tidak dipapar kosong -
   // jadi ketiadaannya diuji pada aras halaman, bukan pada kad.
-  testWidgets(
-    'tiada kad yuran bila outstanding_registration_fee_cents null',
-    (tester) async {
-      final dio = _dioYangMemulangkan(_payloadAhli());
+  testWidgets('tiada kad yuran bila outstanding_registration_fee_cents null', (
+    tester,
+  ) async {
+    final dio = _dioYangMemulangkan(_payloadAhli());
 
-      await tester.pumpWidget(
-        _app(dio, _testRouter(), profile: approvedProfile),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Bayar sekarang'), findsNothing);
-      expect(find.text('Yuran pendaftaran belum dijelaskan'), findsNothing);
-    },
-  );
+    expect(find.text('Bayar sekarang'), findsNothing);
+    expect(find.text('Yuran pendaftaran belum dijelaskan'), findsNothing);
+  });
 
   testWidgets('blok admin terpapar bila admin != null', (tester) async {
     final dio = _dioYangMemulangkan(_payloadAdmin(pendingApprovals: 5));
@@ -316,7 +323,9 @@ void main() {
     expect(find.text('Kuala Lumpur'), findsOneWidget);
   });
 
-  testWidgets('donation_cents null → nota "tidak termasuk derma"', (tester) async {
+  testWidgets('donation_cents null → nota "tidak termasuk derma"', (
+    tester,
+  ) async {
     final dio = _dioYangMemulangkan(_payloadAdmin(donationCents: null));
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
@@ -325,7 +334,9 @@ void main() {
     expect(find.textContaining('tidak termasuk derma'), findsOneWidget);
   });
 
-  testWidgets('donation_cents berisi → tiada nota pengecualian', (tester) async {
+  testWidgets('donation_cents berisi → tiada nota pengecualian', (
+    tester,
+  ) async {
     final dio = _dioYangMemulangkan(_payloadAdmin(donationCents: 5000));
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
@@ -344,7 +355,9 @@ void main() {
     expect(find.text('—'), findsWidgets);
   });
 
-  testWidgets('Menunggu kelulusan: ketukan navigasi ke /members/pending', (tester) async {
+  testWidgets('Menunggu kelulusan: ketukan navigasi ke /members/pending', (
+    tester,
+  ) async {
     final dio = _dioYangMemulangkan(_payloadAdmin());
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
@@ -356,7 +369,9 @@ void main() {
     expect(find.text('pending'), findsOneWidget);
   });
 
-  testWidgets('Kutipan bulan ini: ketukan navigasi ke /admin/payments', (tester) async {
+  testWidgets('Kutipan bulan ini: ketukan navigasi ke /admin/payments', (
+    tester,
+  ) async {
     final dio = _dioYangMemulangkan(_payloadAdmin());
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
@@ -380,7 +395,9 @@ void main() {
     expect(find.text('ahli'), findsOneWidget);
   });
 
-  testWidgets('Statistik Aktiviti: ketukan navigasi ke /activities', (tester) async {
+  testWidgets('Statistik Aktiviti: ketukan navigasi ke /activities', (
+    tester,
+  ) async {
     final dio = _dioYangMemulangkan(_payloadAdmin());
 
     await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
@@ -406,88 +423,83 @@ void main() {
   // jadi untuk tarikh AKAN DATANG diff sentiasa negatif, `diff.inSeconds
   // < 60` sentiasa benar, dan setiap aktiviti akan datang papar "baru" -
   // termasuk satu enam bulan lagi. Ujian ni pastikan ia tidak berulang.
-  testWidgets(
-    'aktiviti jauh di masa depan TIDAK papar "baru"',
-    (tester) async {
-      final farFuture = DateTime.now().add(const Duration(days: 180));
-      final dio = _dioYangMemulangkan(
-        _payloadAhli(
-          openActivities: [
-            {
-              'id': 'act-1',
-              'title': 'Bengkel Keselamatan',
-              'starts_at': farFuture.toUtc().toIso8601String(),
-              'category_name': 'Bengkel',
-              'fee_cents': 0,
-              'currency': 'myr',
-              'registration_count': 3,
-            },
-          ],
-        ),
-      );
+  testWidgets('aktiviti jauh di masa depan TIDAK papar "baru"', (tester) async {
+    final farFuture = DateTime.now().add(const Duration(days: 180));
+    final dio = _dioYangMemulangkan(
+      _payloadAhli(
+        openActivities: [
+          {
+            'id': 'act-1',
+            'title': 'Bengkel Keselamatan',
+            'starts_at': farFuture.toUtc().toIso8601String(),
+            'category_name': 'Bengkel',
+            'fee_cents': 0,
+            'currency': 'myr',
+            'registration_count': 3,
+          },
+        ],
+      ),
+    );
 
-      await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Bengkel Keselamatan'), findsOneWidget);
-      expect(find.textContaining('baru'), findsNothing);
-      expect(find.textContaining('hari lagi'), findsOneWidget);
-    },
-  );
+    expect(find.text('Bengkel Keselamatan'), findsOneWidget);
+    expect(find.textContaining('baru'), findsNothing);
+    expect(find.textContaining('hari lagi'), findsOneWidget);
+  });
 
-  testWidgets(
-    'baris aktiviti terbuka: ketukan navigasi ke /activities/:id',
-    (tester) async {
-      final soon = DateTime.now().add(const Duration(days: 5));
-      final dio = _dioYangMemulangkan(
-        _payloadAhli(
-          openActivities: [
-            {
-              'id': 'act-99',
-              'title': 'Seminar Kerjaya',
-              'starts_at': soon.toUtc().toIso8601String(),
-              'category_name': 'Seminar',
-              'fee_cents': 2000,
-              'currency': 'myr',
-              'registration_count': 12,
-            },
-          ],
-        ),
-      );
+  testWidgets('baris aktiviti terbuka: ketukan navigasi ke /activities/:id', (
+    tester,
+  ) async {
+    final soon = DateTime.now().add(const Duration(days: 5));
+    final dio = _dioYangMemulangkan(
+      _payloadAhli(
+        openActivities: [
+          {
+            'id': 'act-99',
+            'title': 'Seminar Kerjaya',
+            'starts_at': soon.toUtc().toIso8601String(),
+            'category_name': 'Seminar',
+            'fee_cents': 2000,
+            'currency': 'myr',
+            'registration_count': 12,
+          },
+        ],
+      ),
+    );
 
-      await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Seminar Kerjaya'), findsOneWidget);
-      expect(find.textContaining('MYR 20.00'), findsOneWidget);
-      expect(find.textContaining('12 berdaftar'), findsOneWidget);
+    expect(find.text('Seminar Kerjaya'), findsOneWidget);
+    expect(find.textContaining('MYR 20.00'), findsOneWidget);
+    expect(find.textContaining('12 berdaftar'), findsOneWidget);
 
-      await tester.tap(find.text('Seminar Kerjaya'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Seminar Kerjaya'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('aktiviti-act-99'), findsOneWidget);
-    },
-  );
+    expect(find.text('aktiviti-act-99'), findsOneWidget);
+  });
 
-  testWidgets(
-    'yuran tertunggak naik ke atas melebihi blok admin',
-    (tester) async {
-      final payload = _payloadAdmin();
-      (payload['member'] as Map<String, dynamic>)['membership'] = {
-        'status': 'approved',
-        'member_id': 'MARC-001',
-        'outstanding_registration_fee_cents': 5000,
-      };
-      final dio = _dioYangMemulangkan(payload);
+  testWidgets('yuran tertunggak naik ke atas melebihi blok admin', (
+    tester,
+  ) async {
+    final payload = _payloadAdmin();
+    (payload['member'] as Map<String, dynamic>)['membership'] = {
+      'status': 'approved',
+      'member_id': 'MARC-001',
+      'outstanding_registration_fee_cents': 5000,
+    };
+    final dio = _dioYangMemulangkan(payload);
 
-      await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_app(dio, _testRouter(), profile: approvedProfile));
+    await tester.pumpAndSettle();
 
-      final yuranY = tester
-          .getTopLeft(find.text('Yuran pendaftaran belum dijelaskan'))
-          .dy;
-      final adminY = tester.getTopLeft(find.text('Menunggu kelulusan')).dy;
-      expect(yuranY, lessThan(adminY));
-    },
-  );
+    final yuranY = tester
+        .getTopLeft(find.text('Yuran pendaftaran belum dijelaskan'))
+        .dy;
+    final adminY = tester.getTopLeft(find.text('Menunggu kelulusan')).dy;
+    expect(yuranY, lessThan(adminY));
+  });
 }

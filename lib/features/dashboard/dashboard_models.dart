@@ -33,7 +33,8 @@ String? _strOrNull(Object? v) => switch (v) {
 /// Tarikh tak sah/hilang → epoch, BUKAN lontaran: satu tarikh rosak pada
 /// satu kad tidak sepatutnya mengosongkan seluruh skrin Utama.
 DateTime _date(Object? v) =>
-    DateTime.tryParse(v is String ? v : '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+    DateTime.tryParse(v is String ? v : '') ??
+    DateTime.fromMillisecondsSinceEpoch(0);
 
 Map<String, dynamic> _map(Object? v) =>
     v is Map<String, dynamic> ? v : const <String, dynamic>{};
@@ -120,9 +121,9 @@ class MemberBlock {
 
   factory MemberBlock.fromJson(Map<String, dynamic> json) => MemberBlock(
     membership: Membership.fromJson(_map(json['membership'])),
-    openActivities: _list(json['open_activities'])
-        .map(OpenActivity.fromJson)
-        .toList(growable: false),
+    openActivities: _list(
+      json['open_activities'],
+    ).map(OpenActivity.fromJson).toList(growable: false),
     certificatesTotal: _int(json['certificates_total']),
     totalMembers: _int(json['total_members']),
   );
@@ -159,7 +160,11 @@ class Revenue {
 }
 
 class DepartmentStat {
-  const DepartmentStat({required this.code, required this.name, required this.count});
+  const DepartmentStat({
+    required this.code,
+    required this.name,
+    required this.count,
+  });
 
   final String code;
   final String name;
@@ -189,9 +194,9 @@ class MemberStats {
     active: _int(json['active']),
     pending: _int(json['pending']),
     newThisMonth: _int(json['new_this_month']),
-    byDepartment: _list(json['by_department'])
-        .map(DepartmentStat.fromJson)
-        .toList(growable: false),
+    byDepartment: _list(
+      json['by_department'],
+    ).map(DepartmentStat.fromJson).toList(growable: false),
   );
 }
 
@@ -248,6 +253,8 @@ class DashboardData {
 
   factory DashboardData.fromJson(Map<String, dynamic> json) => DashboardData(
     member: MemberBlock.fromJson(_map(json['member'])),
-    admin: json['admin'] == null ? null : AdminBlock.fromJson(_map(json['admin'])),
+    admin: json['admin'] == null
+        ? null
+        : AdminBlock.fromJson(_map(json['admin'])),
   );
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:marc/shared/ui/form/app_mask_formatter.dart';
+import 'package:marc/shared/ui/form/mask_field.dart';
 import 'package:marc/shared/ui/form/custom_textfield.dart';
 
 /// Medan teks dalam dialog adaptive: [CupertinoTextField] di iOS/macOS,
@@ -26,8 +26,15 @@ class AppDialogTextField extends StatefulWidget {
     this.mask,
     this.maskFilter,
     this.maskEager = false,
+    this.maskUpperCase = false,
+    this.maskPreset,
+    this.maskController,
+    this.onUnmaskedChanged,
     this.prefixText,
-  });
+  }) : assert(
+         maskPreset == null || mask == null,
+         'maskPreset dan mask tak boleh sekali gus',
+       );
 
   final TextEditingController? controller;
   final String? label;
@@ -43,6 +50,17 @@ class AppDialogTextField extends StatefulWidget {
   final String? mask;
   final Map<String, RegExp>? maskFilter;
   final bool maskEager;
+  final bool maskUpperCase;
+
+  /// Topeng siap pakai dari `AppMasks`; turut membekalkan [hint],
+  /// [keyboardType] dan [prefixText]. Tak boleh sekali gus dengan [mask].
+  final MaskConfig? maskPreset;
+
+  /// Pegangan untuk baca teks tanpa topeng / status penuh dari luar.
+  final MaskFieldController? maskController;
+
+  /// Sama macam [onChanged] tapi tanpa pemisah topeng.
+  final ValueChanged<String>? onUnmaskedChanged;
   final String? prefixText;
 
   @override
@@ -50,63 +68,51 @@ class AppDialogTextField extends StatefulWidget {
 }
 
 class _AppDialogTextFieldState extends State<AppDialogTextField> {
-  AppMaskTextInputFormatter? _maskFormatter;
+  final _mask = MaskFieldBinding();
 
-  List<TextInputFormatter> get _formatters => [
-    if (_maskFormatter != null) _maskFormatter!,
-    ...?widget.inputFormatters,
-  ];
+  MaskConfig? get _maskConfig {
+    if (widget.maskPreset != null) return widget.maskPreset;
+    final mask = widget.mask;
+    if (mask == null) return null;
+    return MaskConfig(
+      mask: mask,
+      filter: widget.maskFilter,
+      eager: widget.maskEager,
+      upperCase: widget.maskUpperCase,
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    _syncMaskFormatter();
-    _applyMaskToController();
+    _syncMask();
   }
 
   @override
   void didUpdateWidget(AppDialogTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.mask != oldWidget.mask ||
-        widget.maskEager != oldWidget.maskEager) {
-      _syncMaskFormatter(forceNew: true);
+    if (widget.maskController != oldWidget.maskController) {
+      oldWidget.maskController?.detach(_mask);
     }
-    if (widget.mask != oldWidget.mask ||
-        widget.maskEager != oldWidget.maskEager ||
-        widget.controller != oldWidget.controller) {
-      _applyMaskToController();
-    }
+    _syncMask();
   }
 
-  void _syncMaskFormatter({bool forceNew = false}) {
-    if (widget.mask == null) {
-      _maskFormatter = null;
-      return;
-    }
-    if (_maskFormatter == null || forceNew) {
-      _maskFormatter = AppMaskTextInputFormatter(
-        mask: widget.mask!,
-        filter: widget.maskFilter,
-        eager: widget.maskEager,
-        initialText: widget.controller?.text,
-      );
-    }
+  @override
+  void dispose() {
+    widget.maskController?.detach(_mask);
+    _mask.dispose();
+    super.dispose();
   }
 
-  void _applyMaskToController() {
-    final controller = widget.controller;
-    if (_maskFormatter == null ||
-        controller == null ||
-        controller.text.isEmpty) {
-      return;
-    }
-    final next = _maskFormatter!.formatEditUpdate(
-      TextEditingValue.empty,
-      controller.value,
-    );
-    if (next.text != controller.text) {
-      controller.value = next;
-    }
+  void _syncMask() {
+    _mask.update(config: _maskConfig, controller: widget.controller);
+    widget.maskController?.attach(_mask);
+  }
+
+  void _handleChanged(String value) {
+    _mask.syncText(value);
+    widget.onChanged?.call(value);
+    widget.onUnmaskedChanged?.call(_mask.unmask(value));
   }
 
   @override
@@ -131,6 +137,10 @@ class _AppDialogTextFieldState extends State<AppDialogTextField> {
         mask: widget.mask,
         maskFilter: widget.maskFilter,
         maskEager: widget.maskEager,
+        maskUpperCase: widget.maskUpperCase,
+        maskPreset: widget.maskPreset,
+        maskController: widget.maskController,
+        onUnmaskedChanged: widget.onUnmaskedChanged,
         prefixText: widget.prefixText,
       );
     }
@@ -143,21 +153,21 @@ class _AppDialogTextFieldState extends State<AppDialogTextField> {
           FormFieldLabel(widget.label!, enabled: widget.enabled),
         CupertinoTextField(
           controller: widget.controller,
-          placeholder: widget.hint,
-          prefix: widget.prefixText == null
+          placeholder: widget.hint ?? _maskConfig?.hint,
+          prefix: (widget.prefixText ?? _maskConfig?.prefixText) == null
               ? null
               : Padding(
                   padding: const EdgeInsets.only(left: 8),
-                  child: Text(widget.prefixText!),
+                  child: Text((widget.prefixText ?? _maskConfig!.prefixText)!),
                 ),
           maxLines: widget.maxLines,
           maxLength: widget.maxLength,
-          keyboardType: widget.keyboardType,
+          keyboardType: widget.keyboardType ?? _maskConfig?.keyboardType,
           textCapitalization: widget.textCapitalization,
           enabled: widget.enabled,
           autofocus: widget.autofocus,
-          onChanged: widget.onChanged,
-          inputFormatters: _formatters,
+          onChanged: _handleChanged,
+          inputFormatters: _mask.formatters(widget.inputFormatters),
         ),
       ],
     );

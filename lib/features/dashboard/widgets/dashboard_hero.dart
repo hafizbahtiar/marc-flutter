@@ -109,10 +109,9 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: scheme.onPrimary,
-          fontSize: 13,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: scheme.onPrimary, fontSize: 13),
       ),
     );
   }

@@ -21,6 +21,7 @@ import 'package:marc/shared/ui/form/custom_textfield.dart';
 import 'package:marc/shared/ui/media/image_viewer_page.dart';
 import 'package:marc/shared/ui/widgets/member_avatar.dart';
 import 'package:marc/shared/ui/widgets/my_snackbar.dart';
+import 'package:marc/shared/ui/form/app_masks.dart';
 import 'package:marc/shared/utils/member_id.dart';
 import 'package:marc/shared/utils/validators.dart';
 
@@ -410,13 +411,10 @@ Future<void> _correctMemberId(
     context,
     title: 'Betulkan Nombor Ahli',
     message: seed.message,
-    hint: MemberId.hint,
     initialValue: seed.initialValue,
     maxLines: 1,
     maxLength: 14,
-    textCapitalization: TextCapitalization.characters,
-    prefixText: MemberId.prefix,
-    mask: MemberId.mask,
+    maskPreset: AppMasks.memberId,
     validator: (v) => MemberId.validateBody(v) == null,
     positiveLabel: 'Simpan',
   );

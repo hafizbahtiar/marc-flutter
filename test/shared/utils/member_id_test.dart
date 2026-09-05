@@ -1,5 +1,5 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:marc/shared/ui/form/app_masks.dart';
 import 'package:marc/shared/utils/member_id.dart';
 
 void main() {
@@ -85,23 +85,12 @@ void main() {
     });
   });
 
-  group('MemberIdInputFormatter', () {
-    const formatter = MemberIdInputFormatter();
-
-    test('taip padat auto topeng', () {
-      final v = formatter.formatEditUpdate(
-        const TextEditingValue(),
-        const TextEditingValue(text: '011020260001'),
-      );
-      expect(v.text, '0110/2026-0001');
-    });
-
-    test('backspace padam data, topeng susun semula', () {
-      final v = formatter.formatEditUpdate(
-        const TextEditingValue(text: '0110/2026-0001'),
-        const TextEditingValue(text: '0110/2026-000'),
-      );
-      expect(v.text, '0110/2026-000');
+  group('MemberId.config', () {
+    test('corak, hint dan awalan datang dari AppMasks.memberId', () {
+      expect(MemberId.config, AppMasks.memberId);
+      expect(MemberId.mask, AppMasks.memberId.mask);
+      expect(MemberId.hint, AppMasks.memberId.hint);
+      expect(MemberId.prefix, 'MARC-');
     });
   });
 }

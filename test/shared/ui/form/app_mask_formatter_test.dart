@@ -12,19 +12,19 @@ void main() {
       int? oldCursor,
       int? nextCursor,
     }) {
-      return AppMaskTextInputFormatter(mask: mask, eager: eager)
-          .formatEditUpdate(
-            TextEditingValue(
-              text: old,
-              selection: TextSelection.collapsed(offset: oldCursor ?? old.length),
-            ),
-            TextEditingValue(
-              text: next,
-              selection: TextSelection.collapsed(
-                offset: nextCursor ?? next.length,
-              ),
-            ),
-          );
+      return AppMaskTextInputFormatter(
+        mask: mask,
+        eager: eager,
+      ).formatEditUpdate(
+        TextEditingValue(
+          text: old,
+          selection: TextSelection.collapsed(offset: oldCursor ?? old.length),
+        ),
+        TextEditingValue(
+          text: next,
+          selection: TextSelection.collapsed(offset: nextCursor ?? next.length),
+        ),
+      );
     }
 
     test('taip digit, literal lazy lepas slot penuh', () {
@@ -57,22 +57,12 @@ void main() {
     });
 
     test('backspace pada literal tak buang data — topeng masuk semula', () {
-      final v = run(
-        '12/34',
-        '1234',
-        oldCursor: 3,
-        nextCursor: 2,
-      );
+      final v = run('12/34', '1234', oldCursor: 3, nextCursor: 2);
       expect(v.text, '12/34');
     });
 
     test('backspace tengah medan kekal kedudukan cursor', () {
-      final v = run(
-        '12/34',
-        '1/34',
-        oldCursor: 2,
-        nextCursor: 1,
-      );
+      final v = run('12/34', '1/34', oldCursor: 2, nextCursor: 1);
       expect(v.text, '13/4');
       expect(v.selection.baseOffset, 1);
     });
@@ -122,6 +112,38 @@ void main() {
       );
       expect(value.text, '+0 (145) 678-90');
       expect(f.getUnmaskedText(), '014567890');
+    });
+
+    test('upperCase tukar huruf kecil jadi besar', () {
+      final f = AppMaskTextInputFormatter(mask: '****/####', upperCase: true);
+      final v = f.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(text: 'ab1c2026'),
+      );
+      expect(v.text, 'AB1C/2026');
+      expect(f.getUnmaskedText(), 'AB1C2026');
+    });
+
+    test('upperCase menepati filter huruf besar sahaja', () {
+      final f = AppMaskTextInputFormatter(
+        mask: '***',
+        filter: {'*': RegExp(r'[A-Z]')},
+        upperCase: true,
+      );
+      final v = f.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(text: 'abc'),
+      );
+      expect(v.text, 'ABC');
+    });
+
+    test('tanpa upperCase huruf kekal seperti ditaip', () {
+      final f = AppMaskTextInputFormatter(mask: '****');
+      final v = f.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(text: 'ab1c'),
+      );
+      expect(v.text, 'ab1c');
     });
 
     test('updateMask kekal data tak bertopeng', () {

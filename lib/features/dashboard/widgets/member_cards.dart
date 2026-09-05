@@ -210,7 +210,8 @@ class _ActivityRow extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        if (a.categoryName.isNotEmpty) _Tag(label: a.categoryName),
+                        if (a.categoryName.isNotEmpty)
+                          _Tag(label: a.categoryName),
                         _Tag(
                           label: a.feeCents > 0
                               ? _formatAmount(a.feeCents, a.currency)
