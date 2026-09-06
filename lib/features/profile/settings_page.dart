@@ -151,6 +151,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     label: 'Bahagian/Jabatan',
                     route: '/admin/departments',
                   ),
+                  _NavTile(
+                    icon: Icons.person_remove_outlined,
+                    label: 'Pemadaman Akaun',
+                    route: '/admin/account-deletions',
+                  ),
+                  _NavTile(
+                    icon: Icons.gpp_bad_outlined,
+                    label: 'Akaun Digantung',
+                    route: '/admin/banned-members',
+                  ),
                 ],
               ),
             const _SettingsGroup(

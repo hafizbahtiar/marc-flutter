@@ -61,13 +61,13 @@ void main() {
     );
   });
 
-  testWidgets('Tentang: kredit En. Ezri sebagai pencetus', (tester) async {
+  testWidgets('Tentang: nyatakan cetusan idea pihak kelab', (tester) async {
     await tester.pumpWidget(
       MaterialApp(theme: AppTheme.light, home: const AboutPage()),
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('En. Ezri'), findsOneWidget);
+    expect(find.textContaining('pihak kelab'), findsOneWidget);
     expect(find.textContaining('secara sukarela'), findsWidgets);
   });
 }

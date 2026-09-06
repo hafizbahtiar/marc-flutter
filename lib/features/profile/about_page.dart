@@ -93,8 +93,8 @@ class AboutPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Dibina secara sukarela atas permintaan kelab, yang '
-                  'mencetuskan idea app ini.',
+                  'Dibina secara sukarela berdasarkan cetusan idea dan '
+                  'permintaan pihak kelab.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,

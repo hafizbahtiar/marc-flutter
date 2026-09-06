@@ -262,7 +262,11 @@ void main() {
       expect(find.text('Nombor Telefon'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), '0123456789');
-      await tester.tap(find.text('Simpan'));
+      await tester.pump();
+      tester.testTextInput.hide();
+      final saveButton = find.widgetWithText(ElevatedButton, 'Simpan');
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
       await tester.pumpAndSettle();
 
       expect(callCount, 2);
@@ -301,7 +305,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     await tester.enterText(find.byType(TextField), '123');
-    await tester.tap(find.text('Simpan'));
+    await tester.pump();
+    tester.testTextInput.hide();
+    final saveButton = find.widgetWithText(ElevatedButton, 'Simpan');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
     await tester.pumpAndSettle();
 
     expect(callCount, 1); // tak checkout semula lepas nombor tak sah

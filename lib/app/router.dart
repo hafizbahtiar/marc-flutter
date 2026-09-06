@@ -12,6 +12,8 @@ import 'package:marc/features/activities/my_activities_page.dart';
 import 'package:marc/features/activities/my_certificates_page.dart';
 import 'package:marc/features/activities/manage/activity_categories_page.dart';
 import 'package:marc/features/admin/blocked_email_domains_page.dart';
+import 'package:marc/features/admin/account_deletions_page.dart';
+import 'package:marc/features/admin/banned_members_page.dart';
 import 'package:marc/features/admin/departments_page.dart';
 import 'package:marc/features/activities/manage/activity_form_page.dart';
 import 'package:marc/features/activities/manage/issue_certificates_page.dart';
@@ -167,6 +169,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/departments',
         builder: (_, _) => const DepartmentsPage(),
+      ),
+      GoRoute(
+        path: '/admin/account-deletions',
+        builder: (_, _) => const AccountDeletionsPage(),
+      ),
+      GoRoute(
+        path: '/admin/banned-members',
+        builder: (_, _) => const BannedMembersPage(),
       ),
       GoRoute(
         path: '/payments/history',

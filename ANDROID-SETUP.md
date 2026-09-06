@@ -15,6 +15,27 @@ Apl komuniti tidak rasmi: pengumuman, ahli, aktiviti & sumbangan MARC.
 
 (71 aksara)
 
+## What's new
+
+```xml
+<ms-MY>
+Apa yang baharu:
+• Aktiviti kini menyokong pendaftaran, bayaran, QR check-in dan sijil
+• Pengurusan peserta, sesi, kehadiran dan aktiviti diperkemas
+• Profil, direktori ahli dan sejarah bayaran ditambah baik
+• Superadmin boleh urus pemadaman dan penggantungan akaun
+• Navigasi, sesi log masuk dan paparan notifikasi lebih stabil
+</ms-MY>
+<en-US>
+What's new:
+• Activities now support registration, payment, QR check-in and certificates
+• Improved participant, session, attendance and activity management
+• Refined member profiles, directory and payment history
+• Superadmins can manage account deletion and suspensions
+• More stable navigation, sign-in sessions and notifications
+</en-US>
+```
+
 ## Full description
 
 Had: 4000 aksara.
@@ -33,7 +54,7 @@ Ciri utama:
 • Peranan & kebenaran - hierarki Ahli, Supervisor, Manager, dan Super
   Admin, setiap satu dengan kebenaran yang sesuai.
 • Aktiviti & daftar hadir - lihat aktiviti akan datang, daftar penyertaan,
-  dan check-in menggunakan kod QR (untuk pihak pengurusan).
+  dan check-in sendiri atau melalui pengurusan menggunakan kod QR.
 • Sumbangan/derma - sokong pembangunan app secara sukarela melalui kad,
   FPX, atau kaedah pembayaran lain yang disediakan.
 • Pemberitahuan - terima notifikasi push untuk pengumuman dan aktiviti

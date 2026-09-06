@@ -132,7 +132,7 @@ class _AppDialogTextFieldState extends State<AppDialogTextField> {
         textCapitalization: widget.textCapitalization,
         enabled: widget.enabled,
         autofocus: widget.autofocus,
-        onChanged: widget.onChanged,
+        onChanged: _handleChanged,
         inputFormatters: widget.inputFormatters,
         mask: widget.mask,
         maskFilter: widget.maskFilter,
